@@ -164,6 +164,33 @@
             font-weight: bold;
             margin-right: 8px;
         }
+
+        .action-section {
+            margin-top: 40px;
+            padding: 30px;
+        }
+
+        .manage-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .manage-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .manage-btn:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -188,6 +215,12 @@
                 </div>
             </div>
 
+            <div class="action-section">
+                <button class="manage-btn" onclick="window.location.href='manage.html'">
+                    进入测试用例管理系统 →
+                </button>
+            </div>
+
             <div class="next-steps">
                 <h4>✅ 已完成的部署步骤：</h4>
                 <ul>
@@ -196,13 +229,7 @@
                     <li>用户认证系统正常运行</li>
                     <li>CORS 跨域配置成功</li>
                     <li>管理员账号创建成功</li>
-                </ul>
-
-                <h4 style="margin-top: 30px; color: #f59e0b;">⏳ 下一步工作：</h4>
-                <ul style="padding-left: 20px; list-style: disc;">
-                    <li style="color: #666;">集成完整的测试用例管理界面</li>
-                    <li style="color: #666;">部署前端到 Vercel</li>
-                    <li style="color: #666;">配置自定义域名（可选）</li>
+                    <li>测试用例管理界面已完成</li>
                 </ul>
             </div>
         </div>

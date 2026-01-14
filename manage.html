@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - 测试用例管理</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="api-service.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 80px);
+            margin: 20px;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .menu-list {
+            list-style: none;
+        }
+
+        .menu-item {
+            margin-bottom: 15px;
+        }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-header:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .menu-title {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .menu-header:hover .menu-title {
+            color: white;
+        }
+
+        .menu-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 5px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .icon-btn:hover {
+            opacity: 1;
+        }
+
+        .test-case-list {
+            list-style: none;
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .test-case-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #f9f9f9;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .test-case-item:hover {
+            background: #e8e8e8;
+        }
+
+        .test-case-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .status-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .status-card {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .status-card h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .status-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .status-pending { border-color: #d1d5db; }
+        .status-passed { border-color: #10b981; }
+        .status-failed { border-color: #ef4444; }
+        .status-skipped { border-color: #f59e0b; }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-save {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #059669;
+        }
+
+        .btn-cancel {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #4b5563;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>📋 Test 测试管理系统</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="showAddMenuModal()">+ 新建菜单</button>
+                <button class="btn btn-primary" onclick="showAddTestCaseModal()">+ 新建测试用例</button>
+                <button class="btn btn-secondary" onclick="exportToExcel()">📥 导出Excel</button>
+                <label class="btn btn-secondary" style="margin: 0; cursor: pointer;">
+                    📤 导入Excel
+                    <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="importFromExcel(event)">
+                </label>
+            </div>
+        </div>
+        <div class="user-info">
+            <span id="userName">加载中...</span>
+            <button class="btn btn-secondary" onclick="apiService.logout()">退出</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>测试用例列表</h2>
+            </div>
+            <ul class="menu-list" id="menuList">
+                <li class="loading">加载中...</li>
+            </ul>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <h3>请选择或创建测试用例</h3>
+                <p>从左侧菜单选择测试用例，或点击上方按钮创建新的测试用例</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加菜单模态框 -->
+    <div class="modal" id="addMenuModal">
+        <div class="modal-content">
+            <h2 class="modal-header">新建菜单</h2>
+            <div class="form-group">
+                <label>菜单名称</label>
+                <input type="text" id="newMenuName" placeholder="请输入菜单名称">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-save" onclick="createMenu()">创建</button>
+                <button class="btn btn-cancel" onclick="closeModal('addMenuModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加测试用例模态框 -->
+    <div class="modal" id="addTestCaseModal">
+        <div class="modal-content">
+            <h2 class="modal-header">新建测试用例</h2>
+            <div id="addTestCaseError" class="error-message" style="display: none;"></div>
+            <div class="form-group">
+                <label>所属菜单</label>
+                <select id="newTestCaseMenu">
+                    <option value="">请选择菜单</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>项目名称</label>
+                <input type="text" id="newTestCaseProject" placeholder="请输入项目名称">
+            </div>
+            <div class="form-group">
+                <label>测试用例名称</label>
+                <input type="text" id="newTestCaseName" placeholder="请输入测试用例名称">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-save" onclick="createTestCase()">创建</button>
+                <button class="btn btn-cancel" onclick="closeModal('addTestCaseModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 全局变量 ====================
+        let allData = { menus: [], testCases: [] };
+        let currentTestCase = null;
+        let currentUser = null;
+
+        // ==================== 初始化 ====================
+        async function init() {
+            try {
+                // 检查登录状态
+                const user = JSON.parse(localStorage.getItem('user') || 'null');
+                if (!user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                currentUser = user;
+                document.getElementById('userName').textContent = `${user.username} (${user.role})`;
+
+                // 加载数据
+                await loadAllData();
+            } catch (error) {
+                console.error('初始化失败:', error);
+                showError('加载数据失败：' + error.message);
+            }
+        }
+
+        // ==================== 数据加载 ====================
+        async function loadAllData() {
+            try {
+                const data = await apiService.getAllData();
+                allData = data;
+                renderMenuList();
+            } catch (error) {
+                showError('加载数据失败：' + error.message);
+            }
+        }
+
+        // ==================== 渲染菜单列表 ====================
+        function renderMenuList() {
+            const menuList = document.getElementById('menuList');
+
+            if (!allData.menus || allData.menus.length === 0) {
+                menuList.innerHTML = '<li style="text-align: center; color: #999; padding: 20px;">暂无菜单<br>点击上方按钮创建</li>';
+                return;
+            }
+
+            menuList.innerHTML = allData.menus.map(menu => {
+                const testCases = allData.testCases.filter(tc => tc.menu_id === menu.id);
+                return `
+                    <li class="menu-item">
+                        <div class="menu-header">
+                            <span class="menu-title">${escapeHtml(menu.name)}</span>
+                            <div class="menu-actions">
+                                <button class="icon-btn" onclick="deleteMenu('${menu.id}')" title="删除菜单">🗑️</button>
+                            </div>
+                        </div>
+                        <ul class="test-case-list">
+                            ${testCases.map(tc => `
+                                <li class="test-case-item ${currentTestCase && currentTestCase.id === tc.id ? 'active' : ''}"
+                                    onclick="selectTestCase('${tc.id}')">
+                                    ${escapeHtml(tc.name)}
+                                </li>
+                            `).join('')}
+                            ${testCases.length === 0 ? '<li style="color: #999; font-size: 12px;">暂无测试用例</li>' : ''}
+                        </ul>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        // ==================== 选择测试用例 ====================
+        function selectTestCase(id) {
+            currentTestCase = allData.testCases.find(tc => tc.id === id);
+            if (currentTestCase) {
+                renderTestCaseDetail();
+                renderMenuList(); // 更新选中状态
+            }
+        }
+
+        // ==================== 渲染测试用例详情 ====================
+        function renderTestCaseDetail() {
+            if (!currentTestCase) return;
+
+            const mainContent = document.getElementById('mainContent');
+
+            // 解析JSON字段
+            const preconditions = JSON.parse(currentTestCase.preconditions || '[]');
+            const steps = JSON.parse(currentTestCase.steps || '[]');
+            const expectedResults = JSON.parse(currentTestCase.expected_results || '[]');
+
+            mainContent.innerHTML = `
+                <div id="detailMessage"></div>
+                <h2 style="margin-bottom: 20px; color: #333;">${escapeHtml(currentTestCase.name)}</h2>
+
+                <div class="form-group">
+                    <label>项目名称</label>
+                    <input type="text" id="edit_project" value="${escapeHtml(currentTestCase.project)}">
+                </div>
+
+                <div class="form-group">
+                    <label>测试用例名称</label>
+                    <input type="text" id="edit_name" value="${escapeHtml(currentTestCase.name)}">
+                </div>
+
+                <div class="form-group">
+                    <label>前置条件</label>
+                    <textarea id="edit_preconditions">${preconditions.join('\n')}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>测试步骤</label>
+                    <textarea id="edit_steps">${steps.join('\n')}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>预期结果</label>
+                    <textarea id="edit_expectedResults">${expectedResults.join('\n')}</textarea>
+                </div>
+
+                <h3 style="margin: 30px 0 15px;">测试状态</h3>
+                <div class="status-section">
+                    <div class="status-card status-${currentTestCase.android_status}">
+                        <h3>Android</h3>
+                        <select class="status-select" id="status_android" onchange="updateStatus('android', this.value)">
+                            <option value="pending" ${currentTestCase.android_status === 'pending' ? 'selected' : ''}>待测试</option>
+                            <option value="passed" ${currentTestCase.android_status === 'passed' ? 'selected' : ''}>通过</option>
+                            <option value="failed" ${currentTestCase.android_status === 'failed' ? 'selected' : ''}>失败</option>
+                            <option value="skipped" ${currentTestCase.android_status === 'skipped' ? 'selected' : ''}>跳过</option>
+                        </select>
+                        ${currentTestCase.android_status === 'failed' ? `
+                            <textarea id="fail_android" placeholder="失败原因" style="width: 100%; min-height: 60px; padding: 5px;">${escapeHtml(currentTestCase.android_fail_reason || '')}</textarea>
+                        ` : ''}
+                    </div>
+
+                    <div class="status-card status-${currentTestCase.ios_status}">
+                        <h3>iOS</h3>
+                        <select class="status-select" id="status_ios" onchange="updateStatus('ios', this.value)">
+                            <option value="pending" ${currentTestCase.ios_status === 'pending' ? 'selected' : ''}>待测试</option>
+                            <option value="passed" ${currentTestCase.ios_status === 'passed' ? 'selected' : ''}>通过</option>
+                            <option value="failed" ${currentTestCase.ios_status === 'failed' ? 'selected' : ''}>失败</option>
+                            <option value="skipped" ${currentTestCase.ios_status === 'skipped' ? 'selected' : ''}>跳过</option>
+                        </select>
+                        ${currentTestCase.ios_status === 'failed' ? `
+                            <textarea id="fail_ios" placeholder="失败原因" style="width: 100%; min-height: 60px; padding: 5px;">${escapeHtml(currentTestCase.ios_fail_reason || '')}</textarea>
+                        ` : ''}
+                    </div>
+
+                    <div class="status-card status-${currentTestCase.h5_status}">
+                        <h3>H5</h3>
+                        <select class="status-select" id="status_h5" onchange="updateStatus('h5', this.value)">
+                            <option value="pending" ${currentTestCase.h5_status === 'pending' ? 'selected' : ''}>待测试</option>
+                            <option value="passed" ${currentTestCase.h5_status === 'passed' ? 'selected' : ''}>通过</option>
+                            <option value="failed" ${currentTestCase.h5_status === 'failed' ? 'selected' : ''}>失败</option>
+                            <option value="skipped" ${currentTestCase.h5_status === 'skipped' ? 'selected' : ''}>跳过</option>
+                        </select>
+                        ${currentTestCase.h5_status === 'failed' ? `
+                            <textarea id="fail_h5" placeholder="失败原因" style="width: 100%; min-height: 60px; padding: 5px;">${escapeHtml(currentTestCase.h5_fail_reason || '')}</textarea>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-save" onclick="saveTestCase()">💾 保存</button>
+                    <button class="btn btn-delete" onclick="confirmDeleteTestCase()">🗑️ 删除</button>
+                </div>
+            `;
+        }
+
+        // ==================== 保存测试用例 ====================
+        async function saveTestCase() {
+            if (!currentTestCase) return;
+
+            try {
+                const preconditions = document.getElementById('edit_preconditions').value.split('\n').filter(x => x.trim());
+                const steps = document.getElementById('edit_steps').value.split('\n').filter(x => x.trim());
+                const expectedResults = document.getElementById('edit_expectedResults').value.split('\n').filter(x => x.trim());
+
+                const updates = {
+                    project: document.getElementById('edit_project').value,
+                    name: document.getElementById('edit_name').value,
+                    preconditions: JSON.stringify(preconditions),
+                    steps: JSON.stringify(steps),
+                    expected_results: JSON.stringify(expectedResults)
+                };
+
+                await apiService.updateTestCase(currentTestCase.id, updates);
+                showMessage('保存成功', 'success');
+                await loadAllData();
+                selectTestCase(currentTestCase.id);
+            } catch (error) {
+                showMessage('保存失败：' + error.message, 'error');
+            }
+        }
+
+        // ==================== 更新状态 ====================
+        async function updateStatus(platform, status) {
+            if (!currentTestCase) return;
+
+            try {
+                let failReason = '';
+                if (status === 'failed') {
+                    const failInput = document.getElementById(`fail_${platform}`);
+                    failReason = failInput ? failInput.value : '';
+                }
+
+                await apiService.updateTestCaseStatus(currentTestCase.id, platform, status, failReason);
+                showMessage('状态更新成功', 'success');
+                await loadAllData();
+                selectTestCase(currentTestCase.id);
+            } catch (error) {
+                showMessage('状态更新失败：' + error.message, 'error');
+            }
+        }
+
+        // ==================== 模态框 ====================
+        function showAddMenuModal() {
+            document.getElementById('addMenuModal').classList.add('active');
+            document.getElementById('newMenuName').value = '';
+        }
+
+        function showAddTestCaseModal() {
+            const select = document.getElementById('newTestCaseMenu');
+            select.innerHTML = '<option value="">请选择菜单</option>' +
+                allData.menus.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+
+            document.getElementById('addTestCaseModal').classList.add('active');
+            document.getElementById('newTestCaseProject').value = '';
+            document.getElementById('newTestCaseName').value = '';
+            document.getElementById('addTestCaseError').style.display = 'none';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // ==================== 创建菜单 ====================
+        async function createMenu() {
+            const name = document.getElementById('newMenuName').value.trim();
+            if (!name) {
+                alert('请输入菜单名称');
+                return;
+            }
+
+            try {
+                await apiService.createMenu(name);
+                closeModal('addMenuModal');
+                await loadAllData();
+                showMessage('菜单创建成功', 'success');
+            } catch (error) {
+                alert('创建菜单失败：' + error.message);
+            }
+        }
+
+        // ==================== 删除菜单 ====================
+        async function deleteMenu(menuId) {
+            if (!confirm('确定要删除这个菜单吗？菜单下的所有测试用例也会被删除。')) {
+                return;
+            }
+
+            try {
+                await apiService.deleteMenu(menuId);
+                await loadAllData();
+                if (currentTestCase && currentTestCase.menu_id === menuId) {
+                    currentTestCase = null;
+                    document.getElementById('mainContent').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <h3>请选择或创建测试用例</h3>
+                        </div>
+                    `;
+                }
+                showMessage('菜单删除成功', 'success');
+            } catch (error) {
+                alert('删除菜单失败：' + error.message);
+            }
+        }
+
+        // ==================== 创建测试用例 ====================
+        async function createTestCase() {
+            const menuId = document.getElementById('newTestCaseMenu').value;
+            const project = document.getElementById('newTestCaseProject').value.trim();
+            const name = document.getElementById('newTestCaseName').value.trim();
+
+            const errorEl = document.getElementById('addTestCaseError');
+
+            if (!menuId) {
+                errorEl.textContent = '请选择所属菜单';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            if (!project) {
+                errorEl.textContent = '请输入项目名称';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            if (!name) {
+                errorEl.textContent = '请输入测试用例名称';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const testCase = {
+                    menu_id: menuId,
+                    project: project,
+                    name: name,
+                    preconditions: JSON.stringify([]),
+                    steps: JSON.stringify([]),
+                    expected_results: JSON.stringify([])
+                };
+
+                const result = await apiService.createTestCase(testCase);
+                closeModal('addTestCaseModal');
+                await loadAllData();
+                selectTestCase(result.testCase.id);
+                showMessage('测试用例创建成功', 'success');
+            } catch (error) {
+                errorEl.textContent = '创建失败：' + error.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // ==================== 删除测试用例 ====================
+        async function confirmDeleteTestCase() {
+            if (!currentTestCase) return;
+
+            if (!confirm('确定要删除这个测试用例吗？')) {
+                return;
+            }
+
+            try {
+                await apiService.deleteTestCase(currentTestCase.id);
+                currentTestCase = null;
+                await loadAllData();
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <h3>请选择或创建测试用例</h3>
+                    </div>
+                `;
+                showMessage('测试用例删除成功', 'success');
+            } catch (error) {
+                alert('删除失败：' + error.message);
+            }
+        }
+
+        // ==================== Excel 导出 ====================
+        function exportToExcel() {
+            if (!allData.testCases || allData.testCases.length === 0) {
+                alert('暂无数据可导出');
+                return;
+            }
+
+            try {
+                const data = allData.testCases.map(tc => {
+                    const menu = allData.menus.find(m => m.id === tc.menu_id);
+                    return {
+                        '菜单': menu ? menu.name : '',
+                        '项目': tc.project,
+                        '测试用例': tc.name,
+                        '前置条件': JSON.parse(tc.preconditions || '[]').join('\n'),
+                        '测试步骤': JSON.parse(tc.steps || '[]').join('\n'),
+                        '预期结果': JSON.parse(tc.expected_results || '[]').join('\n'),
+                        'Android状态': tc.android_status,
+                        'iOS状态': tc.ios_status,
+                        'H5状态': tc.h5_status,
+                        'Android失败原因': tc.android_fail_reason || '',
+                        'iOS失败原因': tc.ios_fail_reason || '',
+                        'H5失败原因': tc.h5_fail_reason || ''
+                    };
+                });
+
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "测试用例");
+                XLSX.writeFile(wb, `测试用例_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+                showMessage('导出成功', 'success');
+            } catch (error) {
+                alert('导出失败：' + error.message);
+            }
+        }
+
+        // ==================== Excel 导入 ====================
+        async function importFromExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(firstSheet);
+
+                        if (rows.length === 0) {
+                            alert('Excel文件中没有数据');
+                            return;
+                        }
+
+                        // 简化导入：需要菜单已存在
+                        const importedCases = [];
+                        for (const row of rows) {
+                            const menuName = row['菜单'];
+                            const menu = allData.menus.find(m => m.name === menuName);
+
+                            if (!menu) {
+                                console.warn(`菜单 "${menuName}" 不存在，跳过`);
+                                continue;
+                            }
+
+                            importedCases.push({
+                                menu_id: menu.id,
+                                project: row['项目'] || '',
+                                name: row['测试用例'] || '',
+                                preconditions: JSON.stringify((row['前置条件'] || '').split('\n').filter(x => x.trim())),
+                                steps: JSON.stringify((row['测试步骤'] || '').split('\n').filter(x => x.trim())),
+                                expected_results: JSON.stringify((row['预期结果'] || '').split('\n').filter(x => x.trim()))
+                            });
+                        }
+
+                        if (importedCases.length > 0) {
+                            await apiService.createTestCasesBatch(importedCases);
+                            await loadAllData();
+                            showMessage(`成功导入 ${importedCases.length} 条测试用例`, 'success');
+                        } else {
+                            alert('没有可导入的数据（请确保菜单已存在）');
+                        }
+                    } catch (error) {
+                        alert('导入失败：' + error.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                alert('读取文件失败：' + error.message);
+            }
+
+            // 清空文件选择
+            event.target.value = '';
+        }
+
+        // ==================== 工具函数 ====================
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('detailMessage');
+            if (!container) return;
+
+            const className = type === 'success' ? 'success-message' : 'error-message';
+            container.innerHTML = `<div class="${className}">${escapeHtml(message)}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+
+        function showError(message) {
+            alert(message);
+        }
+
+        // ==================== 页面加载 ====================
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
