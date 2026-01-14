@@ -49,9 +49,10 @@ class APIService {
 
     // 创建菜单
     async createMenu(name) {
+        const id = 'menu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         return await this.request('/test-cases/menu', {
             method: 'POST',
-            body: JSON.stringify({ name })
+            body: JSON.stringify({ id, name })
         });
     }
 

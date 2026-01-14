@@ -734,6 +734,7 @@
 
             try {
                 const testCase = {
+                    id: 'tc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                     menu_id: menuId,
                     project: project,
                     name: name,
@@ -835,6 +836,8 @@
 
                         // 简化导入：需要菜单已存在
                         const importedCases = [];
+                        const baseTimestamp = Date.now();
+                        let counter = 0;
                         for (const row of rows) {
                             const menuName = row['菜单'];
                             const menu = allData.menus.find(m => m.name === menuName);
@@ -845,6 +848,7 @@
                             }
 
                             importedCases.push({
+                                id: 'tc_' + baseTimestamp + '_' + (counter++) + '_' + Math.random().toString(36).substr(2, 9),
                                 menu_id: menu.id,
                                 project: row['项目'] || '',
                                 name: row['测试用例'] || '',
