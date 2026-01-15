@@ -2193,6 +2193,184 @@ for (let i = 0; i < rows.length; i++) {
         return rootMenus;
     }
 
+    // 获取菜单及其所有子菜单的ID列表
+    function getAllMenuIds(menuNode) {
+        const ids = [menuNode.id];
+        if (menuNode.children && menuNode.children.length > 0) {
+            menuNode.children.forEach(child => {
+                ids.push(...getAllMenuIds(child));
+            });
+        }
+        return ids;
+    }
+
+    // 递归渲染菜单节点
+    function renderMenuNode(menuNode, level = 1) {
+        const displayTestCases = searchKeyword && searchResults.length > 0
+            ? searchResults.map(r => r.testCase)
+            : testCases;
+
+        // 获取该菜单及其所有子菜单下的测试用例
+        const menuIds = getAllMenuIds(menuNode);
+        const menuTestCases = displayTestCases.filter(tc => menuIds.includes(tc.menuId));
+
+        // 如果搜索中且没有匹配的测试用例，跳过
+        if (searchKeyword && menuTestCases.length === 0 && menuNode.children.length === 0) {
+            return null;
+        }
+
+        const container = document.createElement('div');
+        container.style.marginLeft = (level > 1 ? '20px' : '0px');
+
+        // 渲染菜单项
+        const menuDiv = document.createElement('div');
+        menuDiv.className = 'menu-item';
+        menuDiv.style.paddingLeft = '10px';
+
+        // 根据层级添加不同的样式
+        if (level === 1) {
+            menuDiv.style.fontWeight = 'bold';
+            menuDiv.style.background = '#f5f7fa';
+        } else if (level === 2) {
+            menuDiv.style.background = '#fafbfc';
+        } else {
+            menuDiv.style.background = '#fcfcfc';
+        }
+
+        // 只有有子菜单或测试用例时才显示折叠图标
+        const hasContent = menuNode.children.length > 0 || menuTestCases.filter(tc => tc.menuId === menuNode.id).length > 0;
+        const collapseIcon = hasContent ? `<span class="collapse-icon collapsed">▶</span> ` : '';
+
+        menuDiv.innerHTML = `
+            <span>${collapseIcon}${menuNode.name}</span>
+            <span>${menuTestCases.length}</span>
+        `;
+
+        // 右键菜单
+        menuDiv.oncontextmenu = (e) => showContextMenu(e, menuNode.id);
+
+        // 创建内容容器
+        const menuContent = document.createElement('div');
+        menuContent.className = 'menu-content';
+        menuContent.style.display = 'none';
+
+        // 渲染子菜单
+        if (menuNode.children && menuNode.children.length > 0) {
+            menuNode.children.forEach(childNode => {
+                const childElement = renderMenuNode(childNode, level + 1);
+                if (childElement) {
+                    menuContent.appendChild(childElement);
+                }
+            });
+        }
+
+        // 渲染该菜单直接关联的测试用例（按project分组）
+        const directTestCases = menuTestCases.filter(tc => tc.menuId === menuNode.id);
+        if (directTestCases.length > 0) {
+            const grouped = {};
+            directTestCases.forEach(tc => {
+                const project = tc.project || '未分类';
+                if (!grouped[project]) {
+                    grouped[project] = [];
+                }
+                grouped[project].push(tc);
+            });
+
+            for (const [project, cases] of Object.entries(grouped)) {
+                const projectItem = document.createElement('div');
+                projectItem.style.marginBottom = '10px';
+                projectItem.style.marginLeft = '15px';
+
+                const projectName = document.createElement('div');
+                projectName.className = 'project-name';
+                projectName.innerHTML = `
+                    <span><span class="collapse-icon collapsed">▶</span> ${project}</span>
+                    <span>${cases.length}</span>
+                `;
+
+                const caseList = document.createElement('ul');
+                caseList.className = 'test-case-list';
+                caseList.style.display = 'none';
+
+                cases.forEach(tc => {
+                    const caseItem = document.createElement('li');
+                    caseItem.className = 'test-case-item';
+
+                    if (searchKeyword && searchResults.some(r => r.testCase.id === tc.id)) {
+                        caseItem.classList.add('search-highlight');
+                    }
+
+                    caseItem.innerHTML = `
+                        <span>${tc.name}</span>
+                        <div class="status-group">
+                            <span class="status-badge status-${tc.androidStatus}">A:${getStatusText(tc.androidStatus)}</span>
+                            <span class="status-badge status-${tc.iosStatus}">I:${getStatusText(tc.iosStatus)}</span>
+                            <span class="status-badge status-${tc.h5Status}">H:${getStatusText(tc.h5Status)}</span>
+                        </div>
+                    `;
+                    caseItem.onclick = () => showTestCase(tc);
+                    caseList.appendChild(caseItem);
+                });
+
+                projectName.onclick = (e) => {
+                    e.stopPropagation();
+                    const icon = projectName.querySelector('.collapse-icon');
+                    const isExpanding = caseList.style.display === 'none';
+
+                    if (isExpanding) {
+                        icon.classList.remove('collapsed');
+                        caseList.style.display = 'block';
+                    } else {
+                        icon.classList.add('collapsed');
+                        caseList.style.display = 'none';
+                    }
+
+                    if (isExpanding) {
+                        setTimeout(() => {
+                            projectName.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                        }, 100);
+                    }
+                };
+
+                projectItem.appendChild(projectName);
+                projectItem.appendChild(caseList);
+                menuContent.appendChild(projectItem);
+            }
+        }
+
+        // 菜单折叠/展开
+        if (hasContent) {
+            menuDiv.onclick = (e) => {
+                if (e.button !== 0) return;
+                const icon = menuDiv.querySelector('.collapse-icon');
+                if (!icon) return;
+
+                const isExpanding = menuContent.style.display === 'none';
+
+                if (isExpanding) {
+                    icon.classList.remove('collapsed');
+                    menuContent.style.display = 'block';
+                } else {
+                    icon.classList.add('collapsed');
+                    menuContent.style.display = 'none';
+                }
+
+                if (isExpanding) {
+                    setTimeout(() => {
+                        menuDiv.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                    }, 100);
+                }
+            };
+        }
+
+        container.appendChild(menuDiv);
+        if (hasContent) {
+            container.appendChild(menuContent);
+        }
+
+        return container;
+    }
+
     // 渲染菜单列表（支持多级树形结构）
     function renderMenuList() {
         const projectList = document.getElementById('projectList');
@@ -2203,142 +2381,15 @@ for (let i = 0; i < rows.length; i++) {
             return;
         }
 
-        // 如果有搜索关键词，使用搜索结果
-        let displayTestCases = testCases;
-        if (searchKeyword && searchResults.length > 0) {
-            displayTestCases = searchResults.map(r => r.testCase);
-        } else if (searchKeyword && searchResults.length === 0) {
-            // 搜索了但没有结果
-            displayTestCases = [];
-        }
+        // 构建菜单树
+        const menuTree = buildMenuTree(menus);
 
-        // 渲染每个菜单
-        menus.forEach(menu => {
-            // 获取该菜单下的测试用例（根据搜索结果过滤）
-            const menuTestCases = displayTestCases.filter(tc => tc.menuId === menu.id);
-
-            // 如果该菜单下没有匹配的测试用例，跳过
-            if (searchKeyword && menuTestCases.length === 0) {
-                return;
+        // 渲染所有根菜单
+        menuTree.forEach(rootMenu => {
+            const menuElement = renderMenuNode(rootMenu, 1);
+            if (menuElement) {
+                projectList.appendChild(menuElement);
             }
-
-            const menuDiv = document.createElement('div');
-            menuDiv.className = 'menu-item';
-            menuDiv.innerHTML = `
-                    <span><span class="collapse-icon collapsed">▶</span> ${menu.name}</span>
-                    <span>${menuTestCases.length}</span>
-                `;
-
-            // 右键菜单
-            menuDiv.oncontextmenu = (e) => showContextMenu(e, menu.id);
-
-            // 创建菜单内容容器
-            const menuContent = document.createElement('div');
-            menuContent.className = 'menu-content';
-            menuContent.style.display = 'none'; // 默认折叠
-
-            // 按项目分组
-            const grouped = {};
-            menuTestCases.forEach(tc => {
-                if (!grouped[tc.project]) {
-                    grouped[tc.project] = [];
-                }
-                grouped[tc.project].push(tc);
-            });
-
-            // 渲染每个项目
-            for (const [project, cases] of Object.entries(grouped)) {
-                const projectItem = document.createElement('div');
-                projectItem.style.marginBottom = '10px';
-
-                const projectName = document.createElement('div');
-                projectName.className = 'project-name';
-                projectName.innerHTML = `
-                        <span><span class="collapse-icon collapsed">▶</span> ${project}</span>
-                        <span>${cases.length}</span>
-                    `;
-
-                const caseList = document.createElement('ul');
-                caseList.className = 'test-case-list';
-                caseList.style.display = 'none'; // 默认折叠
-
-                cases.forEach(tc => {
-                    const caseItem = document.createElement('li');
-                    caseItem.className = 'test-case-item';
-
-                    // 如果是搜索结果，添加高亮样式
-                    if (searchKeyword && searchResults.some(r => r.testCase.id === tc.id)) {
-                        caseItem.classList.add('search-highlight');
-                    }
-
-                    caseItem.innerHTML = `
-                            <span>${tc.name}</span>
-                            <div class="status-group">
-                                <span class="status-badge status-${tc.androidStatus}">A:${getStatusText(tc.androidStatus)}</span>
-                                <span class="status-badge status-${tc.iosStatus}">I:${getStatusText(tc.iosStatus)}</span>
-                                <span class="status-badge status-${tc.h5Status}">H:${getStatusText(tc.h5Status)}</span>
-                            </div>
-                        `;
-                    caseItem.onclick = () => showTestCase(tc);
-                    caseList.appendChild(caseItem);
-                });
-
-                // 项目左键点击 - 展开/折叠
-                projectName.onclick = (e) => {
-                    e.stopPropagation();
-                    const icon = projectName.querySelector('.collapse-icon');
-                    const isExpanding = caseList.style.display === 'none' || !caseList.style.display;
-
-                    // 根据展开/折叠状态设置箭头方向
-                    if (isExpanding) {
-                        icon.classList.remove('collapsed'); // 展开：箭头向下
-                        caseList.style.display = 'block';
-                    } else {
-                        icon.classList.add('collapsed'); // 折叠：箭头向右
-                        caseList.style.display = 'none';
-                    }
-
-                    // 如果是展开操作，滚动到该元素
-                    if (isExpanding) {
-                        setTimeout(() => {
-                            projectName.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-                        }, 100);
-                    }
-                };
-
-                // 项目右键点击 - 显示右键菜单
-                projectName.oncontextmenu = (e) => showProjectContextMenu(e, project, menu.id);
-
-                projectItem.appendChild(projectName);
-                projectItem.appendChild(caseList);
-                menuContent.appendChild(projectItem);
-            }
-
-            // 菜单折叠/展开
-            menuDiv.onclick = (e) => {
-                if (e.button !== 0) return; // 只响应左键点击
-                const icon = menuDiv.querySelector('.collapse-icon');
-                const isExpanding = menuContent.style.display === 'none' || !menuContent.style.display;
-
-                // 根据展开/折叠状态设置箭头方向
-                if (isExpanding) {
-                    icon.classList.remove('collapsed'); // 展开：箭头向下
-                    menuContent.style.display = 'block';
-                } else {
-                    icon.classList.add('collapsed'); // 折叠：箭头向右
-                    menuContent.style.display = 'none';
-                }
-
-                // 如果是展开操作，滚动到该元素
-                if (isExpanding) {
-                    setTimeout(() => {
-                        menuDiv.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-                    }, 100);
-                }
-            };
-
-            projectList.appendChild(menuDiv);
-            projectList.appendChild(menuContent);
         });
     }
 
