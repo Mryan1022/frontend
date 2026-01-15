@@ -6,6 +6,7 @@
     <title>Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="api-service.js"></script>
     <style>
         * {
             margin: 0;
@@ -1164,57 +1165,25 @@
         }
 
         try {
-            let newTestCases = [];
+            showLoading(`正在上传 ${file.name}...`);
 
-            if (file.name.endsWith('.xmind')) {
-                // 处理xmind文件
-                newTestCases = await parseXmindFile(file);
-            } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-                // 处理Excel文件
-                newTestCases = await parseExcelFile(file);
-            } else {
-                // 处理其他文件格式
-                const reader = new FileReader();
-                const content = await new Promise((resolve, reject) => {
-                    reader.onload = (event) => resolve(event.target.result);
-                    reader.onerror = reject;
-                    reader.readAsText(file);
-                });
+            // 调用 API 上传文件（后端会解析文件）
+            const result = await apiService.uploadTestCases(currentMenuId, file);
 
-                if (file.name.endsWith('.json')) {
-                    newTestCases = JSON.parse(content);
-                } else if (file.name.endsWith('.md') || file.name.endsWith('.txt')) {
-                    newTestCases = parseMarkdown(content);
-                }
-            }
-
-            // 给新测试用例添加menuId
-            newTestCases.forEach(tc => {
-                tc.menuId = currentMenuId;
-            });
-
-            // 合并到testCases
-            testCases = testCases.concat(newTestCases);
-
-            // 数据迁移：将旧格式转换为新格式
-            migrateTestCaseData();
-
-            // 保存到localStorage
-            saveToLocalStorage();
-
-            renderMenuList();
-            updateStats();
+            // 重新加载数据
+            await loadFromLocalStorage();
 
             // 记录日志
             const currentMenu = menus.find(m => m.id === currentMenuId);
             const menuName = currentMenu ? currentMenu.name : '未知菜单';
             const fileType = file.name.split('.').pop().toUpperCase();
-            addLog('上传测试用例', `文件: ${file.name}, 类型: ${fileType}, 菜单: ${menuName}, 导入用例数: ${newTestCases.length}`);
+            addLog('上传测试用例', `文件: ${file.name}, 类型: ${fileType}, 菜单: ${menuName}, 导入用例数: ${result.data.imported_count}`);
 
-            showToast(`测试用例上传成功，共导入 ${newTestCases.length} 条用例`);
+            showToast(result.message || `测试用例上传成功，共导入 ${result.data.imported_count} 条用例`);
         } catch (error) {
-            console.error('文件解析错误:', error);
-            alert('文件解析失败：' + error.message);
+            console.error('文件上传错误:', error);
+            hideLoading();
+            alert('文件上传失败：' + error.message);
         }
 
         // 重置文件输入
@@ -1236,35 +1205,48 @@
         }
     }
 
-    // 从localStorage加载
-    function loadFromLocalStorage() {
+    // 从API加载数据
+    async function loadFromLocalStorage() {
         try {
-            const dataStr = localStorage.getItem('testCaseData');
-            if (dataStr) {
-                const data = JSON.parse(dataStr);
+            showLoading('正在加载数据...');
 
-                // 兼容旧版本数据
-                if (Array.isArray(data)) {
-                    // 旧版本：直接是testCases数组
-                    testCases = data;
-                    menus = [];
-                    logs = [];
-                } else {
-                    // 新版本：包含menus、testCases和logs
-                    menus = data.menus || [];
-                    testCases = data.testCases || [];
-                    logs = data.logs || [];
-                }
+            // 调用API获取所有菜单和测试用例
+            const data = await apiService.getAllData();
 
-                // 确保数据结构正确
-                migrateTestCaseData();
-                renderMenuList();
-                updateMenuSelector();
-                updateStats();
-                return true;
-            }
+            // 更新全局变量
+            menus = data.menus || [];
+            testCases = data.testCases || [];
+            logs = []; // 日志功能暂时使用本地存储
+
+            // 转换字段名（后端使用下划线，前端使用驼峰）
+            testCases = testCases.map(tc => ({
+                id: tc.id,
+                menuId: tc.menu_id,
+                project: tc.project,
+                name: tc.name,
+                preconditions: tc.preconditions,
+                steps: tc.steps,
+                expectedResults: tc.expected_results,
+                androidStatus: tc.android_status,
+                androidFailedRemark: tc.android_fail_reason,
+                iosStatus: tc.ios_status,
+                iosFailedRemark: tc.ios_fail_reason,
+                h5Status: tc.h5_status,
+                h5FailedRemark: tc.h5_fail_reason
+            }));
+
+            // 渲染页面
+            renderMenuList();
+            updateMenuSelector();
+            updateStats();
+            hideLoading();
+
+            return true;
         } catch (e) {
-            console.error('从localStorage加载失败:', e);
+            console.error('加载数据失败:', e);
+            hideLoading();
+            alert('加载数据失败: ' + e.message);
+            return false;
         }
         return false;
     }
@@ -1929,22 +1911,26 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 创建菜单
-    function createMenu() {
+    async function createMenu() {
         const menuName = prompt('请输入一级菜单名称：', '新菜单');
         if (!menuName || menuName.trim() === '') return;
 
-        const menuId = 'menu_' + Date.now();
-        const newMenu = {
-            id: menuId,
-            name: menuName.trim()
-        };
+        try {
+            showLoading('正在创建菜单...');
 
-        menus.unshift(newMenu); // 使用unshift将新菜单添加到数组开头
-        saveToLocalStorage();
-        renderMenuList();
-        updateMenuSelector();
-        addLog('创建菜单', `菜单名称: ${menuName.trim()}`);
-        showToast('菜单创建成功');
+            // 调用 API 创建菜单
+            await apiService.createMenu(menuName.trim());
+
+            // 重新加载数据
+            await loadFromLocalStorage();
+
+            addLog('创建菜单', `菜单名称: ${menuName.trim()}`);
+            showToast('菜单创建成功');
+        } catch (error) {
+            console.error('创建菜单失败:', error);
+            hideLoading();
+            alert('创建菜单失败: ' + error.message);
+        }
     }
 
     // 显示右键菜单
@@ -1998,7 +1984,7 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 删除菜单
-    function deleteMenu() {
+    async function deleteMenu() {
         hideContextMenu();
         if (!currentMenuId) return;
 
@@ -2009,17 +1995,21 @@ for (let i = 0; i < rows.length; i++) {
             return;
         }
 
-        // 删除菜单
-        menus = menus.filter(m => m.id !== currentMenuId);
+        try {
+            showLoading('正在删除菜单...');
 
-        // 删除该菜单下的所有测试用例
-        testCases = testCases.filter(tc => tc.menuId !== currentMenuId);
+            // 调用 API 删除菜单（会自动级联删除测试用例）
+            await apiService.deleteMenu(currentMenuId);
 
-        saveToLocalStorage();
-        renderMenuList();
-        updateMenuSelector();
-        updateStats();
-        showToast('菜单已删除');
+            // 重新加载数据
+            await loadFromLocalStorage();
+
+            showToast('菜单已删除');
+        } catch (error) {
+            console.error('删除菜单失败:', error);
+            hideLoading();
+            alert('删除菜单失败: ' + error.message);
+        }
     }
 
     // 显示项目右键菜单
@@ -2573,39 +2563,40 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 删除测试用例
-    function deleteTestCase() {
+    async function deleteTestCase() {
         if (!currentTestCase) return;
 
         if (!confirm(`确定要删除测试用例"${currentTestCase.name}"吗？`)) {
             return;
         }
 
-        // 从testCases中删除
-        const index = testCases.findIndex(tc => tc.id === currentTestCase.id);
-        if (index > -1) {
-            testCases.splice(index, 1);
-        }
-
-        // 保存到localStorage
-        saveToLocalStorage();
-
-        // 刷新列表
-        renderMenuList();
-        updateStats();
-
-        // 隐藏详情面板
-        document.getElementById('testCaseDetail').style.display = 'none';
-        document.getElementById('emptyState').style.display = 'flex';
-
         const deletedCaseName = currentTestCase.name;
         const deletedCaseId = currentTestCase.id;
 
-        currentTestCase = null;
-        isEditMode = false;
-        editingTestCase = null;
+        try {
+            showLoading('正在删除测试用例...');
 
-        addLog('删除测试用例', `用例ID: ${deletedCaseId}, 用例名称: ${deletedCaseName}`);
-        showToast('删除成功');
+            // 调用 API 删除测试用例
+            await apiService.deleteTestCase(deletedCaseId);
+
+            // 隐藏详情面板
+            document.getElementById('testCaseDetail').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'flex';
+
+            currentTestCase = null;
+            isEditMode = false;
+            editingTestCase = null;
+
+            // 重新加载数据
+            await loadFromLocalStorage();
+
+            addLog('删除测试用例', `用例ID: ${deletedCaseId}, 用例名称: ${deletedCaseName}`);
+            showToast('删除成功');
+        } catch (error) {
+            console.error('删除测试用例失败:', error);
+            hideLoading();
+            alert('删除失败: ' + error.message);
+        }
     }
 
     // 切换平台
@@ -3286,7 +3277,7 @@ for (let i = 0; i < rows.length; i++) {
     document.head.appendChild(style);
 
     // 执行搜索
-    function performSearch() {
+    async function performSearch() {
         const input = document.getElementById('searchInput');
         const keyword = input.value.trim();
 
@@ -3295,57 +3286,79 @@ for (let i = 0; i < rows.length; i++) {
             return;
         }
 
-        searchKeyword = keyword.toLowerCase();
-        searchResults = [];
+        try {
+            showLoading('正在搜索...');
 
-        // 搜索所有包含关键词的测试用例
-        testCases.forEach(tc => {
-            let matched = false;
-            let matchedPlatforms = [];
+            // 调用 API 搜索失败的测试用例
+            const result = await apiService.searchFailedTestCases(keyword);
 
-            // 检查Android不通过原因
-            if (tc.androidFailReason && tc.androidFailReason.toLowerCase().includes(searchKeyword)) {
-                matched = true;
-                matchedPlatforms.push('Android');
-            }
+            searchKeyword = keyword.toLowerCase();
+            searchResults = [];
 
-            // 检查iOS不通过原因
-            if (tc.iosFailReason && tc.iosFailReason.toLowerCase().includes(searchKeyword)) {
-                matched = true;
-                matchedPlatforms.push('iOS');
-            }
+            // 转换 API 返回的结果
+            if (result.data && result.data.length > 0) {
+                result.data.forEach(tc => {
+                    const matchedPlatforms = [];
 
-            // 检查H5不通过原因
-            if (tc.h5FailReason && tc.h5FailReason.toLowerCase().includes(searchKeyword)) {
-                matched = true;
-                matchedPlatforms.push('H5');
-            }
+                    // 检查哪些平台的失败原因包含关键词
+                    if (tc.android_fail_reason && tc.android_fail_reason.toLowerCase().includes(searchKeyword)) {
+                        matchedPlatforms.push('Android');
+                    }
+                    if (tc.ios_fail_reason && tc.ios_fail_reason.toLowerCase().includes(searchKeyword)) {
+                        matchedPlatforms.push('iOS');
+                    }
+                    if (tc.h5_fail_reason && tc.h5_fail_reason.toLowerCase().includes(searchKeyword)) {
+                        matchedPlatforms.push('H5');
+                    }
 
-            if (matched) {
-                searchResults.push({
-                    testCase: tc,
-                    platforms: matchedPlatforms
+                    // 转换字段名
+                    const testCase = {
+                        id: tc.id,
+                        menuId: tc.menu_id,
+                        project: tc.project,
+                        name: tc.name,
+                        preconditions: tc.preconditions,
+                        steps: tc.steps,
+                        expectedResults: tc.expected_results,
+                        androidStatus: tc.android_status,
+                        androidFailedRemark: tc.android_fail_reason,
+                        iosStatus: tc.ios_status,
+                        iosFailedRemark: tc.ios_fail_reason,
+                        h5Status: tc.h5_status,
+                        h5FailedRemark: tc.h5_fail_reason
+                    };
+
+                    searchResults.push({
+                        testCase,
+                        platforms: matchedPlatforms
+                    });
                 });
             }
-        });
 
-        // 显示搜索结果提示
-        const hint = document.getElementById('searchResultHint');
-        if (searchResults.length > 0) {
-            hint.textContent = `找到 ${searchResults.length} 条结果`;
-            hint.style.display = 'inline-block';
-            const resultDetails = searchResults.map(r => `${r.testCase.id}-${r.testCase.name}(${r.platforms.join(',')})`).join('; ');
-            addLog('搜索不通过原因', `关键词: "${keyword}", 找到 ${searchResults.length} 条结果: ${resultDetails}`);
-            showToast(`找到 ${searchResults.length} 条匹配的测试用例`);
-        } else {
-            hint.textContent = '未找到结果';
-            hint.style.display = 'inline-block';
-            addLog('搜索不通过原因', `关键词: "${keyword}", 未找到结果`);
-            showToast('未找到匹配的测试用例');
+            hideLoading();
+
+            // 显示搜索结果提示
+            const hint = document.getElementById('searchResultHint');
+            if (searchResults.length > 0) {
+                hint.textContent = `找到 ${searchResults.length} 条结果`;
+                hint.style.display = 'inline-block';
+                const resultDetails = searchResults.map(r => `${r.testCase.id}-${r.testCase.name}(${r.platforms.join(',')})`).join('; ');
+                addLog('搜索不通过原因', `关键词: "${keyword}", 找到 ${searchResults.length} 条结果: ${resultDetails}`);
+                showToast(`找到 ${searchResults.length} 条匹配的测试用例`);
+            } else {
+                hint.textContent = '未找到结果';
+                hint.style.display = 'inline-block';
+                addLog('搜索不通过原因', `关键词: "${keyword}", 未找到结果`);
+                showToast('未找到匹配的测试用例');
+            }
+
+            // 重新渲染列表，只显示搜索结果
+            renderMenuList();
+        } catch (error) {
+            console.error('搜索失败:', error);
+            hideLoading();
+            alert('搜索失败: ' + error.message);
         }
-
-        // 重新渲染列表，只显示搜索结果
-        renderMenuList();
     }
 
     // 清除搜索

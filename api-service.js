@@ -104,6 +104,47 @@ class APIService {
         });
     }
 
+    // 上传测试用例文件
+    async uploadTestCases(menuId, file) {
+        const formData = new FormData();
+        formData.append('menuId', menuId);
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`${this.baseURL}/test-cases/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                    // 不设置 Content-Type，让浏览器自动处理
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Upload Error:', error);
+            throw error;
+        }
+    }
+
+    // 搜索失败的测试用例（根据失败原因）
+    async searchFailedTestCases(keyword, menuId = null) {
+        const params = new URLSearchParams();
+        if (keyword) params.append('keyword', keyword);
+        if (menuId) params.append('menuId', menuId);
+
+        const queryString = params.toString();
+        const endpoint = `/test-cases/search${queryString ? '?' + queryString : ''}`;
+
+        return await this.request(endpoint);
+    }
+
     // ==================== 用户相关 ====================
 
     // 获取当前用户信息
