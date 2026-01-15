@@ -2165,7 +2165,35 @@ for (let i = 0; i < rows.length; i++) {
         ];
     }
 
-    // 渲染菜单列表（三层结构：菜单 -> 项目 -> 测试用例）
+    // 构建菜单树结构
+    function buildMenuTree(menus) {
+        const menuMap = {};
+        const rootMenus = [];
+
+        // 第一遍：创建所有菜单的映射
+        menus.forEach(menu => {
+            menuMap[menu.id] = {
+                ...menu,
+                children: []
+            };
+        });
+
+        // 第二遍：建立父子关系
+        menus.forEach(menu => {
+            const menuNode = menuMap[menu.id];
+            if (menu.parent_id && menuMap[menu.parent_id]) {
+                // 有父菜单，添加到父菜单的 children 中
+                menuMap[menu.parent_id].children.push(menuNode);
+            } else {
+                // 没有父菜单，是根菜单（一级菜单）
+                rootMenus.push(menuNode);
+            }
+        });
+
+        return rootMenus;
+    }
+
+    // 渲染菜单列表（支持多级树形结构）
     function renderMenuList() {
         const projectList = document.getElementById('projectList');
         projectList.innerHTML = '';
