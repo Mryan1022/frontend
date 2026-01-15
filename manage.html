@@ -1181,6 +1181,25 @@
         if (overlay) overlay.style.display = 'none';
     }
 
+    // 将字符串或JSON转换为数组的辅助函数
+    function parseToArray(value) {
+        if (!value) return [];
+        if (Array.isArray(value)) return value;
+
+        // 尝试解析 JSON
+        if (typeof value === 'string') {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) return parsed;
+            } catch (e) {
+                // 不是 JSON，按换行符分割
+                return value.split('\n').filter(line => line.trim());
+            }
+        }
+
+        return [String(value)];
+    }
+
     // 文件上传处理
     document.getElementById('fileInput').addEventListener('change', async function (e) {
         const file = e.target.files[0];
@@ -1251,15 +1270,15 @@
                 menuId: tc.menu_id,
                 project: tc.project,
                 name: tc.name,
-                preconditions: tc.preconditions,
-                steps: tc.steps,
-                expectedResults: tc.expected_results,
+                preconditions: parseToArray(tc.preconditions),
+                steps: parseToArray(tc.steps),
+                expectedResults: parseToArray(tc.expected_results),
                 androidStatus: tc.android_status,
-                androidFailedRemark: tc.android_fail_reason,
+                androidFailedRemark: tc.android_fail_reason || '',
                 iosStatus: tc.ios_status,
-                iosFailedRemark: tc.ios_fail_reason,
+                iosFailedRemark: tc.ios_fail_reason || '',
                 h5Status: tc.h5_status,
-                h5FailedRemark: tc.h5_fail_reason
+                h5FailedRemark: tc.h5_fail_reason || ''
             }));
 
             // 渲染页面
@@ -3344,15 +3363,15 @@ for (let i = 0; i < rows.length; i++) {
                         menuId: tc.menu_id,
                         project: tc.project,
                         name: tc.name,
-                        preconditions: tc.preconditions,
-                        steps: tc.steps,
-                        expectedResults: tc.expected_results,
+                        preconditions: parseToArray(tc.preconditions),
+                        steps: parseToArray(tc.steps),
+                        expectedResults: parseToArray(tc.expected_results),
                         androidStatus: tc.android_status,
-                        androidFailedRemark: tc.android_fail_reason,
+                        androidFailedRemark: tc.android_fail_reason || '',
                         iosStatus: tc.ios_status,
-                        iosFailedRemark: tc.ios_fail_reason,
+                        iosFailedRemark: tc.ios_fail_reason || '',
                         h5Status: tc.h5_status,
-                        h5FailedRemark: tc.h5_fail_reason
+                        h5FailedRemark: tc.h5_fail_reason || ''
                     };
 
                     searchResults.push({
