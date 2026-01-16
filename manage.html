@@ -3855,7 +3855,7 @@ for (let i = 0; i < rows.length; i++) {
                 reason
             );
 
-            if (response.success) {
+            if (response && response.success) {
                 // 更新本地测试用例数据（H5 互斥逻辑由后端处理）
                 currentTestCase.androidStatus = response.data.androidStatus;
                 currentTestCase.androidFailReason = response.data.androidFailReason;
@@ -3863,9 +3863,6 @@ for (let i = 0; i < rows.length; i++) {
                 currentTestCase.iosFailReason = response.data.iosFailReason;
                 currentTestCase.h5Status = response.data.h5Status;
                 currentTestCase.h5FailReason = response.data.h5FailReason;
-
-                // 关闭弹窗
-                closeFailReasonModal();
 
                 // 刷新显示
                 renderProjectList();
@@ -3876,12 +3873,18 @@ for (let i = 0; i < rows.length; i++) {
                 const platformName = currentPlatform === 'android' ? 'Android' : (currentPlatform === 'ios' ? 'iOS' : 'H5');
                 addLog('标记不通过', `用例: ${currentTestCase.id} - ${currentTestCase.name}, 平台: ${platformName}, 原因: ${reason}`);
                 showToast(`${platformName} 已标记为：不通过`);
+            } else {
+                // API返回了，但success不是true
+                console.error('API返回异常:', response);
+                showToast('更新失败：服务器返回异常');
             }
         } catch (error) {
             console.error('更新失败原因失败:', error);
             showToast('更新失败：' + error.message);
         } finally {
+            // 确保无论成功还是失败，都关闭弹窗和loading
             hideLoading();
+            closeFailReasonModal();
         }
     }
 
