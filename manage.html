@@ -2218,6 +2218,7 @@ for (let i = 0; i < rows.length; i++) {
         const menuDiv = document.createElement('div');
         menuDiv.className = 'menu-item';
         menuDiv.style.paddingLeft = '10px';
+        menuDiv.dataset.menuId = menuNode.id; // 添加菜单 ID 用于状态保存
 
         // 根据层级添加不同的样式
         if (level === 1) {
@@ -2232,9 +2233,8 @@ for (let i = 0; i < rows.length; i++) {
         // 只有有子菜单或测试用例时才显示折叠图标
         const hasContent = menuNode.children.length > 0 || menuTestCases.filter(tc => tc.menuId === menuNode.id).length > 0;
 
-        // 检查菜单是否应该展开
-        const menuDisplayName = menuNode.name + menuTestCases.length;
-        const shouldExpand = expandedMenus.has(menuDisplayName);
+        // 检查菜单是否应该展开（使用菜单 ID）
+        const shouldExpand = expandedMenus.has(menuNode.id);
         const collapseIcon = hasContent ? `<span class="collapse-icon ${shouldExpand ? '' : 'collapsed'}">${shouldExpand ? '▼' : '▶'}</span> ` : '';
 
         menuDiv.innerHTML = `
@@ -2284,14 +2284,20 @@ for (let i = 0; i < rows.length; i++) {
 
                     const projectName = document.createElement('div');
                     projectName.className = 'project-name';
+
+                    // 检查项目分组是否应该展开
+                    const projectKey = `${menuNode.id}:${project}`;
+                    const shouldExpandProject = expandedMenus.has(projectKey);
+
                     projectName.innerHTML = `
-                        <span><span class="collapse-icon collapsed">▶</span> ${project}</span>
+                        <span><span class="collapse-icon ${shouldExpandProject ? '' : 'collapsed'}">${shouldExpandProject ? '▼' : '▶'}</span> ${project}</span>
                         <span>${cases.length}</span>
                     `;
+                    projectName.dataset.projectKey = projectKey;
 
                     const caseList = document.createElement('ul');
                     caseList.className = 'test-case-list';
-                    caseList.style.display = 'none';
+                    caseList.style.display = shouldExpandProject ? 'block' : 'none';
 
                     cases.forEach(tc => {
                         const caseItem = document.createElement('li');
@@ -2320,10 +2326,14 @@ for (let i = 0; i < rows.length; i++) {
 
                         if (isExpanding) {
                             icon.classList.remove('collapsed');
+                            icon.textContent = '▼';
                             caseList.style.display = 'block';
+                            expandedMenus.add(projectKey);
                         } else {
                             icon.classList.add('collapsed');
+                            icon.textContent = '▶';
                             caseList.style.display = 'none';
+                            expandedMenus.delete(projectKey);
                         }
 
                         if (isExpanding) {
@@ -2380,12 +2390,12 @@ for (let i = 0; i < rows.length; i++) {
                     icon.classList.remove('collapsed');
                     icon.textContent = '▼';
                     menuContent.style.display = 'block';
-                    expandedMenus.add(menuDisplayName);
+                    expandedMenus.add(menuNode.id);
                 } else {
                     icon.classList.add('collapsed');
                     icon.textContent = '▶';
                     menuContent.style.display = 'none';
-                    expandedMenus.delete(menuDisplayName);
+                    expandedMenus.delete(menuNode.id);
                 }
 
                 if (isExpanding) {
@@ -2408,14 +2418,24 @@ for (let i = 0; i < rows.length; i++) {
     function renderMenuList() {
         const projectList = document.getElementById('projectList');
 
-        // 保存当前展开的菜单状态
-        const currentExpanded = projectList.querySelectorAll('.menu-content[style*="display: block"]');
+        // 保存当前展开的菜单状态（使用菜单ID）
         expandedMenus.clear();
-        currentExpanded.forEach(content => {
+
+        // 保存展开的菜单
+        const currentExpandedMenus = projectList.querySelectorAll('.menu-content[style*="display: block"]');
+        currentExpandedMenus.forEach(content => {
             const menuDiv = content.previousElementSibling;
-            if (menuDiv) {
-                const menuName = menuDiv.textContent.trim();
-                expandedMenus.add(menuName);
+            if (menuDiv && menuDiv.dataset.menuId) {
+                expandedMenus.add(menuDiv.dataset.menuId);
+            }
+        });
+
+        // 保存展开的项目分组
+        const currentExpandedProjects = projectList.querySelectorAll('.test-case-list[style*="display: block"]');
+        currentExpandedProjects.forEach(caseList => {
+            const projectDiv = caseList.previousElementSibling;
+            if (projectDiv && projectDiv.dataset.projectKey) {
+                expandedMenus.add(projectDiv.dataset.projectKey);
             }
         });
 
