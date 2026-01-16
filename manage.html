@@ -2263,35 +2263,90 @@ for (let i = 0; i < rows.length; i++) {
             });
         }
 
-        // 渲染该菜单直接关联的测试用例（按project分组）
+        // 渲染该菜单直接关联的测试用例
         const directTestCases = menuTestCases.filter(tc => tc.menuId === menuNode.id);
         if (directTestCases.length > 0) {
-            const grouped = {};
-            directTestCases.forEach(tc => {
-                const project = tc.project || '未分类';
-                if (!grouped[project]) {
-                    grouped[project] = [];
+            // 检查是否有有效的 project（非空）
+            const hasProjects = directTestCases.some(tc => tc.project && tc.project.trim() !== '');
+
+            if (hasProjects) {
+                // 如果有project，按project分组显示
+                const grouped = {};
+                directTestCases.forEach(tc => {
+                    const project = tc.project || '未分类';
+                    if (!grouped[project]) {
+                        grouped[project] = [];
+                    }
+                    grouped[project].push(tc);
+                });
+
+                for (const [project, cases] of Object.entries(grouped)) {
+                    const projectItem = document.createElement('div');
+                    projectItem.style.marginBottom = '10px';
+                    projectItem.style.marginLeft = '15px';
+
+                    const projectName = document.createElement('div');
+                    projectName.className = 'project-name';
+                    projectName.innerHTML = `
+                        <span><span class="collapse-icon collapsed">▶</span> ${project}</span>
+                        <span>${cases.length}</span>
+                    `;
+
+                    const caseList = document.createElement('ul');
+                    caseList.className = 'test-case-list';
+                    caseList.style.display = 'none';
+
+                    cases.forEach(tc => {
+                        const caseItem = document.createElement('li');
+                        caseItem.className = 'test-case-item';
+
+                        if (searchKeyword && searchResults.some(r => r.testCase.id === tc.id)) {
+                            caseItem.classList.add('search-highlight');
+                        }
+
+                        caseItem.innerHTML = `
+                            <span>${tc.name}</span>
+                            <div class="status-group">
+                                <span class="status-badge status-${tc.androidStatus}">A:${getStatusText(tc.androidStatus)}</span>
+                                <span class="status-badge status-${tc.iosStatus}">I:${getStatusText(tc.iosStatus)}</span>
+                                <span class="status-badge status-${tc.h5Status}">H:${getStatusText(tc.h5Status)}</span>
+                            </div>
+                        `;
+                        caseItem.onclick = () => showTestCase(tc);
+                        caseList.appendChild(caseItem);
+                    });
+
+                    projectName.onclick = (e) => {
+                        e.stopPropagation();
+                        const icon = projectName.querySelector('.collapse-icon');
+                        const isExpanding = caseList.style.display === 'none';
+
+                        if (isExpanding) {
+                            icon.classList.remove('collapsed');
+                            caseList.style.display = 'block';
+                        } else {
+                            icon.classList.add('collapsed');
+                            caseList.style.display = 'none';
+                        }
+
+                        if (isExpanding) {
+                            setTimeout(() => {
+                                projectName.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                            }, 100);
+                        }
+                    };
+
+                    projectItem.appendChild(projectName);
+                    projectItem.appendChild(caseList);
+                    menuContent.appendChild(projectItem);
                 }
-                grouped[project].push(tc);
-            });
-
-            for (const [project, cases] of Object.entries(grouped)) {
-                const projectItem = document.createElement('div');
-                projectItem.style.marginBottom = '10px';
-                projectItem.style.marginLeft = '15px';
-
-                const projectName = document.createElement('div');
-                projectName.className = 'project-name';
-                projectName.innerHTML = `
-                    <span><span class="collapse-icon collapsed">▶</span> ${project}</span>
-                    <span>${cases.length}</span>
-                `;
-
+            } else {
+                // 如果没有project，直接显示测试用例列表（不分组）
                 const caseList = document.createElement('ul');
                 caseList.className = 'test-case-list';
-                caseList.style.display = 'none';
+                caseList.style.marginLeft = '15px';
 
-                cases.forEach(tc => {
+                directTestCases.forEach(tc => {
                     const caseItem = document.createElement('li');
                     caseItem.className = 'test-case-item';
 
@@ -2311,29 +2366,7 @@ for (let i = 0; i < rows.length; i++) {
                     caseList.appendChild(caseItem);
                 });
 
-                projectName.onclick = (e) => {
-                    e.stopPropagation();
-                    const icon = projectName.querySelector('.collapse-icon');
-                    const isExpanding = caseList.style.display === 'none';
-
-                    if (isExpanding) {
-                        icon.classList.remove('collapsed');
-                        caseList.style.display = 'block';
-                    } else {
-                        icon.classList.add('collapsed');
-                        caseList.style.display = 'none';
-                    }
-
-                    if (isExpanding) {
-                        setTimeout(() => {
-                            projectName.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-                        }, 100);
-                    }
-                };
-
-                projectItem.appendChild(projectName);
-                projectItem.appendChild(caseList);
-                menuContent.appendChild(projectItem);
+                menuContent.appendChild(caseList);
             }
         }
 
