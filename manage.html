@@ -787,6 +787,29 @@
             margin-top: 10px;
         }
 
+        .search-menu-filter {
+            padding: 10px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 150px;
+        }
+
+        .search-menu-filter:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-menu-filter option {
+            background: #667eea;
+            color: white;
+        }
+
         .search-input {
             flex: 1;
             max-width: 400px;
@@ -1040,6 +1063,9 @@
                 </button>
             </div>
             <div class="search-container">
+                <select id="searchMenuFilter" class="search-menu-filter">
+                    <option value="">所有菜单</option>
+                </select>
                 <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索不通过原因..." onkeyup="handleSearchKeyup(event)">
                 <button class="search-btn" onclick="performSearch()">搜索</button>
                 <button class="search-btn" onclick="clearSearch()" style="background: #6b7280;">清除</button>
@@ -1276,6 +1302,7 @@
             // 渲染页面
             renderMenuList();
             // updateMenuSelector(); // 进度统计功能已移除
+            updateSearchMenuFilter(); // 更新搜索菜单过滤器
             updateStats();
             hideLoading();
 
@@ -2206,8 +2233,8 @@ for (let i = 0; i < rows.length; i++) {
         const menuIds = getAllMenuIds(menuNode);
         const menuTestCases = displayTestCases.filter(tc => menuIds.includes(tc.menuId));
 
-        // 如果搜索中且没有匹配的测试用例，跳过
-        if (searchKeyword && menuTestCases.length === 0 && menuNode.children.length === 0) {
+        // 在搜索模式下，如果该菜单及其所有子菜单都没有匹配的测试用例，跳过渲染
+        if (searchKeyword && menuTestCases.length === 0) {
             return null;
         }
 
@@ -3468,6 +3495,35 @@ for (let i = 0; i < rows.length; i++) {
         `;
     document.head.appendChild(style);
 
+    // 更新搜索菜单过滤器
+    function updateSearchMenuFilter() {
+        const filterSelect = document.getElementById('searchMenuFilter');
+        if (!filterSelect) return;
+
+        // 保存当前选中的值
+        const currentValue = filterSelect.value;
+
+        // 清空选项
+        filterSelect.innerHTML = '<option value="">所有菜单</option>';
+
+        // 只添加一级菜单（level === 1）
+        const level1Menus = menus.filter(m => m.level === 1);
+        level1Menus.forEach(menu => {
+            const option = document.createElement('option');
+            option.value = menu.id;
+            option.textContent = menu.name;
+            filterSelect.appendChild(option);
+        });
+
+        // 恢复之前选中的值（如果还存在）
+        if (currentValue) {
+            const optionExists = Array.from(filterSelect.options).some(opt => opt.value === currentValue);
+            if (optionExists) {
+                filterSelect.value = currentValue;
+            }
+        }
+    }
+
     // 执行搜索
     async function performSearch() {
         const input = document.getElementById('searchInput');
@@ -3481,8 +3537,12 @@ for (let i = 0; i < rows.length; i++) {
         try {
             showLoading('正在搜索...');
 
-            // 调用 API 搜索失败的测试用例
-            const result = await apiService.searchFailedTestCases(keyword);
+            // 获取选中的菜单 ID
+            const filterSelect = document.getElementById('searchMenuFilter');
+            const selectedMenuId = filterSelect ? filterSelect.value : '';
+
+            // 调用 API 搜索失败的测试用例，传递菜单 ID
+            const result = await apiService.searchFailedTestCases(keyword, selectedMenuId || null);
 
             searchKeyword = keyword.toLowerCase();
             searchResults = [];
@@ -3563,6 +3623,12 @@ for (let i = 0; i < rows.length; i++) {
 
         input.value = '';
         hint.style.display = 'none';
+
+        // 重置菜单过滤器
+        const filterSelect = document.getElementById('searchMenuFilter');
+        if (filterSelect) {
+            filterSelect.value = ''; // 重置为"所有菜单"
+        }
 
         // 重新渲染列表，显示所有用例
         renderMenuList();
