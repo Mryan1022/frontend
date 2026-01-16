@@ -1324,13 +1324,26 @@
             return;
         }
 
+        let uploadSuccess = false;
+
         try {
-            showLoading(`正在上传 ${file.name}...`);
+            showLoading(`正在上传 ${file.name}，请耐心等待...`);
 
             // 调用 API 上传文件（后端会解析文件）
-            const result = await apiService.uploadTestCases(currentMenuId, file);
+            // 设置5分钟超时，适合大量用例上传
+            const result = await apiService.uploadTestCases(currentMenuId, file, {
+                timeout: 300000,  // 5分钟超时
+                onProgress: (progress) => {
+                    if (progress.status === 'retrying') {
+                        showLoading(`上传失败，正在重试 (${progress.attempt}/${progress.total})...`);
+                    }
+                }
+            });
+
+            uploadSuccess = true;
 
             // 重新加载数据
+            showLoading('上传成功，正在刷新数据...');
             await loadFromLocalStorage();
 
             // 记录日志
@@ -1339,15 +1352,35 @@
             const fileType = file.name.split('.').pop().toUpperCase();
             addLog('上传测试用例', `文件: ${file.name}, 类型: ${fileType}, 菜单: ${menuName}, 导入用例数: ${result.data.imported_count}`);
 
+            hideLoading();
             showToast(result.message || `测试用例上传成功，共导入 ${result.data.imported_count} 条用例`);
+
         } catch (error) {
             console.error('文件上传错误:', error);
-            hideLoading();
-            alert('文件上传失败：' + error.message);
-        }
 
-        // 重置文件输入
-        e.target.value = '';
+            hideLoading();
+
+            // 提供更详细的错误提示和重试建议
+            let errorMessage = '文件上传失败：' + error.message;
+
+            if (error.message.includes('超时')) {
+                errorMessage += '\n\n建议：\n1. 检查网络连接\n2. 尝试减少用例数量\n3. 重新上传文件';
+            } else if (error.message.includes('网络') || error.message.includes('连接')) {
+                errorMessage += '\n\n建议：\n1. 检查网络连接\n2. 稍后重试';
+            }
+
+            alert(errorMessage);
+
+        } finally {
+            // 确保无论成功还是失败，都会执行清理操作
+            // 重置文件输入，允许重新选择同一个文件
+            e.target.value = '';
+
+            // 如果加载框还在显示，确保关闭它
+            if (!uploadSuccess) {
+                hideLoading();
+            }
+        }
     });
 
     // 保存到localStorage

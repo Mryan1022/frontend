@@ -104,33 +104,83 @@ class APIService {
         });
     }
 
-    // 上传测试用例文件
-    async uploadTestCases(menuId, file) {
+    // 上传测试用例文件（带超时和重试）
+    async uploadTestCases(menuId, file, options = {}) {
+        const {
+            timeout = 300000,  // 默认超时5分钟（大量用例需要更长时间）
+            retries = 0,        // 默认不重试（用户手动重试）
+            onProgress = null   // 进度回调
+        } = options;
+
         const formData = new FormData();
         formData.append('menuId', menuId);
         formData.append('file', file);
 
-        try {
-            const response = await fetch(`${this.baseURL}/test-cases/upload`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`
-                    // 不设置 Content-Type，让浏览器自动处理
-                },
-                body: formData
-            });
+        let lastError = null;
 
-            const data = await response.json();
+        // 重试逻辑
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                if (attempt > 0) {
+                    console.log(`重试上传 (${attempt}/${retries})...`);
+                    if (onProgress) {
+                        onProgress({ status: 'retrying', attempt, total: retries });
+                    }
+                    // 重试前等待一下
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
 
-            if (!response.ok) {
-                throw new Error(data.error || `HTTP ${response.status}`);
+                // 创建 AbortController 用于超时控制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+                try {
+                    const response = await fetch(`${this.baseURL}/test-cases/upload`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                            // 不设置 Content-Type，让浏览器自动处理
+                        },
+                        body: formData,
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || `HTTP ${response.status}`);
+                    }
+
+                    return data;
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+
+                    // 判断是否是超时错误
+                    if (fetchError.name === 'AbortError') {
+                        throw new Error(`上传超时（超过${timeout/1000}秒），请检查网络或减少用例数量`);
+                    }
+
+                    throw fetchError;
+                }
+            } catch (error) {
+                lastError = error;
+
+                // 如果不是最后一次尝试，继续重试
+                if (attempt < retries) {
+                    console.warn(`上传失败，准备重试: ${error.message}`);
+                    continue;
+                }
+
+                // 最后一次失败，抛出错误
+                console.error('Upload Error:', error);
+                throw error;
             }
-
-            return data;
-        } catch (error) {
-            console.error('Upload Error:', error);
-            throw error;
         }
+
+        // 理论上不会到这里，但为了安全
+        throw lastError || new Error('上传失败');
     }
 
     // 搜索失败的测试用例（根据失败原因）
