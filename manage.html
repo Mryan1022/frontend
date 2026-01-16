@@ -2775,7 +2775,7 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 设置测试状态
-    function setStatus(status) {
+    async function setStatus(status) {
         if (!currentTestCase) return;
 
         // 如果是不通过状态，显示弹窗
@@ -2785,57 +2785,43 @@ for (let i = 0; i < rows.length; i++) {
             return;
         }
 
-        // 其他状态直接设置
-        // 根据当前平台设置对应的状态
-        if (currentPlatform === 'android') {
-            currentTestCase.androidStatus = status;
-            // 清除不通过原因（如果切换到其他状态）
-            if (status !== 'failed') {
-                currentTestCase.androidFailReason = '';
+        try {
+            showLoading('正在更新状态...');
+
+            // 调用 API 更新状态
+            const response = await apiService.updateTestCaseStatus(
+                currentTestCase.id,
+                currentPlatform,
+                status,
+                ''
+            );
+
+            if (response.success) {
+                // 更新本地测试用例数据（H5 互斥逻辑由后端处理）
+                currentTestCase.androidStatus = response.data.androidStatus;
+                currentTestCase.androidFailReason = response.data.androidFailReason;
+                currentTestCase.iosStatus = response.data.iosStatus;
+                currentTestCase.iosFailReason = response.data.iosFailReason;
+                currentTestCase.h5Status = response.data.h5Status;
+                currentTestCase.h5FailReason = response.data.h5FailReason;
+
+                // 刷新显示
+                renderProjectList();
+                updateStats();
+                renderTestCaseDetail();
+
+                // 显示提示
+                const statusText = getStatusText(status);
+                const platformName = currentPlatform === 'android' ? 'Android' : (currentPlatform === 'ios' ? 'iOS' : 'H5');
+                addLog('更新测试状态', `用例: ${currentTestCase.id} - ${currentTestCase.name}, 平台: ${platformName}, 状态: ${statusText}`);
+                showToast(`${platformName} 已标记为：${statusText}`);
             }
-            // Android测试了（非待测），H5要重置为待测
-            if (status !== 'pending') {
-                currentTestCase.h5Status = 'pending';
-                currentTestCase.h5FailReason = '';
-            }
-        } else if (currentPlatform === 'ios') {
-            currentTestCase.iosStatus = status;
-            // 清除不通过原因（如果切换到其他状态）
-            if (status !== 'failed') {
-                currentTestCase.iosFailReason = '';
-            }
-            // iOS测试了（非待测），H5要重置为待测
-            if (status !== 'pending') {
-                currentTestCase.h5Status = 'pending';
-                currentTestCase.h5FailReason = '';
-            }
-        } else if (currentPlatform === 'h5') {
-            currentTestCase.h5Status = status;
-            // 清除不通过原因（如果切换到其他状态）
-            if (status !== 'failed') {
-                currentTestCase.h5FailReason = '';
-            }
-            // H5测试了（非待测），Android和iOS要重置为待测
-            if (status !== 'pending') {
-                currentTestCase.androidStatus = 'pending';
-                currentTestCase.androidFailReason = '';
-                currentTestCase.iosStatus = 'pending';
-                currentTestCase.iosFailReason = '';
-            }
+        } catch (error) {
+            console.error('更新状态失败:', error);
+            showToast('更新失败：' + error.message);
+        } finally {
+            hideLoading();
         }
-
-        // 保存到localStorage
-        saveToLocalStorage();
-
-        renderProjectList();
-        updateStats();
-        renderTestCaseDetail();
-
-        // 显示提示
-        const statusText = getStatusText(status);
-        const platformName = currentPlatform === 'android' ? 'Android' : (currentPlatform === 'ios' ? 'iOS' : 'H5');
-        addLog('更新测试状态', `用例: ${currentTestCase.id} - ${currentTestCase.name}, 平台: ${platformName}, 状态: ${statusText}`);
-        showToast(`${platformName} 已标记为：${statusText}`);
     }
 
     // 获取状态文本
@@ -3571,7 +3557,7 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 确认不通过原因
-    function confirmFailReason() {
+    async function confirmFailReason() {
         const input = document.getElementById('failReasonInput');
         const reason = input.value.trim();
 
@@ -3580,44 +3566,45 @@ for (let i = 0; i < rows.length; i++) {
             return;
         }
 
-        // 保存不通过原因到对应平台，并设置互斥状态
-        if (currentPlatform === 'android') {
-            currentTestCase.androidFailReason = reason;
-            currentTestCase.androidStatus = 'failed';
-            // Android测试了，H5要重置为待测
-            currentTestCase.h5Status = 'pending';
-            currentTestCase.h5FailReason = '';
-        } else if (currentPlatform === 'ios') {
-            currentTestCase.iosFailReason = reason;
-            currentTestCase.iosStatus = 'failed';
-            // iOS测试了，H5要重置为待测
-            currentTestCase.h5Status = 'pending';
-            currentTestCase.h5FailReason = '';
-        } else if (currentPlatform === 'h5') {
-            currentTestCase.h5FailReason = reason;
-            currentTestCase.h5Status = 'failed';
-            // H5测试了，Android和iOS要重置为待测
-            currentTestCase.androidStatus = 'pending';
-            currentTestCase.androidFailReason = '';
-            currentTestCase.iosStatus = 'pending';
-            currentTestCase.iosFailReason = '';
+        try {
+            showLoading('正在更新状态...');
+
+            // 调用 API 更新状态为 failed
+            const response = await apiService.updateTestCaseStatus(
+                currentTestCase.id,
+                currentPlatform,
+                'failed',
+                reason
+            );
+
+            if (response.success) {
+                // 更新本地测试用例数据（H5 互斥逻辑由后端处理）
+                currentTestCase.androidStatus = response.data.androidStatus;
+                currentTestCase.androidFailReason = response.data.androidFailReason;
+                currentTestCase.iosStatus = response.data.iosStatus;
+                currentTestCase.iosFailReason = response.data.iosFailReason;
+                currentTestCase.h5Status = response.data.h5Status;
+                currentTestCase.h5FailReason = response.data.h5FailReason;
+
+                // 关闭弹窗
+                closeFailReasonModal();
+
+                // 刷新显示
+                renderProjectList();
+                updateStats();
+                renderTestCaseDetail();
+
+                // 显示提示
+                const platformName = currentPlatform === 'android' ? 'Android' : (currentPlatform === 'ios' ? 'iOS' : 'H5');
+                addLog('标记不通过', `用例: ${currentTestCase.id} - ${currentTestCase.name}, 平台: ${platformName}, 原因: ${reason}`);
+                showToast(`${platformName} 已标记为：不通过`);
+            }
+        } catch (error) {
+            console.error('更新失败原因失败:', error);
+            showToast('更新失败：' + error.message);
+        } finally {
+            hideLoading();
         }
-
-        // 保存到localStorage
-        saveToLocalStorage();
-
-        // 关闭弹窗
-        closeFailReasonModal();
-
-        // 刷新显示
-        renderProjectList();
-        updateStats();
-        renderTestCaseDetail();
-
-        // 显示提示
-        const platformName = currentPlatform === 'android' ? 'Android' : (currentPlatform === 'ios' ? 'iOS' : 'H5');
-        addLog('标记不通过', `用例: ${currentTestCase.id} - ${currentTestCase.name}, 平台: ${platformName}, 原因: ${reason}`);
-        showToast(`${platformName} 已标记为：不通过`);
     }
 
     // 页面加载时从localStorage加载数据

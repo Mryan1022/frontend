@@ -93,7 +93,7 @@ class APIService {
     async updateTestCaseStatus(id, platform, status, failReason = '') {
         return await this.request(`/test-cases/${id}/status`, {
             method: 'PATCH',
-            body: JSON.stringify({ platform, status, failReason })
+            body: JSON.stringify({ platform, status, fail_reason: failReason })
         });
     }
 
