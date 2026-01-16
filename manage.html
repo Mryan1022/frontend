@@ -1062,15 +1062,7 @@
             </div>
         </div>
         <div class="header-right">
-            <div id="progressCircleContainer" class="progress-circle-container">
-                <div class="progress-circle-header">📊 各菜单进度统计</div>
-                <div class="menu-selector">
-                    <select id="menuSelector" onchange="onMenuSelectorChange()">
-                        <option value="all">显示所有菜单</option>
-                    </select>
-                </div>
-                <div id="progressCircleContent"></div>
-            </div>
+            <!-- 进度统计已移除 -->
         </div>
     </div>
 
@@ -1166,6 +1158,7 @@
     let pendingFailStatus = false; // 是否有待处理的不通过状态
     let searchKeyword = ''; // 搜索关键词
     let searchResults = []; // 搜索结果
+    let expandedMenus = new Set(); // 保存展开的菜单ID
 
     // Loading 显示和隐藏函数
     function showLoading(message = '正在加载...') {
@@ -1282,7 +1275,7 @@
 
             // 渲染页面
             renderMenuList();
-            updateMenuSelector();
+            // updateMenuSelector(); // 进度统计功能已移除
             updateStats();
             hideLoading();
 
@@ -2024,7 +2017,7 @@ for (let i = 0; i < rows.length; i++) {
         menu.name = newName.trim();
         saveToLocalStorage();
         renderMenuList();
-        updateMenuSelector();
+        // updateMenuSelector(); // 进度统计功能已移除
         showToast('菜单名称已修改');
     }
 
@@ -2238,7 +2231,11 @@ for (let i = 0; i < rows.length; i++) {
 
         // 只有有子菜单或测试用例时才显示折叠图标
         const hasContent = menuNode.children.length > 0 || menuTestCases.filter(tc => tc.menuId === menuNode.id).length > 0;
-        const collapseIcon = hasContent ? `<span class="collapse-icon collapsed">▶</span> ` : '';
+
+        // 检查菜单是否应该展开
+        const menuDisplayName = menuNode.name + menuTestCases.length;
+        const shouldExpand = expandedMenus.has(menuDisplayName);
+        const collapseIcon = hasContent ? `<span class="collapse-icon ${shouldExpand ? '' : 'collapsed'}">${shouldExpand ? '▼' : '▶'}</span> ` : '';
 
         menuDiv.innerHTML = `
             <span>${collapseIcon}${menuNode.name}</span>
@@ -2251,7 +2248,7 @@ for (let i = 0; i < rows.length; i++) {
         // 创建内容容器
         const menuContent = document.createElement('div');
         menuContent.className = 'menu-content';
-        menuContent.style.display = 'none';
+        menuContent.style.display = shouldExpand ? 'block' : 'none';
 
         // 渲染子菜单
         if (menuNode.children && menuNode.children.length > 0) {
@@ -2381,10 +2378,14 @@ for (let i = 0; i < rows.length; i++) {
 
                 if (isExpanding) {
                     icon.classList.remove('collapsed');
+                    icon.textContent = '▼';
                     menuContent.style.display = 'block';
+                    expandedMenus.add(menuDisplayName);
                 } else {
                     icon.classList.add('collapsed');
+                    icon.textContent = '▶';
                     menuContent.style.display = 'none';
+                    expandedMenus.delete(menuDisplayName);
                 }
 
                 if (isExpanding) {
@@ -2406,6 +2407,18 @@ for (let i = 0; i < rows.length; i++) {
     // 渲染菜单列表（支持多级树形结构）
     function renderMenuList() {
         const projectList = document.getElementById('projectList');
+
+        // 保存当前展开的菜单状态
+        const currentExpanded = projectList.querySelectorAll('.menu-content[style*="display: block"]');
+        expandedMenus.clear();
+        currentExpanded.forEach(content => {
+            const menuDiv = content.previousElementSibling;
+            if (menuDiv) {
+                const menuName = menuDiv.textContent.trim();
+                expandedMenus.add(menuName);
+            }
+        });
+
         projectList.innerHTML = '';
 
         if (menus.length === 0) {
@@ -2891,11 +2904,9 @@ for (let i = 0; i < rows.length; i++) {
                 document.getElementById(`${platform}PendingCount`).textContent = '0';
             });
         }
-
-        // 更新圆盘进度图
-        renderProgressCircles();
     }
 
+    /* 进度统计相关功能已删除
     // 渲染圆盘进度图
     function renderProgressCircles(selectedMenuId = null) {
         const container = document.getElementById('progressCircleContent');
@@ -3217,6 +3228,7 @@ for (let i = 0; i < rows.length; i++) {
         const tooltip = document.getElementById('progressTooltip');
         tooltip.classList.remove('show');
     }
+    */
 
     // 添加日志
     function addLog(action, details) {
