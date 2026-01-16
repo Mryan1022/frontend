@@ -1291,7 +1291,7 @@
                             id="iosSkipCount2">0</strong> ⏸️:<strong id="iosPendingCount2">0</strong></div>
                 </div>
                 <div class="stats">
-                    <div class="stat-item">🌐 Web - ✓:<strong id="h5PassCount2">0</strong> ✗:<strong id="h5FailCount2">0</strong> 〇:<strong
+                    <div class="stat-item">🌐 H5 - ✓:<strong id="h5PassCount2">0</strong> ✗:<strong id="h5FailCount2">0</strong> 〇:<strong
                             id="h5SkipCount2">0</strong> ⏸️:<strong id="h5PendingCount2">0</strong></div>
                 </div>
             </div>
@@ -2599,7 +2599,7 @@ for (let i = 0; i < rows.length; i++) {
                             <div class="status-group">
                                 <span class="status-badge status-${tc.androidStatus}" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
                                 <span class="status-badge status-${tc.iosStatus}" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
-                                <span class="status-badge status-${tc.h5Status}" title="Web: ${getStatusText(tc.h5Status)}">🌐</span>
+                                <span class="status-badge status-${tc.h5Status}" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
                             </div>
                         `;
                         caseItem.onclick = () => showTestCase(tc);
@@ -2960,7 +2960,7 @@ for (let i = 0; i < rows.length; i++) {
                                     </button>
                                     <button class="platform-btn ${currentPlatform === 'h5' ? 'active' : ''}" onclick="switchPlatform('h5')">
                                         <span>🌐</span>
-                                        <span>Web</span>
+                                        <span>H5</span>
                                     </button>
                                 </div>
                             </div>
@@ -3300,7 +3300,7 @@ for (let i = 0; i < rows.length; i++) {
             const platforms = [
                 { name: 'Android', emoji: '📱', statusKey: 'androidStatus' },
                 { name: 'iOS', emoji: '🍎', statusKey: 'iosStatus' },
-                { name: 'Web', emoji: '🌐', statusKey: 'h5Status' }
+                { name: 'H5', emoji: '🌐', statusKey: 'h5Status' }
             ];
 
             platforms.forEach(platform => {
