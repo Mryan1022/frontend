@@ -1273,11 +1273,11 @@
                 steps: parseToArray(tc.steps),
                 expectedResults: parseToArray(tc.expected_results),
                 androidStatus: tc.android_status,
-                androidFailedRemark: tc.android_fail_reason || '',
+                androidFailReason: tc.android_fail_reason || '',
                 iosStatus: tc.ios_status,
-                iosFailedRemark: tc.ios_fail_reason || '',
+                iosFailReason: tc.ios_fail_reason || '',
                 h5Status: tc.h5_status,
-                h5FailedRemark: tc.h5_fail_reason || ''
+                h5FailReason: tc.h5_fail_reason || ''
             }));
 
             // 渲染页面
@@ -2671,7 +2671,7 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 保存测试用例
-    function saveTestCase() {
+    async function saveTestCase() {
         if (!editingTestCase) return;
 
         // 收集表单数据
@@ -2701,22 +2701,40 @@ for (let i = 0; i < rows.length; i++) {
             .map(input => input.value.trim())
             .filter(v => v);
 
-        // 更新原测试用例
-        Object.assign(currentTestCase, editingTestCase);
+        try {
+            showLoading('正在保存...');
 
-        // 保存到localStorage
-        saveToLocalStorage();
+            // 调用 API 更新测试用例
+            const updates = {
+                name: editingTestCase.name,
+                preconditions: editingTestCase.preconditions.join('\n'),
+                steps: editingTestCase.steps.join('\n'),
+                expectedResults: editingTestCase.expectedResults.join('\n')
+            };
 
-        // 刷新列表
-        renderMenuList();
+            const response = await apiService.updateTestCase(currentTestCase.id, updates);
 
-        // 退出编辑模式
-        isEditMode = false;
-        editingTestCase = null;
-        renderTestCaseDetail();
+            if (response.success || response.message) {
+                // 更新本地测试用例对象
+                Object.assign(currentTestCase, editingTestCase);
 
-        addLog('保存测试用例', `用例ID: ${currentTestCase.id}, 用例名称: ${currentTestCase.name}`);
-        showToast('保存成功');
+                // 刷新列表
+                renderMenuList();
+
+                // 退出编辑模式
+                isEditMode = false;
+                editingTestCase = null;
+                renderTestCaseDetail();
+
+                addLog('保存测试用例', `用例ID: ${currentTestCase.id}, 用例名称: ${currentTestCase.name}`);
+                showToast('保存成功');
+            }
+        } catch (error) {
+            console.error('保存测试用例失败:', error);
+            showToast('保存失败：' + error.message);
+        } finally {
+            hideLoading();
+        }
     }
 
     // 删除测试用例
@@ -3463,11 +3481,11 @@ for (let i = 0; i < rows.length; i++) {
                         steps: parseToArray(tc.steps),
                         expectedResults: parseToArray(tc.expected_results),
                         androidStatus: tc.android_status,
-                        androidFailedRemark: tc.android_fail_reason || '',
+                        androidFailReason: tc.android_fail_reason || '',
                         iosStatus: tc.ios_status,
-                        iosFailedRemark: tc.ios_fail_reason || '',
+                        iosFailReason: tc.ios_fail_reason || '',
                         h5Status: tc.h5_status,
-                        h5FailedRemark: tc.h5_fail_reason || ''
+                        h5FailReason: tc.h5_fail_reason || ''
                     };
 
                     searchResults.push({
