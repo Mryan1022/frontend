@@ -145,6 +145,17 @@ class APIService {
         return await this.request(endpoint);
     }
 
+    // 获取统计数据
+    async getStats(menuId = null) {
+        const params = new URLSearchParams();
+        if (menuId) params.append('menuId', menuId);
+
+        const queryString = params.toString();
+        const endpoint = `/test-cases/stats${queryString ? '?' + queryString : ''}`;
+
+        return await this.request(endpoint);
+    }
+
     // ==================== 用户相关 ====================
 
     // 获取当前用户信息

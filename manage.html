@@ -2836,44 +2836,43 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 更新统计信息
-    function updateStats() {
-        const total = testCases.length;
+    async function updateStats() {
+        try {
+            // 从 API 获取统计数据（包含 H5 互斥逻辑）
+            const response = await apiService.getStats();
 
-        // Android统计
-        const androidPassed = testCases.filter(tc => tc.androidStatus === 'passed').length;
-        const androidFailed = testCases.filter(tc => tc.androidStatus === 'failed').length;
-        const androidSkipped = testCases.filter(tc => tc.androidStatus === 'skipped').length;
-        const androidPending = testCases.filter(tc => tc.androidStatus === 'pending').length;
+            if (response.success) {
+                const stats = response.data;
 
-        // iOS统计
-        const iosPassed = testCases.filter(tc => tc.iosStatus === 'passed').length;
-        const iosFailed = testCases.filter(tc => tc.iosStatus === 'failed').length;
-        const iosSkipped = testCases.filter(tc => tc.iosStatus === 'skipped').length;
-        const iosPending = testCases.filter(tc => tc.iosStatus === 'pending').length;
+                // 更新显示
+                document.getElementById('totalCount').textContent = stats.total;
 
-        // H5统计
-        const h5Passed = testCases.filter(tc => tc.h5Status === 'passed').length;
-        const h5Failed = testCases.filter(tc => tc.h5Status === 'failed').length;
-        const h5Skipped = testCases.filter(tc => tc.h5Status === 'skipped').length;
-        const h5Pending = testCases.filter(tc => tc.h5Status === 'pending').length;
+                document.getElementById('androidPassCount').textContent = stats.android.passed;
+                document.getElementById('androidFailCount').textContent = stats.android.failed;
+                document.getElementById('androidSkipCount').textContent = stats.android.skipped;
+                document.getElementById('androidPendingCount').textContent = stats.android.pending;
 
-        // 更新显示
-        document.getElementById('totalCount').textContent = total;
+                document.getElementById('iosPassCount').textContent = stats.ios.passed;
+                document.getElementById('iosFailCount').textContent = stats.ios.failed;
+                document.getElementById('iosSkipCount').textContent = stats.ios.skipped;
+                document.getElementById('iosPendingCount').textContent = stats.ios.pending;
 
-        document.getElementById('androidPassCount').textContent = androidPassed;
-        document.getElementById('androidFailCount').textContent = androidFailed;
-        document.getElementById('androidSkipCount').textContent = androidSkipped;
-        document.getElementById('androidPendingCount').textContent = androidPending;
-
-        document.getElementById('iosPassCount').textContent = iosPassed;
-        document.getElementById('iosFailCount').textContent = iosFailed;
-        document.getElementById('iosSkipCount').textContent = iosSkipped;
-        document.getElementById('iosPendingCount').textContent = iosPending;
-
-        document.getElementById('h5PassCount').textContent = h5Passed;
-        document.getElementById('h5FailCount').textContent = h5Failed;
-        document.getElementById('h5SkipCount').textContent = h5Skipped;
-        document.getElementById('h5PendingCount').textContent = h5Pending;
+                document.getElementById('h5PassCount').textContent = stats.h5.passed;
+                document.getElementById('h5FailCount').textContent = stats.h5.failed;
+                document.getElementById('h5SkipCount').textContent = stats.h5.skipped;
+                document.getElementById('h5PendingCount').textContent = stats.h5.pending;
+            }
+        } catch (error) {
+            console.error('获取统计数据失败:', error);
+            // 失败时显示 0
+            document.getElementById('totalCount').textContent = '0';
+            ['android', 'ios', 'h5'].forEach(platform => {
+                document.getElementById(`${platform}PassCount`).textContent = '0';
+                document.getElementById(`${platform}FailCount`).textContent = '0';
+                document.getElementById(`${platform}SkipCount`).textContent = '0';
+                document.getElementById(`${platform}PendingCount`).textContent = '0';
+            });
+        }
 
         // 更新圆盘进度图
         renderProgressCircles();
