@@ -2727,7 +2727,6 @@ for (let i = 0; i < rows.length; i++) {
                             <div class="edit-actions">
                                 <button class="btn-save" onclick="saveTestCase()">💾 保存</button>
                                 <button class="btn-cancel" onclick="cancelEdit()">❌ 取消</button>
-                                <button class="btn-delete" onclick="deleteTestCase()">🗑️ 删除用例</button>
                             </div>
                         </div>
                     </div>
@@ -2823,11 +2822,6 @@ for (let i = 0; i < rows.length; i++) {
                                 <button class="action-btn btn-skip" onclick="setStatus('skipped')">
                                     ⏭️ 跳过
                                 </button>
-                            </div>
-
-                            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                                <button class="btn-edit" onclick="enterEditMode()" style="flex: 1;">✏️ 编辑</button>
-                                <button class="btn-delete" onclick="deleteTestCase()" style="flex: 1; margin-left: 0;">🗑️ 删除用例</button>
                             </div>
                         </div>
                     </div>
@@ -3839,10 +3833,11 @@ for (let i = 0; i < rows.length; i++) {
         const input = document.getElementById('failReasonInput');
         const reason = input.value.trim();
 
-        if (!reason) {
-            alert('请填写不通过原因');
-            return;
-        }
+        // 不通过原因改为非必填，允许空原因
+        // if (!reason) {
+        //     alert('请填写不通过原因');
+        //     return;
+        // }
 
         // 立即关闭弹窗
         closeFailReasonModal();
