@@ -29,6 +29,46 @@
             overflow-y: scroll;
         }
 
+        .tab-navigation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            gap: 0;
+            padding: 0 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-btn {
+            padding: 15px 30px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom-color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -99,28 +139,39 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-            padding: 20px;
+            overflow: hidden;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar h2 {
             font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
+            margin: 0;
+            color: white;
+            text-align: center;
+            padding: 15px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px 10px 0 0;
+            flex-shrink: 0;
         }
 
         .project-list {
+            padding: 20px;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
             list-style: none;
         }
 
         .project-item {
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
 
         .project-name {
             font-weight: 600;
             color: #667eea;
-            padding: 10px;
+            padding: 8px 10px;
             background: #f8f9ff;
             border-radius: 5px;
             cursor: pointer;
@@ -137,21 +188,22 @@
 
         .test-case-list {
             list-style: none;
-            margin-left: 20px;
-            margin-top: 10px;
+            margin-left: 15px;
+            margin-top: 5px;
         }
 
         .test-case-item {
-            padding: 8px 12px;
-            margin: 5px 0;
+            padding: 6px 12px;
+            margin: 3px 0;
             background: #f9f9f9;
             border-radius: 5px;
             cursor: pointer;
             transition: all 0.3s;
             font-size: 14px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
         }
 
         .test-case-item:hover {
@@ -164,17 +216,23 @@
         }
 
         .status-badge {
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
+            padding: 3px 6px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 500;
-            margin-left: 4px;
+            margin-left: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            cursor: help;
         }
 
         .status-group {
             display: flex;
             gap: 4px;
             align-items: center;
+            margin-left: 0;
         }
 
         .status-passed {
@@ -343,7 +401,7 @@
 
         .action-btn {
             flex: 1;
-            padding: 15px 24px;
+            padding: 12px 24px;
             border: none;
             border-radius: 8px;
             font-size: 16px;
@@ -497,15 +555,16 @@
         .menu-item {
             font-weight: 600;
             color: #333;
-            padding: 12px 15px;
+            padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             user-select: none;
+            font-size: 14px;
         }
 
         .menu-item:hover {
@@ -515,8 +574,8 @@
         }
 
         .menu-content {
-            margin-left: 10px;
-            margin-bottom: 15px;
+            margin-left: 8px;
+            margin-bottom: 8px;
         }
 
         /* 编辑模式样式 */
@@ -1047,54 +1106,75 @@
 </head>
 <body>
 <div class="content">
-    <div class="header">
-        <div class="header-left">
-            <h1>📋 Test</h1>
-            <div class="upload-area">
-                <input type="file" id="fileInput" accept=".json,.md,.txt,.xmind,.xlsx,.xls" style="display: none;"/>
-                <button class="upload-btn" onclick="createMenu()">
-                    ➕ 创建一级菜单
-                </button>
-                <button class="btn-export" onclick="exportResults()">
-                    💾 导出测试结果
-                </button>
-                <button class="btn-export" onclick="clearData()" style="background: #ef4444;">
-                    🗑️ 清除数据
-                </button>
-            </div>
-            <div class="search-container">
-                <select id="searchMenuFilter" class="search-menu-filter">
-                    <option value="">所有菜单</option>
-                </select>
-                <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索不通过原因..." onkeyup="handleSearchKeyup(event)">
-                <button class="search-btn" onclick="performSearch()">搜索</button>
-                <button class="search-btn" onclick="clearSearch()" style="background: #6b7280;">清除</button>
-                <span id="searchResultHint" class="search-result-hint" style="display: none;"></span>
-            </div>
-            <div class="stats">
-                <div class="stat-item">总计: <strong id="totalCount">0</strong></div>
-            </div>
-            <div class="stats">
-                <div class="stat-item">🤖 Android - ✅:<strong id="androidPassCount">0</strong> ❌:<strong id="androidFailCount">0</strong> ⏭️:<strong
-                        id="androidSkipCount">0</strong> ⏸️:<strong id="androidPendingCount">0</strong></div>
-            </div>
-            <div class="stats">
-                <div class="stat-item">🍎 iOS - ✅:<strong id="iosPassCount">0</strong> ❌:<strong id="iosFailCount">0</strong> ⏭️:<strong
-                        id="iosSkipCount">0</strong> ⏸️:<strong id="iosPendingCount">0</strong></div>
-            </div>
-            <div class="stats">
-                <div class="stat-item">🌐 H5 - ✅:<strong id="h5PassCount">0</strong> ❌:<strong id="h5FailCount">0</strong> ⏭️:<strong
-                        id="h5SkipCount">0</strong> ⏸️:<strong id="h5PendingCount">0</strong></div>
+    <!-- TAB 导航 -->
+    <div class="tab-navigation">
+        <button class="tab-btn active" onclick="switchTab('home')">
+            🏠 首页
+        </button>
+        <button class="tab-btn" onclick="switchTab('data')">
+            📊 数据管理
+        </button>
+    </div>
+
+    <!-- TAB 1: 首页 -->
+    <div id="tab-home" class="tab-content active">
+        <div class="header">
+            <div class="header-left">
+                <h1>📋 Test</h1>
+                <div class="upload-area">
+                    <input type="file" id="fileInput" accept=".json,.md,.txt,.xmind,.xlsx,.xls" style="display: none;"/>
+                    <button class="upload-btn" onclick="createMenu()">
+                        ➕ 新增版本号
+                    </button>
+                </div>
+                <div class="search-container">
+                    <select id="searchMenuFilter" class="search-menu-filter">
+                        <option value="">所有菜单</option>
+                    </select>
+                    <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索不通过原因..." onkeyup="handleSearchKeyup(event)">
+                    <button class="search-btn" onclick="performSearch()">搜索</button>
+                    <button class="search-btn" onclick="clearSearch()" style="background: #6b7280;">清除</button>
+                    <span id="searchResultHint" class="search-result-hint" style="display: none;"></span>
+                </div>
             </div>
         </div>
-        <div class="header-right">
-            <!-- 进度统计已移除 -->
+    </div>
+
+    <!-- TAB 2: 数据管理 -->
+    <div id="tab-data" class="tab-content">
+        <div class="header">
+            <div class="header-left">
+                <h1>📊 数据管理</h1>
+                <div class="upload-area">
+                    <button class="btn-export" onclick="exportResults()">
+                        💾 导出测试结果
+                    </button>
+                    <button class="btn-export" onclick="clearData()" style="background: #ef4444;">
+                        🗑️ 清除数据
+                    </button>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">总计: <strong id="totalCount2">0</strong></div>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">🤖 Android - ✅:<strong id="androidPassCount2">0</strong> ❌:<strong id="androidFailCount2">0</strong> ⏭️:<strong
+                            id="androidSkipCount2">0</strong> ⏸️:<strong id="androidPendingCount2">0</strong></div>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">🍎 iOS - ✅:<strong id="iosPassCount2">0</strong> ❌:<strong id="iosFailCount2">0</strong> ⏭️:<strong
+                            id="iosSkipCount2">0</strong> ⏸️:<strong id="iosPendingCount2">0</strong></div>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">🌐 H5 - ✅:<strong id="h5PassCount2">0</strong> ❌:<strong id="h5FailCount2">0</strong> ⏭️:<strong
+                            id="h5SkipCount2">0</strong> ⏸️:<strong id="h5PendingCount2">0</strong></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="container">
         <div class="sidebar">
-            <h2>📑 测试菜单</h2>
+            <h2>📑 测试用例</h2>
             <ul class="project-list" id="projectList">
                 <!-- 项目列表将动态生成 -->
             </ul>
@@ -1185,6 +1265,22 @@
     let searchKeyword = ''; // 搜索关键词
     let searchResults = []; // 搜索结果
     let expandedMenus = new Set(); // 保存展开的菜单ID
+
+    // TAB 切换函数
+    function switchTab(tabName) {
+        // 移除所有active类
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        // 添加active类到当前tab
+        event.target.classList.add('active');
+        document.getElementById('tab-' + tabName).classList.add('active');
+
+        // 如果切换到数据管理TAB，更新统计数据
+        if (tabName === 'data') {
+            updateStats();
+        }
+    }
 
     // Loading 显示和隐藏函数
     function showLoading(message = '正在加载...') {
@@ -2239,7 +2335,7 @@ for (let i = 0; i < rows.length; i++) {
         }
 
         const container = document.createElement('div');
-        container.style.marginLeft = (level > 1 ? '20px' : '0px');
+        container.style.marginLeft = (level > 1 ? '10px' : '0px');
 
         // 渲染菜单项
         const menuDiv = document.createElement('div');
@@ -2250,10 +2346,15 @@ for (let i = 0; i < rows.length; i++) {
         // 根据层级添加不同的样式
         if (level === 1) {
             menuDiv.style.fontWeight = 'bold';
+            menuDiv.style.fontSize = '14px';
             menuDiv.style.background = '#f5f7fa';
         } else if (level === 2) {
+            menuDiv.style.fontWeight = '600';
+            menuDiv.style.fontSize = '13px';
             menuDiv.style.background = '#fafbfc';
         } else {
+            menuDiv.style.fontWeight = 'normal';
+            menuDiv.style.fontSize = '13px';
             menuDiv.style.background = '#fcfcfc';
         }
 
@@ -2335,11 +2436,11 @@ for (let i = 0; i < rows.length; i++) {
                         }
 
                         caseItem.innerHTML = `
-                            <span>${tc.name}</span>
+                            <span>${tc.name.replace(/\*/g, '')}</span>
                             <div class="status-group">
-                                <span class="status-badge status-${tc.androidStatus}">A:${getStatusText(tc.androidStatus)}</span>
-                                <span class="status-badge status-${tc.iosStatus}">I:${getStatusText(tc.iosStatus)}</span>
-                                <span class="status-badge status-${tc.h5Status}">H:${getStatusText(tc.h5Status)}</span>
+                                <span class="status-badge status-${tc.androidStatus}" title="Android: ${getStatusText(tc.androidStatus)}">🤖</span>
+                                <span class="status-badge status-${tc.iosStatus}" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
+                                <span class="status-badge status-${tc.h5Status}" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
                             </div>
                         `;
                         caseItem.onclick = () => showTestCase(tc);
@@ -2389,11 +2490,11 @@ for (let i = 0; i < rows.length; i++) {
                     }
 
                     caseItem.innerHTML = `
-                        <span>${tc.name}</span>
+                        <span>${tc.name.replace(/\*/g, '')}</span>
                         <div class="status-group">
-                            <span class="status-badge status-${tc.androidStatus}">A:${getStatusText(tc.androidStatus)}</span>
-                            <span class="status-badge status-${tc.iosStatus}">I:${getStatusText(tc.iosStatus)}</span>
-                            <span class="status-badge status-${tc.h5Status}">H:${getStatusText(tc.h5Status)}</span>
+                            <span class="status-badge status-${tc.androidStatus}" title="Android: ${getStatusText(tc.androidStatus)}">🤖</span>
+                            <span class="status-badge status-${tc.iosStatus}" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
+                            <span class="status-badge status-${tc.h5Status}" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
                         </div>
                     `;
                     caseItem.onclick = () => showTestCase(tc);
@@ -2922,34 +3023,63 @@ for (let i = 0; i < rows.length; i++) {
             if (response.success) {
                 const stats = response.data;
 
-                // 更新显示
-                document.getElementById('totalCount').textContent = stats.total;
+                // 更新两个TAB中的统计数据
+                const updateElements = (suffix = '') => {
+                    const totalEl = document.getElementById('totalCount' + suffix);
+                    if (totalEl) totalEl.textContent = stats.total;
 
-                document.getElementById('androidPassCount').textContent = stats.android.passed;
-                document.getElementById('androidFailCount').textContent = stats.android.failed;
-                document.getElementById('androidSkipCount').textContent = stats.android.skipped;
-                document.getElementById('androidPendingCount').textContent = stats.android.pending;
+                    const androidPassEl = document.getElementById('androidPassCount' + suffix);
+                    if (androidPassEl) androidPassEl.textContent = stats.android.passed;
+                    const androidFailEl = document.getElementById('androidFailCount' + suffix);
+                    if (androidFailEl) androidFailEl.textContent = stats.android.failed;
+                    const androidSkipEl = document.getElementById('androidSkipCount' + suffix);
+                    if (androidSkipEl) androidSkipEl.textContent = stats.android.skipped;
+                    const androidPendingEl = document.getElementById('androidPendingCount' + suffix);
+                    if (androidPendingEl) androidPendingEl.textContent = stats.android.pending;
 
-                document.getElementById('iosPassCount').textContent = stats.ios.passed;
-                document.getElementById('iosFailCount').textContent = stats.ios.failed;
-                document.getElementById('iosSkipCount').textContent = stats.ios.skipped;
-                document.getElementById('iosPendingCount').textContent = stats.ios.pending;
+                    const iosPassEl = document.getElementById('iosPassCount' + suffix);
+                    if (iosPassEl) iosPassEl.textContent = stats.ios.passed;
+                    const iosFailEl = document.getElementById('iosFailCount' + suffix);
+                    if (iosFailEl) iosFailEl.textContent = stats.ios.failed;
+                    const iosSkipEl = document.getElementById('iosSkipCount' + suffix);
+                    if (iosSkipEl) iosSkipEl.textContent = stats.ios.skipped;
+                    const iosPendingEl = document.getElementById('iosPendingCount' + suffix);
+                    if (iosPendingEl) iosPendingEl.textContent = stats.ios.pending;
 
-                document.getElementById('h5PassCount').textContent = stats.h5.passed;
-                document.getElementById('h5FailCount').textContent = stats.h5.failed;
-                document.getElementById('h5SkipCount').textContent = stats.h5.skipped;
-                document.getElementById('h5PendingCount').textContent = stats.h5.pending;
+                    const h5PassEl = document.getElementById('h5PassCount' + suffix);
+                    if (h5PassEl) h5PassEl.textContent = stats.h5.passed;
+                    const h5FailEl = document.getElementById('h5FailCount' + suffix);
+                    if (h5FailEl) h5FailEl.textContent = stats.h5.failed;
+                    const h5SkipEl = document.getElementById('h5SkipCount' + suffix);
+                    if (h5SkipEl) h5SkipEl.textContent = stats.h5.skipped;
+                    const h5PendingEl = document.getElementById('h5PendingCount' + suffix);
+                    if (h5PendingEl) h5PendingEl.textContent = stats.h5.pending;
+                };
+
+                // 更新首页TAB（无后缀）
+                updateElements('');
+                // 更新数据管理TAB（带2后缀）
+                updateElements('2');
             }
         } catch (error) {
             console.error('获取统计数据失败:', error);
             // 失败时显示 0
-            document.getElementById('totalCount').textContent = '0';
-            ['android', 'ios', 'h5'].forEach(platform => {
-                document.getElementById(`${platform}PassCount`).textContent = '0';
-                document.getElementById(`${platform}FailCount`).textContent = '0';
-                document.getElementById(`${platform}SkipCount`).textContent = '0';
-                document.getElementById(`${platform}PendingCount`).textContent = '0';
-            });
+            const updateZeros = (suffix = '') => {
+                const totalEl = document.getElementById('totalCount' + suffix);
+                if (totalEl) totalEl.textContent = '0';
+                ['android', 'ios', 'h5'].forEach(platform => {
+                    const passEl = document.getElementById(`${platform}PassCount` + suffix);
+                    if (passEl) passEl.textContent = '0';
+                    const failEl = document.getElementById(`${platform}FailCount` + suffix);
+                    if (failEl) failEl.textContent = '0';
+                    const skipEl = document.getElementById(`${platform}SkipCount` + suffix);
+                    if (skipEl) skipEl.textContent = '0';
+                    const pendingEl = document.getElementById(`${platform}PendingCount` + suffix);
+                    if (pendingEl) pendingEl.textContent = '0';
+                });
+            };
+            updateZeros('');
+            updateZeros('2');
         }
     }
 
