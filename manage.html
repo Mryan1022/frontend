@@ -447,6 +447,132 @@
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
         }
 
+        /* 新的按钮布局区域 */
+        .buttons-area {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            margin-top: 20px;
+        }
+
+        .buttons-section {
+            margin-bottom: 15px;
+        }
+
+        .buttons-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 状态按钮组 - 横向排列 */
+        .status-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .status-btn:active {
+            transform: translateY(0);
+        }
+
+        .status-btn.btn-pass {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .status-btn.btn-pass:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .status-btn.btn-fail {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .status-btn.btn-fail:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .status-btn.btn-skip {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .status-btn.btn-skip:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+
+        /* 平台按钮组 - 横向排列 */
+        .platform-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .platform-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: #4b5563;
+        }
+
+        .platform-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .platform-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .platform-btn:active {
+            transform: translateY(0);
+        }
+
         .btn-export {
             background: #6366f1;
             color: white;
@@ -1157,15 +1283,15 @@
                     <div class="stat-item">总计: <strong id="totalCount2">0</strong></div>
                 </div>
                 <div class="stats">
-                    <div class="stat-item">🤖 Android - ✅:<strong id="androidPassCount2">0</strong> ❌:<strong id="androidFailCount2">0</strong> ⏭️:<strong
+                    <div class="stat-item">📱 Android - ✓:<strong id="androidPassCount2">0</strong> ✗:<strong id="androidFailCount2">0</strong> 〇:<strong
                             id="androidSkipCount2">0</strong> ⏸️:<strong id="androidPendingCount2">0</strong></div>
                 </div>
                 <div class="stats">
-                    <div class="stat-item">🍎 iOS - ✅:<strong id="iosPassCount2">0</strong> ❌:<strong id="iosFailCount2">0</strong> ⏭️:<strong
+                    <div class="stat-item">🍎 iOS - ✓:<strong id="iosPassCount2">0</strong> ✗:<strong id="iosFailCount2">0</strong> 〇:<strong
                             id="iosSkipCount2">0</strong> ⏸️:<strong id="iosPendingCount2">0</strong></div>
                 </div>
                 <div class="stats">
-                    <div class="stat-item">🌐 H5 - ✅:<strong id="h5PassCount2">0</strong> ❌:<strong id="h5FailCount2">0</strong> ⏭️:<strong
+                    <div class="stat-item">🌐 Web - ✓:<strong id="h5PassCount2">0</strong> ✗:<strong id="h5FailCount2">0</strong> 〇:<strong
                             id="h5SkipCount2">0</strong> ⏸️:<strong id="h5PendingCount2">0</strong></div>
                 </div>
             </div>
@@ -2471,9 +2597,9 @@ for (let i = 0; i < rows.length; i++) {
                         caseItem.innerHTML = `
                             <span>${tc.name.replace(/\*/g, '')}</span>
                             <div class="status-group">
-                                <span class="status-badge status-${tc.androidStatus}" title="Android: ${getStatusText(tc.androidStatus)}">🤖</span>
+                                <span class="status-badge status-${tc.androidStatus}" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
                                 <span class="status-badge status-${tc.iosStatus}" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
-                                <span class="status-badge status-${tc.h5Status}" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
+                                <span class="status-badge status-${tc.h5Status}" title="Web: ${getStatusText(tc.h5Status)}">🌐</span>
                             </div>
                         `;
                         caseItem.onclick = () => showTestCase(tc);
@@ -2799,33 +2925,53 @@ for (let i = 0; i < rows.length; i++) {
                             </div>
                         </div>
 
-                        <div class="test-case-actions">
-                            <div class="platform-tabs">
-                                <div class="platform-tab ${currentPlatform === 'android' ? 'active' : ''}" onclick="switchPlatform('android')">
-                                    🤖 Android
-                                </div>
-                                <div class="platform-tab ${currentPlatform === 'ios' ? 'active' : ''}" onclick="switchPlatform('ios')">
-                                    🍎 iOS
-                                </div>
-                                <div class="platform-tab ${currentPlatform === 'h5' ? 'active' : ''}" onclick="switchPlatform('h5')">
-                                    🌐 H5
+                        <!-- 新的按钮布局区域 -->
+                        <div class="buttons-area">
+                            <!-- 状态按钮 -->
+                            <div class="buttons-section">
+                                <div class="section-label">测试状态</div>
+                                <div class="status-buttons">
+                                    <button class="status-btn btn-pass" onclick="setStatus('passed')">
+                                        <span>✓</span>
+                                        <span>通过</span>
+                                    </button>
+                                    <button class="status-btn btn-fail" onclick="setStatus('failed')">
+                                        <span>✗</span>
+                                        <span>不通过</span>
+                                    </button>
+                                    <button class="status-btn btn-skip" onclick="setStatus('skipped')">
+                                        <span>〇</span>
+                                        <span>跳过</span>
+                                    </button>
                                 </div>
                             </div>
 
-                            <div class="action-buttons" style="flex-direction: column;">
-                                <button class="action-btn btn-pass" onclick="setStatus('passed')">
-                                    ✅ 通过
-                                </button>
-                                <button class="action-btn btn-fail" onclick="setStatus('failed')">
-                                    ❌ 不通过
-                                </button>
-                                <button class="action-btn btn-skip" onclick="setStatus('skipped')">
-                                    ⏭️ 跳过
-                                </button>
+                            <!-- 平台选择按钮 -->
+                            <div class="buttons-section">
+                                <div class="section-label">测试平台</div>
+                                <div class="platform-buttons">
+                                    <button class="platform-btn ${currentPlatform === 'android' ? 'active' : ''}" onclick="switchPlatform('android')">
+                                        <span>📱</span>
+                                        <span>Android</span>
+                                    </button>
+                                    <button class="platform-btn ${currentPlatform === 'ios' ? 'active' : ''}" onclick="switchPlatform('ios')">
+                                        <span>🍎</span>
+                                        <span>iOS</span>
+                                    </button>
+                                    <button class="platform-btn ${currentPlatform === 'h5' ? 'active' : ''}" onclick="switchPlatform('h5')">
+                                        <span>🌐</span>
+                                        <span>Web</span>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div style="margin-top: 20px;">
-                                <button class="btn-edit" onclick="enterEditMode()" style="width: 100%;">✏️ 编辑测试用例</button>
+                            <!-- 编辑按钮 -->
+                            <div class="buttons-section">
+                                <div class="section-label">用例操作</div>
+                                <button class="btn-edit" onclick="enterEditMode()" style="width: 100%;">
+                                    <span>✏️</span>
+                                    <span>编辑测试用例</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -3152,9 +3298,9 @@ for (let i = 0; i < rows.length; i++) {
 
             // 为每个平台创建圆盘
             const platforms = [
-                { name: 'Android', emoji: '🤖', statusKey: 'androidStatus' },
+                { name: 'Android', emoji: '📱', statusKey: 'androidStatus' },
                 { name: 'iOS', emoji: '🍎', statusKey: 'iosStatus' },
-                { name: 'H5', emoji: '🌐', statusKey: 'h5Status' }
+                { name: 'Web', emoji: '🌐', statusKey: 'h5Status' }
             ];
 
             platforms.forEach(platform => {
