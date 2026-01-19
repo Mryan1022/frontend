@@ -2681,8 +2681,15 @@ for (let i = 0; i < rows.length; i++) {
             menuDiv.style.background = '#fcfcfc';
         }
 
-        // 只有有子菜单或测试用例时才显示折叠图标
-        const hasContent = menuNode.children.length > 0 || menuTestCases.filter(tc => tc.menuId === menuNode.id).length > 0;
+        // 判断菜单是否有内容（优先使用 API 返回的信息，支持懒加载）
+        let hasContent;
+        if (menuNode.stats) {
+            // 懒加载模式：使用 API 返回的 has_children 和 stats 判断
+            hasContent = menuNode.has_children || menuNode.stats.total_test_cases > 0;
+        } else {
+            // 兼容旧模式：使用已加载的数据判断
+            hasContent = menuNode.children.length > 0 || menuTestCases.filter(tc => tc.menuId === menuNode.id).length > 0;
+        }
 
         // 检查菜单是否应该展开（使用菜单 ID）
         const shouldExpand = expandedMenus.has(menuNode.id);
