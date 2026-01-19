@@ -2695,12 +2695,19 @@ for (let i = 0; i < rows.length; i++) {
         const shouldExpand = expandedMenus.has(menuNode.id);
         const collapseIcon = hasContent ? `<span class="collapse-icon ${shouldExpand ? '' : 'collapsed'}">${shouldExpand ? '▼' : '▶'}</span> ` : '';
 
-        // 从stats字段获取测试用例数量（如果有）
-        const testCaseCount = menuNode.stats ? menuNode.stats.total_test_cases : menuTestCases.length;
+        // 显示逻辑：有子菜单显示子菜单数量，没有子菜单显示测试用例数量
+        let displayCount;
+        if (menuNode.has_children) {
+            // 有子菜单：显示子菜单数量
+            displayCount = menuNode.children_count || menuNode.children.length;
+        } else {
+            // 没有子菜单：显示测试用例数量
+            displayCount = menuNode.stats ? menuNode.stats.total_test_cases : menuTestCases.length;
+        }
 
         menuDiv.innerHTML = `
             <span>${collapseIcon}${menuNode.name}</span>
-            <span>${testCaseCount}</span>
+            <span>${displayCount}</span>
         `;
 
         // 右键菜单
