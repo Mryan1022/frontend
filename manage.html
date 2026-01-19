@@ -1506,8 +1506,8 @@
 
             uploadSuccess = true;
 
-            // 清除相关缓存
-            clearCache(currentMenuId);
+            // 清除所有缓存（因为新上传的用例可能影响所有菜单的统计数据）
+            clearCache();
 
             // 重新加载数据
             showLoading('上传成功，正在刷新数据...');
