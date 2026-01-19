@@ -235,6 +235,26 @@
             margin-left: 0;
         }
 
+        .test-case-name {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .test-case-name:hover {
+            color: #667eea;
+            text-decoration: underline;
+        }
+
+        .status-badge {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .status-badge:hover {
+            transform: scale(1.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
         .status-passed {
             background: #10b981;
             color: white;
@@ -2776,14 +2796,30 @@ for (let i = 0; i < rows.length; i++) {
                         }
 
                         caseItem.innerHTML = `
-                            <span>${tc.name.replace(/\*/g, '')}</span>
+                            <span class="test-case-name">${tc.name.replace(/\*/g, '')}</span>
                             <div class="status-group">
-                                <span class="status-badge status-${tc.androidStatus}" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
-                                <span class="status-badge status-${tc.iosStatus}" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
-                                <span class="status-badge status-${tc.h5Status}" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
+                                <span class="status-badge status-${tc.androidStatus}" data-platform="android" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
+                                <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
+                                <span class="status-badge status-${tc.h5Status}" data-platform="h5" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
                             </div>
                         `;
-                        caseItem.onclick = () => showTestCase(tc);
+
+                        // 点击标题 → 默认跳转到 Android
+                        const nameSpan = caseItem.querySelector('.test-case-name');
+                        nameSpan.onclick = (e) => {
+                            e.stopPropagation();
+                            showTestCase(tc, 'android');
+                        };
+
+                        // 点击图标 → 跳转到对应平台
+                        caseItem.querySelectorAll('.status-badge').forEach(badge => {
+                            badge.onclick = (e) => {
+                                e.stopPropagation();
+                                const platform = badge.getAttribute('data-platform');
+                                showTestCase(tc, platform);
+                            };
+                        });
+
                         caseList.appendChild(caseItem);
                     });
 
@@ -2830,14 +2866,30 @@ for (let i = 0; i < rows.length; i++) {
                     }
 
                     caseItem.innerHTML = `
-                        <span>${tc.name.replace(/\*/g, '')}</span>
+                        <span class="test-case-name">${tc.name.replace(/\*/g, '')}</span>
                         <div class="status-group">
-                            <span class="status-badge status-${tc.androidStatus}" title="Android: ${getStatusText(tc.androidStatus)}">🤖</span>
-                            <span class="status-badge status-${tc.iosStatus}" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
-                            <span class="status-badge status-${tc.h5Status}" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
+                            <span class="status-badge status-${tc.androidStatus}" data-platform="android" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
+                            <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
+                            <span class="status-badge status-${tc.h5Status}" data-platform="h5" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
                         </div>
                     `;
-                    caseItem.onclick = () => showTestCase(tc);
+
+                    // 点击标题 → 默认跳转到 Android
+                    const nameSpan = caseItem.querySelector('.test-case-name');
+                    nameSpan.onclick = (e) => {
+                        e.stopPropagation();
+                        showTestCase(tc, 'android');
+                    };
+
+                    // 点击图标 → 跳转到对应平台
+                    caseItem.querySelectorAll('.status-badge').forEach(badge => {
+                        badge.onclick = (e) => {
+                            e.stopPropagation();
+                            const platform = badge.getAttribute('data-platform');
+                            showTestCase(tc, platform);
+                        };
+                    });
+
                     caseList.appendChild(caseItem);
                 });
 
@@ -2953,8 +3005,9 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 显示测试用例详情（支持懒加载）
-    async function showTestCase(testCase) {
+    async function showTestCase(testCase, platform = 'android') {
         currentTestCase = testCase;
+        currentPlatform = platform; // 设置当前平台
         isEditMode = false;
         const detail = document.getElementById('testCaseDetail');
         const emptyState = document.getElementById('emptyState');
