@@ -2785,6 +2785,7 @@ for (let i = 0; i < rows.length; i++) {
                     cases.forEach(tc => {
                         const caseItem = document.createElement('li');
                         caseItem.className = 'test-case-item';
+                        caseItem.setAttribute('data-test-case-id', tc.id); // 添加用例 ID
 
                         if (searchKeyword && searchResults.some(r => r.testCase.id === tc.id)) {
                             caseItem.classList.add('search-highlight');
@@ -2853,6 +2854,7 @@ for (let i = 0; i < rows.length; i++) {
                 directTestCases.forEach(tc => {
                     const caseItem = document.createElement('li');
                     caseItem.className = 'test-case-item';
+                    caseItem.setAttribute('data-test-case-id', tc.id); // 添加用例 ID
 
                     if (searchKeyword && searchResults.some(r => r.testCase.id === tc.id)) {
                         caseItem.classList.add('search-highlight');
@@ -3022,13 +3024,18 @@ for (let i = 0; i < rows.length; i++) {
         renderTestCaseDetail();
 
         // 高亮当前选中的测试用例
-        document.querySelectorAll('.test-case-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        if (event && event.target) {
-            const item = event.target.closest('.test-case-item');
-            if (item) item.classList.add('active');
-        }
+        // 使用 setTimeout 确保 DOM 已经渲染完成
+        setTimeout(() => {
+            document.querySelectorAll('.test-case-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // 通过 testCase.id 找到对应的用例项并高亮
+            const activeItem = document.querySelector(`.test-case-item[data-test-case-id="${testCase.id}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+        }, 0);
     }
 
     // 渲染测试用例详情（查看或编辑模式）
