@@ -201,9 +201,10 @@
             transition: all 0.3s;
             font-size: 14px;
             display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 6px;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
         }
 
         .test-case-item:hover {
@@ -236,13 +237,7 @@
         }
 
         .test-case-name {
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .test-case-name:hover {
-            color: #667eea;
-            text-decoration: underline;
+            flex: 1;
         }
 
         .status-badge {
@@ -2804,14 +2799,12 @@ for (let i = 0; i < rows.length; i++) {
                             </div>
                         `;
 
-                        // 点击标题 → 默认跳转到 Android
-                        const nameSpan = caseItem.querySelector('.test-case-name');
-                        nameSpan.onclick = (e) => {
-                            e.stopPropagation();
+                        // 点击整个用例行（标题区域）→ 默认跳转到 Android
+                        caseItem.onclick = (e) => {
                             showTestCase(tc, 'android');
                         };
 
-                        // 点击图标 → 跳转到对应平台
+                        // 点击图标 → 跳转到对应平台（阻止冒泡，避免触发整行点击）
                         caseItem.querySelectorAll('.status-badge').forEach(badge => {
                             badge.onclick = (e) => {
                                 e.stopPropagation();
@@ -2874,14 +2867,12 @@ for (let i = 0; i < rows.length; i++) {
                         </div>
                     `;
 
-                    // 点击标题 → 默认跳转到 Android
-                    const nameSpan = caseItem.querySelector('.test-case-name');
-                    nameSpan.onclick = (e) => {
-                        e.stopPropagation();
+                    // 点击整个用例行（标题区域）→ 默认跳转到 Android
+                    caseItem.onclick = (e) => {
                         showTestCase(tc, 'android');
                     };
 
-                    // 点击图标 → 跳转到对应平台
+                    // 点击图标 → 跳转到对应平台（阻止冒泡，避免触发整行点击）
                     caseItem.querySelectorAll('.status-badge').forEach(badge => {
                         badge.onclick = (e) => {
                             e.stopPropagation();
@@ -3379,13 +3370,7 @@ for (let i = 0; i < rows.length; i++) {
     function switchPlatform(platform) {
         currentPlatform = platform;
 
-        // 更新Tab样式
-        document.querySelectorAll('.platform-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        event.target.classList.add('active');
-
-        // 重新渲染详情，以显示正确的不通过原因
+        // 重新渲染详情，以显示正确的不通过原因和平台按钮状态
         renderTestCaseDetail();
 
         // 显示提示
