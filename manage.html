@@ -2462,7 +2462,7 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 重命名菜单
-    function renameMenu() {
+    async function renameMenu() {
         hideContextMenu();
         if (!currentMenuId) return;
 
@@ -2472,11 +2472,34 @@ for (let i = 0; i < rows.length; i++) {
         const newName = prompt('请输入新的菜单名称：', menu.name);
         if (!newName || newName.trim() === '') return;
 
-        menu.name = newName.trim();
-        saveToLocalStorage();
-        renderMenuList();
-        // updateMenuSelector(); // 进度统计功能已移除
-        showToast('菜单名称已修改');
+        try {
+            showLoading('正在修改菜单名称...');
+
+            // 调用 API 更新菜单名称
+            await apiService.updateMenu(currentMenuId, newName.trim());
+
+            // 更新本地数据
+            menu.name = newName.trim();
+
+            // 更新所有缓存中相同菜单的名称
+            Object.values(menuChildrenCache).forEach(children => {
+                const cachedMenu = children.find(m => m.id === currentMenuId);
+                if (cachedMenu) {
+                    cachedMenu.name = newName.trim();
+                }
+            });
+
+            // 重新渲染菜单列表
+            renderMenuList();
+            updateSearchMenuFilter();
+
+            addLog('修改菜单名称', `菜单: ${menu.name} → ${newName.trim()}`);
+            showToast('菜单名称已修改');
+        } catch (error) {
+            console.error('修改菜单名称失败:', error);
+            hideLoading();
+            alert('修改菜单名称失败: ' + error.message);
+        }
     }
 
     // 删除菜单

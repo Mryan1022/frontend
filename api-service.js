@@ -76,6 +76,14 @@ class APIService {
         });
     }
 
+    // 更新菜单名称
+    async updateMenu(menuId, name) {
+        return await this.request(`/test-cases/menu/${menuId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ name })
+        });
+    }
+
     // 删除菜单
     async deleteMenu(menuId) {
         return await this.request(`/test-cases/menu/${menuId}`, {
