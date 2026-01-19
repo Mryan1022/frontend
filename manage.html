@@ -3000,74 +3000,72 @@ for (let i = 0; i < rows.length; i++) {
                         <button class="btn-cancel" onclick="cancelEdit()" style="float: right; padding: 6px 12px; font-size: 14px;">取消</button>
                     </div>
 
-                    <div style="display: flex; gap: 30px; flex: 1; overflow: hidden; max-height: calc(100% - 80px);">
-                        <div class="test-case-content" style="overflow-y: auto;">
-                            <div class="test-case-section">
-                                <div class="section-title">
-                                    <span>📝</span>
-                                    <span>测试用例名称</span>
-                                </div>
-                                <input type="text" class="edit-input" id="editName" value="${testCase.name}" />
+                    <div class="test-case-content" style="overflow-y: auto; flex: 1; max-height: calc(100% - 80px);">
+                        <div class="test-case-section">
+                            <div class="section-title">
+                                <span>📝</span>
+                                <span>测试用例名称</span>
                             </div>
+                            <input type="text" class="edit-input" id="editName" value="${testCase.name}" />
+                        </div>
 
-                            <div class="test-case-section">
-                                <div class="section-title">
-                                    <span>📋</span>
-                                    <span>前置条件</span>
-                                </div>
-                                <div class="section-content">
-                                    <ul class="edit-list" id="editPreconditions">
-                                        ${testCase.preconditions.map((p, i) => `
-                                            <li class="edit-list-item">
-                                                <input type="text" value="${p}" data-index="${i}" />
-                                                <button class="btn-remove" onclick="removeItem('preconditions', ${i})">删除</button>
-                                            </li>
-                                        `).join('')}
-                                    </ul>
-                                    <button class="btn-add" onclick="addItem('preconditions')">+ 添加前置条件</button>
-                                </div>
+                        <div class="test-case-section">
+                            <div class="section-title">
+                                <span>📋</span>
+                                <span>前置条件</span>
                             </div>
+                            <div class="section-content">
+                                <ul class="edit-list" id="editPreconditions">
+                                    ${testCase.preconditions.map((p, i) => `
+                                        <li class="edit-list-item">
+                                            <input type="text" value="${p}" data-index="${i}" />
+                                            <button class="btn-remove" onclick="removeItem('preconditions', ${i})">删除</button>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                                <button class="btn-add" onclick="addItem('preconditions')">+ 添加前置条件</button>
+                            </div>
+                        </div>
 
-                            <div class="test-case-section">
-                                <div class="section-title">
-                                    <span>📝</span>
-                                    <span>操作步骤</span>
-                                </div>
-                                <div class="section-content">
-                                    <ul class="edit-list" id="editSteps">
-                                        ${testCase.steps.map((s, i) => `
-                                            <li class="edit-list-item">
-                                                <input type="text" value="${s}" data-index="${i}" />
-                                                <button class="btn-remove" onclick="removeItem('steps', ${i})">删除</button>
-                                            </li>
-                                        `).join('')}
-                                    </ul>
-                                    <button class="btn-add" onclick="addItem('steps')">+ 添加操作步骤</button>
-                                </div>
+                        <div class="test-case-section">
+                            <div class="section-title">
+                                <span>📝</span>
+                                <span>操作步骤</span>
                             </div>
+                            <div class="section-content">
+                                <ul class="edit-list" id="editSteps">
+                                    ${testCase.steps.map((s, i) => `
+                                        <li class="edit-list-item">
+                                            <input type="text" value="${s}" data-index="${i}" />
+                                            <button class="btn-remove" onclick="removeItem('steps', ${i})">删除</button>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                                <button class="btn-add" onclick="addItem('steps')">+ 添加操作步骤</button>
+                            </div>
+                        </div>
 
-                            <div class="test-case-section">
-                                <div class="section-title">
-                                    <span>✅</span>
-                                    <span>预期结果</span>
-                                </div>
-                                <div class="section-content">
-                                    <ul class="edit-list" id="editExpectedResults">
-                                        ${testCase.expectedResults.map((r, i) => `
-                                            <li class="edit-list-item">
-                                                <input type="text" value="${r}" data-index="${i}" />
-                                                <button class="btn-remove" onclick="removeItem('expectedResults', ${i})">删除</button>
-                                            </li>
-                                        `).join('')}
-                                    </ul>
-                                    <button class="btn-add" onclick="addItem('expectedResults')">+ 添加预期结果</button>
-                                </div>
+                        <div class="test-case-section">
+                            <div class="section-title">
+                                <span>✅</span>
+                                <span>预期结果</span>
                             </div>
+                            <div class="section-content">
+                                <ul class="edit-list" id="editExpectedResults">
+                                    ${testCase.expectedResults.map((r, i) => `
+                                        <li class="edit-list-item">
+                                            <input type="text" value="${r}" data-index="${i}" />
+                                            <button class="btn-remove" onclick="removeItem('expectedResults', ${i})">删除</button>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                                <button class="btn-add" onclick="addItem('expectedResults')">+ 添加预期结果</button>
+                            </div>
+                        </div>
 
-                            <div class="edit-actions">
-                                <button class="btn-save" onclick="saveTestCase()">💾 保存</button>
-                                <button class="btn-cancel" onclick="cancelEdit()">❌ 取消</button>
-                            </div>
+                        <div class="edit-actions">
+                            <button class="btn-save" onclick="saveTestCase()">💾 保存</button>
+                            <button class="btn-cancel" onclick="cancelEdit()">❌ 取消</button>
                         </div>
                     </div>
                 `;
@@ -3090,57 +3088,55 @@ for (let i = 0; i < rows.length; i++) {
                         ${testCase.name}
                     </div>
 
-                    <div style="display: flex; gap: 30px; flex: 1; overflow: hidden; max-height: calc(100% - 80px);">
-                        <div class="test-case-content" style="overflow-y: auto;">
-                            ${failReason ? `
-                            <div class="fail-reason-display">
-                                <div class="fail-reason-title">
-                                    <span>❌</span>
-                                    <span>${platformName} 不通过原因</span>
-                                </div>
-                                <div class="fail-reason-text">${failReason}</div>
+                    <div class="test-case-content" style="overflow-y: auto; flex: 1; max-height: calc(100% - 80px);">
+                        ${failReason ? `
+                        <div class="fail-reason-display">
+                            <div class="fail-reason-title">
+                                <span>❌</span>
+                                <span>${platformName} 不通过原因</span>
                             </div>
-                            ` : ''}
+                            <div class="fail-reason-text">${failReason}</div>
+                        </div>
+                        ` : ''}
 
-                            <div class="test-case-section">
-                                <div class="section-title">
-                                    <span>📋</span>
-                                    <span>前置条件</span>
-                                </div>
-                                <div class="section-content">
-                                    <ul>
-                                        ${testCase.preconditions.map(p => `<li>${p}</li>`).join('')}
-                                    </ul>
-                                </div>
+                        <div class="test-case-section">
+                            <div class="section-title">
+                                <span>📋</span>
+                                <span>前置条件</span>
                             </div>
-
-                            <div class="test-case-section">
-                                <div class="section-title">
-                                    <span>📝</span>
-                                    <span>操作步骤</span>
-                                </div>
-                                <div class="section-content">
-                                    <ul>
-                                        ${testCase.steps.map((s, i) => `<li>步骤${i + 1}：${s}</li>`).join('')}
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div class="test-case-section">
-                                <div class="section-title">
-                                    <span>✅</span>
-                                    <span>预期结果</span>
-                                </div>
-                                <div class="section-content">
-                                    <ul>
-                                        ${testCase.expectedResults.map(r => `<li>${r}</li>`).join('')}
-                                    </ul>
-                                </div>
+                            <div class="section-content">
+                                <ul>
+                                    ${testCase.preconditions.map(p => `<li>${p}</li>`).join('')}
+                                </ul>
                             </div>
                         </div>
 
-                        <!-- 新的按钮布局区域 -->
-                        <div class="buttons-area">
+                        <div class="test-case-section">
+                            <div class="section-title">
+                                <span>📝</span>
+                                <span>操作步骤</span>
+                            </div>
+                            <div class="section-content">
+                                <ul>
+                                    ${testCase.steps.map((s, i) => `<li>步骤${i + 1}：${s}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="test-case-section">
+                            <div class="section-title">
+                                <span>✅</span>
+                                <span>预期结果</span>
+                            </div>
+                            <div class="section-content">
+                                <ul>
+                                    ${testCase.expectedResults.map(r => `<li>${r}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- 按钮区域 - 放在预期结果下面 -->
+                        <div class="buttons-area" style="margin-top: 30px;">
                             <!-- 状态按钮 -->
                             <div class="buttons-section">
                                 <div class="section-label">测试状态</div>
