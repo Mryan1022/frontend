@@ -1506,6 +1506,9 @@
 
             uploadSuccess = true;
 
+            // 清除相关缓存
+            clearCache(currentMenuId);
+
             // 重新加载数据
             showLoading('上传成功，正在刷新数据...');
             await loadFromLocalStorage();
@@ -1609,6 +1612,120 @@
             Object.keys(testCaseListCache).forEach(key => delete testCaseListCache[key]);
             Object.keys(testCaseDetailCache).forEach(key => delete testCaseDetailCache[key]);
             loadedMenuIds.clear();
+        }
+    }
+
+    // 懒加载子菜单
+    async function loadMenuChildren(menuId) {
+        // 如果已经加载过，直接返回缓存
+        if (menuChildrenCache[menuId]) {
+            return menuChildrenCache[menuId];
+        }
+
+        try {
+            const result = await apiService.getMenuChildren(menuId);
+            if (result && result.success) {
+                menuChildrenCache[menuId] = result.data || [];
+                // 将子菜单添加到全局menus数组中
+                result.data.forEach(childMenu => {
+                    if (!menus.find(m => m.id === childMenu.id)) {
+                        menus.push(childMenu);
+                    }
+                });
+                return menuChildrenCache[menuId];
+            }
+            return [];
+        } catch (error) {
+            console.error('加载子菜单失败:', error);
+            return [];
+        }
+    }
+
+    // 懒加载测试用例列表
+    async function loadTestCaseList(menuId) {
+        // 如果已经加载过，直接返回缓存
+        if (testCaseListCache[menuId]) {
+            return testCaseListCache[menuId];
+        }
+
+        try {
+            const result = await apiService.getTestCasesByMenu(menuId);
+            if (result && result.success) {
+                const cases = (result.data || []).map(tc => ({
+                    id: tc.id,
+                    menuId: tc.menu_id,
+                    project: tc.project,
+                    name: tc.name,
+                    androidStatus: tc.android_status,
+                    androidFailReason: tc.android_fail_reason || '',
+                    iosStatus: tc.ios_status,
+                    iosFailReason: tc.ios_fail_reason || '',
+                    h5Status: tc.h5_status,
+                    h5FailReason: tc.h5_fail_reason || '',
+                    // 详情字段暂时不加载，等点击时再加载
+                    preconditions: [],
+                    steps: [],
+                    expectedResults: []
+                }));
+                testCaseListCache[menuId] = cases;
+                // 将测试用例添加到全局testCases数组中
+                cases.forEach(tc => {
+                    const existingIndex = testCases.findIndex(t => t.id === tc.id);
+                    if (existingIndex >= 0) {
+                        testCases[existingIndex] = tc;
+                    } else {
+                        testCases.push(tc);
+                    }
+                });
+                return cases;
+            }
+            return [];
+        } catch (error) {
+            console.error('加载测试用例列表失败:', error);
+            return [];
+        }
+    }
+
+    // 懒加载测试用例详情
+    async function loadTestCaseDetail(testCaseId) {
+        // 如果已经加载过，直接返回缓存
+        if (testCaseDetailCache[testCaseId]) {
+            return testCaseDetailCache[testCaseId];
+        }
+
+        try {
+            const result = await apiService.getTestCaseDetail(testCaseId);
+            if (result && result.success) {
+                const tc = result.data;
+                const detail = {
+                    id: tc.id,
+                    menuId: tc.menu_id,
+                    project: tc.project,
+                    name: tc.name,
+                    preconditions: parseToArray(tc.preconditions),
+                    steps: parseToArray(tc.steps),
+                    expectedResults: parseToArray(tc.expected_results),
+                    androidStatus: tc.android_status,
+                    androidFailReason: tc.android_fail_reason || '',
+                    iosStatus: tc.ios_status,
+                    iosFailReason: tc.ios_fail_reason || '',
+                    h5Status: tc.h5_status,
+                    h5FailReason: tc.h5_fail_reason || ''
+                };
+                testCaseDetailCache[testCaseId] = detail;
+                // 更新全局testCases数组
+                const existingIndex = testCases.findIndex(t => t.id === testCaseId);
+                if (existingIndex >= 0) {
+                    testCases[existingIndex] = detail;
+                } else {
+                    testCases.push(detail);
+                }
+                return detail;
+            }
+            return null;
+        } catch (error) {
+            console.error('加载测试用例详情失败:', error);
+            return null;
         }
     }
 
@@ -2282,6 +2399,9 @@ for (let i = 0; i < rows.length; i++) {
             // 调用 API 创建菜单
             await apiService.createMenu(menuName.trim());
 
+            // 清除所有缓存
+            clearCache();
+
             // 重新加载数据
             await loadFromLocalStorage();
 
@@ -2361,6 +2481,9 @@ for (let i = 0; i < rows.length; i++) {
 
             // 调用 API 删除菜单（会自动级联删除测试用例）
             await apiService.deleteMenu(currentMenuId);
+
+            // 清除所有缓存
+            clearCache();
 
             // 重新加载数据
             await loadFromLocalStorage();
@@ -2565,9 +2688,12 @@ for (let i = 0; i < rows.length; i++) {
         const shouldExpand = expandedMenus.has(menuNode.id);
         const collapseIcon = hasContent ? `<span class="collapse-icon ${shouldExpand ? '' : 'collapsed'}">${shouldExpand ? '▼' : '▶'}</span> ` : '';
 
+        // 从stats字段获取测试用例数量（如果有）
+        const testCaseCount = menuNode.stats ? menuNode.stats.total_test_cases : menuTestCases.length;
+
         menuDiv.innerHTML = `
             <span>${collapseIcon}${menuNode.name}</span>
-            <span>${menuTestCases.length}</span>
+            <span>${testCaseCount}</span>
         `;
 
         // 右键菜单
@@ -2705,9 +2831,9 @@ for (let i = 0; i < rows.length; i++) {
             }
         }
 
-        // 菜单折叠/展开
+        // 菜单折叠/展开（支持懒加载）
         if (hasContent) {
-            menuDiv.onclick = (e) => {
+            menuDiv.onclick = async (e) => {
                 if (e.button !== 0) return;
                 const icon = menuDiv.querySelector('.collapse-icon');
                 if (!icon) return;
@@ -2719,6 +2845,27 @@ for (let i = 0; i < rows.length; i++) {
                     icon.textContent = '▼';
                     menuContent.style.display = 'block';
                     expandedMenus.add(menuNode.id);
+
+                    // 懒加载：如果还没加载过子内容，则加载
+                    if (!loadedMenuIds.has(menuNode.id)) {
+                        loadedMenuIds.add(menuNode.id);
+
+                        // 显示加载提示
+                        const loadingDiv = document.createElement('div');
+                        loadingDiv.style.padding = '10px';
+                        loadingDiv.style.color = '#999';
+                        loadingDiv.style.fontSize = '12px';
+                        loadingDiv.textContent = '加载中...';
+                        menuContent.appendChild(loadingDiv);
+
+                        // 加载子菜单
+                        const children = await loadMenuChildren(menuNode.id);
+                        // 加载测试用例
+                        await loadTestCaseList(menuNode.id);
+
+                        // 重新渲染这个菜单节点
+                        renderMenuList();
+                    }
                 } else {
                     icon.classList.add('collapsed');
                     icon.textContent = '▶';
@@ -2791,8 +2938,8 @@ for (let i = 0; i < rows.length; i++) {
         renderMenuList();
     }
 
-    // 显示测试用例详情
-    function showTestCase(testCase) {
+    // 显示测试用例详情（支持懒加载）
+    async function showTestCase(testCase) {
         currentTestCase = testCase;
         isEditMode = false;
         const detail = document.getElementById('testCaseDetail');
@@ -2801,6 +2948,18 @@ for (let i = 0; i < rows.length; i++) {
         emptyState.style.display = 'none';
         detail.style.display = 'flex';
         detail.style.flexDirection = 'column';
+
+        // 如果测试用例没有详情数据，先加载
+        if (!testCase.preconditions || testCase.preconditions.length === 0) {
+            // 显示加载状态
+            detail.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">加载中...</div>';
+
+            // 加载完整详情
+            const fullTestCase = await loadTestCaseDetail(testCase.id);
+            if (fullTestCase) {
+                currentTestCase = fullTestCase;
+            }
+        }
 
         renderTestCaseDetail();
 
