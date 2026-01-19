@@ -1391,6 +1391,12 @@
     let logs = []; // 操作日志列表
     let currentTestCase = null;
     let currentPlatform = 'android'; // 默认选择Android平台
+
+    // 懒加载缓存
+    const menuChildrenCache = {}; // 子菜单缓存 { parentId: [children] }
+    const testCaseListCache = {}; // 测试用例列表缓存 { menuId: [testCases] }
+    const testCaseDetailCache = {}; // 测试用例详情缓存 { testCaseId: testCase }
+    let loadedMenuIds = new Set(); // 已加载子菜单的menu ID集合
     let currentMenuId = null; // 当前右键点击的菜单ID
     let currentProjectName = null; // 当前右键点击的项目名称
     let currentProjectMenuId = null; // 当前项目所属的菜单ID
@@ -1556,44 +1562,31 @@
         }
     }
 
-    // 从API加载数据
+    // 从API加载数据（优化：只加载一级菜单）
     async function loadFromLocalStorage() {
         try {
             showLoading('正在加载数据...');
 
-            // 调用API获取所有菜单和测试用例
-            const data = await apiService.getAllData();
+            // 只加载一级菜单（懒加载优化）
+            const result = await apiService.getMenusByLevel(1);
 
-            // 更新全局变量
-            menus = data.menus || [];
-            testCases = data.testCases || [];
-            logs = []; // 日志功能暂时使用本地存储
+            if (!result || !result.success) {
+                throw new Error('加载菜单失败');
+            }
 
-            // 转换字段名（后端使用下划线，前端使用驼峰）
-            testCases = testCases.map(tc => ({
-                id: tc.id,
-                menuId: tc.menu_id,
-                project: tc.project,
-                name: tc.name,
-                preconditions: parseToArray(tc.preconditions),
-                steps: parseToArray(tc.steps),
-                expectedResults: parseToArray(tc.expected_results),
-                androidStatus: tc.android_status,
-                androidFailReason: tc.android_fail_reason || '',
-                iosStatus: tc.ios_status,
-                iosFailReason: tc.ios_fail_reason || '',
-                h5Status: tc.h5_status,
-                h5FailReason: tc.h5_fail_reason || ''
-            }));
+            // 更新全局变量（只有一级菜单）
+            menus = result.data || [];
+            testCases = []; // 不再一次性加载所有测试用例
+            logs = [];
 
             // 渲染页面
             renderMenuList();
-            // updateMenuSelector(); // 进度统计功能已移除
             updateSearchMenuFilter(); // 更新搜索菜单过滤器
             updateStats();
             hideLoading();
             hideLoadError(); // 加载成功，确保隐藏错误提示
 
+            console.log(`✅ 首页加载完成，加载了 ${menus.length} 个一级菜单`);
             return true;
         } catch (e) {
             console.error('加载数据失败:', e);
@@ -1601,6 +1594,21 @@
             // 显示错误提示（带重新加载按钮）
             showLoadError();
             return false;
+        }
+    }
+
+    // 清除缓存（在增删改操作后调用）
+    function clearCache(menuId = null) {
+        if (menuId) {
+            delete menuChildrenCache[menuId];
+            delete testCaseListCache[menuId];
+            loadedMenuIds.delete(menuId);
+        } else {
+            // 清除所有缓存
+            Object.keys(menuChildrenCache).forEach(key => delete menuChildrenCache[key]);
+            Object.keys(testCaseListCache).forEach(key => delete testCaseListCache[key]);
+            Object.keys(testCaseDetailCache).forEach(key => delete testCaseDetailCache[key]);
+            loadedMenuIds.clear();
         }
     }
 

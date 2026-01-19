@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试用例详情页 - 新布局预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .preview-wrapper {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .layout-description {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 6px;
+        }
+
+        .layout-description h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .layout-description ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .layout-description li {
+            color: #1e3a8a;
+            margin-bottom: 5px;
+            position: relative;
+        }
+
+        .layout-description li::before {
+            content: "✓";
+            position: absolute;
+            left: -20px;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        /* 测试用例详情样式 */
+        .test-case-detail {
+            display: flex;
+            gap: 30px;
+            min-height: 600px;
+        }
+
+        .test-case-header {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            padding: 15px 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-case-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 20px;
+        }
+
+        .test-case-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .section-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .section-content li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #f9fafb;
+            border-radius: 6px;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .section-content li::before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        /* 新的按钮布局区域 */
+        .buttons-area {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            margin-top: 20px;
+        }
+
+        .buttons-section {
+            margin-bottom: 15px;
+        }
+
+        .buttons-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 状态按钮组 */
+        .status-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .status-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-pass {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-pass:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .btn-fail {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-fail:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .btn-skip {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-skip:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+
+        /* 平台按钮组 */
+        .platform-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .platform-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: #4b5563;
+        }
+
+        .platform-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .platform-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .platform-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 编辑按钮 */
+        .edit-btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .edit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 高亮提示 */
+        .highlight-box {
+            background: #fef3c7;
+            border: 2px dashed #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 30px;
+        }
+
+        .highlight-box h4 {
+            color: #92400e;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .highlight-box p {
+            color: #78350f;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .test-case-detail {
+                flex-direction: column;
+            }
+
+            .status-buttons,
+            .platform-buttons {
+                flex-direction: column;
+            }
+
+            .status-btn,
+            .platform-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">📱 测试用例详情页 - 新布局预览</h1>
+
+        <div class="preview-wrapper">
+            <div class="layout-description">
+                <h3>💡 新布局设计说明</h3>
+                <ul>
+                    <li>状态操作按钮（通过/不通过/跳过）横向排列在第一行</li>
+                    <li>平台选择按钮（Android/iOS/H5）横向排列在第二行</li>
+                    <li>编辑按钮独占第三行，全宽显示</li>
+                    <li>所有按钮放在预期结果下方，紧凑集中</li>
+                    <li>按钮更大更明显，方便快速点击</li>
+                </ul>
+            </div>
+
+            <div class="test-case-detail">
+                <div class="test-case-content">
+                    <div class="test-case-header">
+                        TC001 - VIP5用户查看神秘人特权页面
+                    </div>
+
+                    <div class="test-case-section">
+                        <div class="section-title">
+                            <span>📋</span>
+                            <span>前置条件</span>
+                        </div>
+                        <div class="section-content">
+                            <ul>
+                                <li>用户已登录系统</li>
+                                <li>用户VIP等级为VIP5或以上</li>
+                                <li>用户已获得神秘人功能权限</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="test-case-section">
+                        <div class="section-title">
+                            <span>📝</span>
+                            <span>操作步骤</span>
+                        </div>
+                        <div class="section-content">
+                            <ul>
+                                <li>步骤1：打开APP进入首页</li>
+                                <li>步骤2：点击"我的"进入个人中心</li>
+                                <li>步骤3：找到并点击"神秘人特权"入口</li>
+                                <li>步骤4：进入神秘人特权页面</li>
+                                <li>步骤5：查看页面展示的所有内容</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="test-case-section">
+                        <div class="section-title">
+                            <span>✅</span>
+                            <span>预期结果</span>
+                        </div>
+                        <div class="section-content">
+                            <ul>
+                                <li>页面成功加载，显示神秘人特权功能介绍</li>
+                                <li>底部固定显示购买按钮</li>
+                                <li>按钮文案为"立即购买(XXXXXX钻石)/xx 天"</li>
+                                <li>钻石价格和天数由后台配置正确显示</li>
+                                <li>页面UI符合设计规范，无样式错误</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 新的按钮布局区域 -->
+                    <div class="buttons-area">
+                        <!-- 状态操作按钮 -->
+                        <div class="buttons-section">
+                            <div class="section-label">测试状态</div>
+                            <div class="status-buttons">
+                                <button class="status-btn btn-pass">
+                                    <span>✅</span>
+                                    <span>通过</span>
+                                </button>
+                                <button class="status-btn btn-fail">
+                                    <span>❌</span>
+                                    <span>不通过</span>
+                                </button>
+                                <button class="status-btn btn-skip">
+                                    <span>⏭️</span>
+                                    <span>跳过</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 平台选择按钮 -->
+                        <div class="buttons-section">
+                            <div class="section-label">测试平台</div>
+                            <div class="platform-buttons">
+                                <button class="platform-btn active">
+                                    <span>🤖</span>
+                                    <span>Android</span>
+                                </button>
+                                <button class="platform-btn">
+                                    <span>🍎</span>
+                                    <span>iOS</span>
+                                </button>
+                                <button class="platform-btn">
+                                    <span>🌐</span>
+                                    <span>H5</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 编辑按钮 -->
+                        <div class="buttons-section">
+                            <div class="section-label">用例操作</div>
+                            <button class="edit-btn">
+                                <span>✏️</span>
+                                <span>编辑测试用例</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <h4>🎯 布局优势</h4>
+                <p>
+                    <strong>1. 操作集中：</strong>所有按钮在预期结果下方集中显示，无需滚动即可看到所有操作。<br>
+                    <strong>2. 点击便捷：</strong>按钮横向排列，大小合适，手指或鼠标点击更容易。<br>
+                    <strong>3. 逻辑清晰：</strong>测试状态 → 选择平台 → 编辑用例，操作流程自然。<br>
+                    <strong>4. 视觉舒适：</strong>按钮有明显的视觉层次和颜色区分，一目了然。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 平台按钮切换效果
+        document.querySelectorAll('.platform-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.platform-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+
+        // 状态按钮点击反馈
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<span>✓</span><span>已标记</span>';
+                this.style.opacity = '0.8';
+
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.style.opacity = '1';
+                }, 1000);
+            });
+        });
+
+        // 编辑按钮点击反馈
+        document.querySelector('.edit-btn').addEventListener('click', function() {
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<span>✓</span><span>进入编辑模式</span>';
+            this.style.opacity = '0.8';
+
+            setTimeout(() => {
+                this.innerHTML = originalHTML;
+                this.style.opacity = '1';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

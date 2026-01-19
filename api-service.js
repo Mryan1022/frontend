@@ -42,9 +42,29 @@ class APIService {
 
     // ==================== 菜单相关 ====================
 
-    // 获取所有菜单和测试用例
+    // 获取所有菜单和测试用例（旧接口，保留兼容）
     async getAllData() {
         return await this.request('/test-cases');
+    }
+
+    // 新优化接口：获取指定层级的菜单
+    async getMenusByLevel(level = 1) {
+        return await this.request(`/test-cases/menus?level=${level}`);
+    }
+
+    // 新优化接口：获取子菜单
+    async getMenuChildren(parentId) {
+        return await this.request(`/test-cases/menus/${parentId}/children`);
+    }
+
+    // 新优化接口：获取菜单下的测试用例列表（精简版）
+    async getTestCasesByMenu(menuId) {
+        return await this.request(`/test-cases/menus/${menuId}/test-cases`);
+    }
+
+    // 新优化接口：获取测试用例详情（完整版）
+    async getTestCaseDetail(testCaseId) {
+        return await this.request(`/test-cases/${testCaseId}/detail`);
     }
 
     // 创建菜单
