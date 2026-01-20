@@ -216,6 +216,16 @@
             color: white;
         }
 
+        .test-case-item.dragging {
+            opacity: 0.5;
+            cursor: move;
+        }
+
+        .menu-item.drag-over {
+            background: #e0e7ff !important;
+            border: 2px dashed #667eea;
+        }
+
         .status-badge {
             padding: 3px 6px;
             border-radius: 8px;
@@ -1356,6 +1366,19 @@
         </div>
     </div>
 
+    <!-- 测试用例右键菜单 -->
+    <div id="testCaseContextMenu" class="context-menu">
+        <div class="context-menu-item" onclick="copyTestCase()">
+            📋 复制
+        </div>
+        <div class="context-menu-item" onclick="pasteTestCase()" id="pasteMenuItem">
+            📄 粘贴
+        </div>
+        <div class="context-menu-item danger" onclick="deleteTestCaseFromContextMenu()">
+            🗑️ 删除
+        </div>
+    </div>
+
     <!-- 不通过原因弹窗 -->
     <div id="failReasonModal" class="modal-overlay">
         <div class="modal-content">
@@ -2446,10 +2469,162 @@ for (let i = 0; i < rows.length; i++) {
     function hideContextMenu() {
         document.getElementById('contextMenu').style.display = 'none';
         document.getElementById('projectContextMenu').style.display = 'none';
+        document.getElementById('testCaseContextMenu').style.display = 'none';
     }
 
     // 点击页面其他地方隐藏右键菜单
     document.addEventListener('click', hideContextMenu);
+
+    // 测试用例右键菜单相关
+    let contextMenuTestCaseId = null; // 当前右键点击的测试用例ID
+    let clipboardTestCase = null; // 剪贴板中的测试用例
+
+    // 显示测试用例右键菜单
+    function showTestCaseContextMenu(e, testCaseId) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        contextMenuTestCaseId = testCaseId;
+
+        const contextMenu = document.getElementById('testCaseContextMenu');
+        const pasteMenuItem = document.getElementById('pasteMenuItem');
+
+        // 如果剪贴板中有测试用例，启用粘贴选项
+        if (clipboardTestCase) {
+            pasteMenuItem.style.opacity = '1';
+            pasteMenuItem.style.pointerEvents = 'auto';
+        } else {
+            pasteMenuItem.style.opacity = '0.5';
+            pasteMenuItem.style.pointerEvents = 'none';
+        }
+
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = e.pageX + 'px';
+        contextMenu.style.top = e.pageY + 'px';
+    }
+
+    // 复制测试用例
+    async function copyTestCase() {
+        hideContextMenu();
+        if (!contextMenuTestCaseId) return;
+
+        try {
+            // 加载完整的测试用例详情
+            const testCase = await loadTestCaseDetail(contextMenuTestCaseId);
+            if (testCase) {
+                clipboardTestCase = testCase;
+                showToast('测试用例已复制');
+                addLog('复制测试用例', `用例: ${testCase.name}`);
+            }
+        } catch (error) {
+            console.error('复制测试用例失败:', error);
+            showToast('复制失败: ' + error.message);
+        }
+    }
+
+    // 粘贴测试用例
+    async function pasteTestCase() {
+        hideContextMenu();
+        if (!clipboardTestCase || !contextMenuTestCaseId) return;
+
+        try {
+            // 获取目标测试用例所在的菜单
+            const targetTestCase = testCases.find(tc => tc.id === contextMenuTestCaseId);
+            if (!targetTestCase) {
+                showToast('找不到目标测试用例');
+                return;
+            }
+
+            const targetMenuId = targetTestCase.menuId;
+
+            showLoading('正在粘贴测试用例...');
+
+            // 创建测试用例副本
+            const newTestCase = {
+                menuId: targetMenuId,
+                name: clipboardTestCase.name + ' (副本)',
+                project: clipboardTestCase.project || '',
+                preconditions: clipboardTestCase.preconditions || [],
+                steps: clipboardTestCase.steps || [],
+                expectedResults: clipboardTestCase.expectedResults || [],
+                androidStatus: 'pending',
+                iosStatus: 'pending',
+                h5Status: 'pending'
+            };
+
+            // 调用 API 创建新测试用例
+            const result = await apiService.createTestCase(newTestCase);
+
+            if (result && result.success) {
+                // 清除相关缓存
+                delete testCaseListCache[targetMenuId];
+
+                // 重新加载测试用例列表
+                await loadTestCaseList(targetMenuId);
+
+                // 重新渲染菜单列表
+                renderMenuList();
+
+                addLog('粘贴测试用例', `从 ${clipboardTestCase.name} 创建副本到菜单`);
+                showToast('测试用例已粘贴');
+            }
+        } catch (error) {
+            console.error('粘贴测试用例失败:', error);
+            showToast('粘贴失败: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // 从右键菜单删除测试用例
+    async function deleteTestCaseFromContextMenu() {
+        hideContextMenu();
+        if (!contextMenuTestCaseId) return;
+
+        const testCase = testCases.find(tc => tc.id === contextMenuTestCaseId);
+        if (!testCase) {
+            showToast('找不到测试用例');
+            return;
+        }
+
+        if (!confirm(`确定要删除测试用例"${testCase.name}"吗？此操作不可恢复！`)) {
+            return;
+        }
+
+        try {
+            showLoading('正在删除测试用例...');
+
+            await apiService.deleteTestCase(contextMenuTestCaseId);
+
+            // 从全局数组中移除
+            const index = testCases.findIndex(tc => tc.id === contextMenuTestCaseId);
+            if (index >= 0) {
+                testCases.splice(index, 1);
+            }
+
+            // 清除相关缓存
+            delete testCaseListCache[testCase.menuId];
+            delete testCaseDetailCache[contextMenuTestCaseId];
+
+            // 如果删除的是当前显示的测试用例，清空详情区
+            if (currentTestCase && currentTestCase.id === contextMenuTestCaseId) {
+                currentTestCase = null;
+                document.getElementById('testCaseDetail').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'flex';
+            }
+
+            // 重新渲染菜单列表
+            renderMenuList();
+
+            addLog('删除测试用例', `用例: ${testCase.name}`);
+            showToast('测试用例已删除');
+        } catch (error) {
+            console.error('删除测试用例失败:', error);
+            showToast('删除失败: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
 
     // 上传测试用例到菜单
     function uploadTestCasesToMenu() {
@@ -2751,6 +2926,70 @@ for (let i = 0; i < rows.length; i++) {
         // 右键菜单
         menuDiv.oncontextmenu = (e) => showContextMenu(e, menuNode.id);
 
+        // 拖拽悬停
+        menuDiv.ondragover = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'move';
+            menuDiv.classList.add('drag-over');
+        };
+
+        // 拖拽离开
+        menuDiv.ondragleave = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            menuDiv.classList.remove('drag-over');
+        };
+
+        // 拖拽放下
+        menuDiv.ondrop = async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            menuDiv.classList.remove('drag-over');
+
+            const testCaseId = e.dataTransfer.getData('testCaseId');
+            if (!testCaseId) return;
+
+            const targetMenuId = menuNode.id;
+
+            // 检查是否拖拽到原来的菜单
+            const testCase = testCases.find(tc => tc.id === testCaseId);
+            if (testCase && testCase.menuId === targetMenuId) {
+                showToast('测试用例已在该菜单中');
+                return;
+            }
+
+            try {
+                showLoading('正在移动测试用例...');
+
+                // 调用 API 移动测试用例
+                const result = await apiService.moveTestCase(testCaseId, targetMenuId);
+
+                if (result && result.success) {
+                    // 更新本地数据
+                    if (testCase) {
+                        const oldMenuId = testCase.menuId;
+                        testCase.menuId = targetMenuId;
+
+                        // 清除相关缓存
+                        delete testCaseListCache[oldMenuId];
+                        delete testCaseListCache[targetMenuId];
+                    }
+
+                    // 重新渲染菜单列表
+                    renderMenuList();
+
+                    addLog('移动测试用例', `用例 ${testCaseId} 移动到菜单 ${menuNode.name}`);
+                    showToast('测试用例已移动');
+                }
+            } catch (error) {
+                console.error('移动测试用例失败:', error);
+                showToast('移动失败: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        };
+
         // 创建内容容器
         const menuContent = document.createElement('div');
         menuContent.className = 'menu-content';
@@ -2809,6 +3048,7 @@ for (let i = 0; i < rows.length; i++) {
                         const caseItem = document.createElement('li');
                         caseItem.className = 'test-case-item';
                         caseItem.setAttribute('data-test-case-id', tc.id); // 添加用例 ID
+                        caseItem.draggable = true; // 启用拖拽
 
                         if (searchKeyword && searchResults.some(r => r.testCase.id === tc.id)) {
                             caseItem.classList.add('search-highlight');
@@ -2826,6 +3066,28 @@ for (let i = 0; i < rows.length; i++) {
                         // 点击整个用例行（标题区域）→ 默认跳转到 Android
                         caseItem.onclick = (e) => {
                             showTestCase(tc, 'android');
+                        };
+
+                        // 右键菜单
+                        caseItem.oncontextmenu = (e) => {
+                            showTestCaseContextMenu(e, tc.id);
+                        };
+
+                        // 拖拽开始
+                        caseItem.ondragstart = (e) => {
+                            e.stopPropagation();
+                            e.dataTransfer.setData('testCaseId', tc.id);
+                            e.dataTransfer.effectAllowed = 'move';
+                            caseItem.classList.add('dragging');
+                        };
+
+                        // 拖拽结束
+                        caseItem.ondragend = (e) => {
+                            caseItem.classList.remove('dragging');
+                            // 清除所有菜单的拖拽悬停状态
+                            document.querySelectorAll('.menu-item.drag-over').forEach(item => {
+                                item.classList.remove('drag-over');
+                            });
                         };
 
                         // 点击图标 → 跳转到对应平台（阻止冒泡，避免触发整行点击）
@@ -2878,6 +3140,7 @@ for (let i = 0; i < rows.length; i++) {
                     const caseItem = document.createElement('li');
                     caseItem.className = 'test-case-item';
                     caseItem.setAttribute('data-test-case-id', tc.id); // 添加用例 ID
+                    caseItem.draggable = true; // 启用拖拽
 
                     if (searchKeyword && searchResults.some(r => r.testCase.id === tc.id)) {
                         caseItem.classList.add('search-highlight');
@@ -2895,6 +3158,28 @@ for (let i = 0; i < rows.length; i++) {
                     // 点击整个用例行（标题区域）→ 默认跳转到 Android
                     caseItem.onclick = (e) => {
                         showTestCase(tc, 'android');
+                    };
+
+                    // 右键菜单
+                    caseItem.oncontextmenu = (e) => {
+                        showTestCaseContextMenu(e, tc.id);
+                    };
+
+                    // 拖拽开始
+                    caseItem.ondragstart = (e) => {
+                        e.stopPropagation();
+                        e.dataTransfer.setData('testCaseId', tc.id);
+                        e.dataTransfer.effectAllowed = 'move';
+                        caseItem.classList.add('dragging');
+                    };
+
+                    // 拖拽结束
+                    caseItem.ondragend = (e) => {
+                        caseItem.classList.remove('dragging');
+                        // 清除所有菜单的拖拽悬停状态
+                        document.querySelectorAll('.menu-item.drag-over').forEach(item => {
+                            item.classList.remove('drag-over');
+                        });
                     };
 
                     // 点击图标 → 跳转到对应平台（阻止冒泡，避免触发整行点击）

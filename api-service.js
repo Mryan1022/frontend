@@ -125,6 +125,14 @@ class APIService {
         });
     }
 
+    // 移动测试用例到其他菜单
+    async moveTestCase(id, targetMenuId) {
+        return await this.request(`/test-cases/${id}/move`, {
+            method: 'PATCH',
+            body: JSON.stringify({ targetMenuId })
+        });
+    }
+
     // 删除测试用例
     async deleteTestCase(id) {
         return await this.request(`/test-cases/${id}`, {
