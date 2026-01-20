@@ -2539,8 +2539,12 @@ for (let i = 0; i < rows.length; i++) {
 
             showLoading('正在粘贴测试用例...');
 
+            // 生成新的测试用例ID
+            const newId = 'test_case_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
             // 创建测试用例副本
             const newTestCase = {
+                id: newId,
                 menuId: targetMenuId,
                 name: clipboardTestCase.name + ' (副本)',
                 project: clipboardTestCase.project || '',
