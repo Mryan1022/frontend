@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>平台图标方案选择</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .option-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .option-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .platform-preview {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .platform-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: #4b5563;
+        }
+
+        .platform-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+
+        .platform-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .icon-large {
+            font-size: 28px;
+        }
+
+        .icon-text {
+            font-size: 13px;
+        }
+
+        .description {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .pros {
+            background: #f0fdf4;
+            border-left: 3px solid #10b981;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #065f46;
+        }
+
+        .recommendation {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 8px;
+        }
+
+        .recommendation h3 {
+            color: #92400e;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .recommendation p {
+            color: #78350f;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .platform-preview {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 平台图标方案选择</h1>
+
+        <div class="options-grid">
+            <!-- 方案1：纯文字版 -->
+            <div class="option-card">
+                <div class="option-title">
+                    <span>📝</span>
+                    <span>方案1：纯文字版</span>
+                </div>
+
+                <div class="platform-preview">
+                    <button class="platform-btn active">
+                        <span class="icon-large">A</span>
+                        <span class="icon-text">Android</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">i</span>
+                        <span class="icon-text">iOS</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">H5</span>
+                        <span class="icon-text">Web</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    使用简洁的字母标识，Android用"A"，iOS用小写"i"，H5直接显示"H5"。
+                </div>
+
+                <div class="pros">
+                    ✓ 简洁专业<br>
+                    ✓ 加载快速<br>
+                    ✓ 兼容性好
+                </div>
+            </div>
+
+            <!-- 方案2：Unicode符号版 -->
+            <div class="option-card">
+                <div class="option-title">
+                    <span>🎯</span>
+                    <span>方案2：Unicode符号版</span>
+                </div>
+
+                <div class="platform-preview">
+                    <button class="platform-btn active">
+                        <span class="icon-large">📱</span>
+                        <span class="icon-text">Android</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">🍏</span>
+                        <span class="icon-text">iOS</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">💻</span>
+                        <span class="icon-text">H5</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    Android用手机📱，iOS用青苹果🍏，H5用电脑💻。更直观的设备图标。
+                </div>
+
+                <div class="pros">
+                    ✓ 视觉直观<br>
+                    ✓ 容易区分<br>
+                    ✓ 不需要额外资源
+                </div>
+            </div>
+
+            <!-- 方案3：系统图标版 -->
+            <div class="option-card">
+                <div class="option-title">
+                    <span>⚡</span>
+                    <span>方案3：系统图标版</span>
+                </div>
+
+                <div class="platform-preview">
+                    <button class="platform-btn active">
+                        <span class="icon-large">📲</span>
+                        <span class="icon-text">Android</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">📱</span>
+                        <span class="icon-text">iOS</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">🌍</span>
+                        <span class="icon-text">H5</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    Android用带箭头的手机📲，iOS用普通手机📱，H5用地球🌍。强调移动和Web的区别。
+                </div>
+
+                <div class="pros">
+                    ✓ 区分明显<br>
+                    ✓ 符号通用<br>
+                    ✓ 现代感强
+                </div>
+            </div>
+
+            <!-- 方案4：颜色圆形版 -->
+            <div class="option-card">
+                <div class="option-title">
+                    <span>🎨</span>
+                    <span>方案4：彩色圆形版</span>
+                </div>
+
+                <div class="platform-preview">
+                    <button class="platform-btn active">
+                        <span class="icon-large" style="color: #3DDC84;">●</span>
+                        <span class="icon-text">Android</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large" style="color: #000000;">●</span>
+                        <span class="icon-text">iOS</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large" style="color: #E34F26;">●</span>
+                        <span class="icon-text">H5</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    使用官方品牌色的圆点：Android绿色、iOS黑色、H5橙色（HTML5官方色）。
+                </div>
+
+                <div class="pros">
+                    ✓ 品牌识别度高<br>
+                    ✓ 颜色区分清晰<br>
+                    ✓ 简约美观
+                </div>
+            </div>
+
+            <!-- 方案5：图形符号版 -->
+            <div class="option-card">
+                <div class="option-title">
+                    <span>🔷</span>
+                    <span>方案5：图形符号版</span>
+                </div>
+
+                <div class="platform-preview">
+                    <button class="platform-btn active">
+                        <span class="icon-large">▶</span>
+                        <span class="icon-text">Android</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">◼</span>
+                        <span class="icon-text">iOS</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">◆</span>
+                        <span class="icon-text">H5</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    Android用三角▶（Play），iOS用方块◼（简约），H5用菱形◆（Web）。几何图形区分。
+                </div>
+
+                <div class="pros">
+                    ✓ 几何美感<br>
+                    ✓ 形状区分<br>
+                    ✓ 专业简洁
+                </div>
+            </div>
+
+            <!-- 方案6：混合图标版（推荐） -->
+            <div class="option-card" style="border: 3px solid #f59e0b;">
+                <div class="option-title">
+                    <span>⭐</span>
+                    <span>方案6：混合图标版（推荐）</span>
+                </div>
+
+                <div class="platform-preview">
+                    <button class="platform-btn active">
+                        <span class="icon-large">📱</span>
+                        <span class="icon-text">Android</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">🍎</span>
+                        <span class="icon-text">iOS</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">🌐</span>
+                        <span class="icon-text">Web</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    Android用通用手机📱（代表安卓设备），iOS保留苹果🍎（品牌标识性强），H5用地球🌐（表示网页/Web）。
+                </div>
+
+                <div class="pros">
+                    ✓ 识别度最高<br>
+                    ✓ 符号含义清晰<br>
+                    ✓ 用户认知度好<br>
+                    ✓ 兼顾美观和实用
+                </div>
+            </div>
+
+            <!-- 方案7：彩色emoji版 -->
+            <div class="option-card">
+                <div class="option-title">
+                    <span>🌈</span>
+                    <span>方案7：彩色Emoji版</span>
+                </div>
+
+                <div class="platform-preview">
+                    <button class="platform-btn active">
+                        <span class="icon-large">📗</span>
+                        <span class="icon-text">Android</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">📘</span>
+                        <span class="icon-text">iOS</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large">📙</span>
+                        <span class="icon-text">H5</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    用不同颜色的书本：Android绿色📗，iOS蓝色📘，H5橙色📙。用颜色区分平台。
+                </div>
+
+                <div class="pros">
+                    ✓ 颜色鲜艳<br>
+                    ✓ 易于记忆<br>
+                    ✓ 视觉活泼
+                </div>
+            </div>
+
+            <!-- 方案8：纯色文字徽章版 -->
+            <div class="option-card">
+                <div class="option-title">
+                    <span>🏷️</span>
+                    <span>方案8：徽章版</span>
+                </div>
+
+                <div class="platform-preview">
+                    <button class="platform-btn active">
+                        <span class="icon-large" style="background: #3DDC84; color: white; padding: 4px 8px; border-radius: 4px; font-size: 14px;">And</span>
+                        <span class="icon-text">Android</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large" style="background: #000000; color: white; padding: 4px 8px; border-radius: 4px; font-size: 14px;">iOS</span>
+                        <span class="icon-text">iOS</span>
+                    </button>
+                    <button class="platform-btn">
+                        <span class="icon-large" style="background: #E34F26; color: white; padding: 4px 8px; border-radius: 4px; font-size: 14px;">H5</span>
+                        <span class="icon-text">Web</span>
+                    </button>
+                </div>
+
+                <div class="description">
+                    用品牌色的文字徽章，Android绿色、iOS黑色、H5橙色。专业感强。
+                </div>
+
+                <div class="pros">
+                    ✓ 专业商务风<br>
+                    ✓ 品牌色突出<br>
+                    ✓ 一致性好
+                </div>
+            </div>
+        </div>
+
+        <div class="recommendation">
+            <h3>💡 推荐使用：方案6 - 混合图标版</h3>
+            <p>
+                <strong>推荐理由：</strong>
+            </p>
+            <p>
+                1. <strong>Android 📱</strong> - 通用手机图标，避免使用机器人emoji（🤖可能被误认为是AI或机器人功能）
+            </p>
+            <p>
+                2. <strong>iOS 🍎</strong> - 苹果图标，品牌识别度最高，用户一眼就知道是苹果设备
+            </p>
+            <p>
+                3. <strong>H5 🌐</strong> - 地球/网络图标，清晰表达Web/网页的含义，比之前更准确
+            </p>
+            <p style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #d97706;">
+                <strong>备选方案：</strong>如果你希望更专业简洁，可以选择<strong>方案4（彩色圆形版）</strong>或<strong>方案8（徽章版）</strong>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 为所有平台按钮添加点击切换效果
+        document.querySelectorAll('.platform-preview').forEach(preview => {
+            preview.querySelectorAll('.platform-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    preview.querySelectorAll('.platform-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
