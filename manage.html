@@ -1521,6 +1521,19 @@
 
 
 <script>
+    // ========== 立即执行登录检查 ==========
+    // 必须在所有代码执行前检查登录状态
+    (function() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            // 未登录，立即重定向到登录页
+            window.location.href = 'index.html';
+            // 阻止后续代码执行
+            throw new Error('Not authenticated');
+        }
+    })();
+    // ========================================
+
     let menus = []; // 一级菜单列表
     let testCases = [];
     let logs = []; // 操作日志列表
@@ -4770,24 +4783,8 @@ for (let i = 0; i < rows.length; i++) {
         }
     }
 
-    // 检查登录状态
-    function checkAuth() {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            // 未登录，重定向到登录页
-            window.location.href = 'index.html';
-            return false;
-        }
-        return true;
-    }
-
-    // 页面加载时检查登录状态并加载数据
+    // 页面加载时加载数据
     window.addEventListener('DOMContentLoaded', () => {
-        // 先检查是否已登录
-        if (!checkAuth()) {
-            return;
-        }
-
         loadFromLocalStorage();
     });
 </script>
