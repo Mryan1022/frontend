@@ -4770,8 +4770,24 @@ for (let i = 0; i < rows.length; i++) {
         }
     }
 
-    // 页面加载时从localStorage加载数据
+    // 检查登录状态
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            // 未登录，重定向到登录页
+            window.location.href = 'index.html';
+            return false;
+        }
+        return true;
+    }
+
+    // 页面加载时检查登录状态并加载数据
     window.addEventListener('DOMContentLoaded', () => {
+        // 先检查是否已登录
+        if (!checkAuth()) {
+            return;
+        }
+
         loadFromLocalStorage();
     });
 </script>
