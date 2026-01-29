@@ -30,6 +30,13 @@ class APIService {
             const data = await response.json();
 
             if (!response.ok) {
+                // 401 未授权错误 - token 过期或无效
+                if (response.status === 401) {
+                    const error = new Error('认证失败，请重新登录');
+                    error.code = 'UNAUTHORIZED';
+                    error.status = 401;
+                    throw error;
+                }
                 throw new Error(data.error || `HTTP ${response.status}`);
             }
 
