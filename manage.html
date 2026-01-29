@@ -1369,6 +1369,311 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* ========== 进度统计模块样式 ========== */
+        .stats-module {
+            margin: 20px;
+        }
+
+        .stats-header-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .stats-header-section h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .menu-selector {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .menu-selector label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .menu-selector select {
+            flex: 1;
+            max-width: 400px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .stats-loading {
+            background: white;
+            padding: 60px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        .stats-empty-state {
+            background: white;
+            padding: 60px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        /* 整体统计卡片 */
+        .overall-stats-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .overall-stats-card h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-title {
+            font-size: 16px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .total-count {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .platform-stat {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .platform-stat:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .platform-name {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .platform-numbers {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-badge.pass { color: #10b981; }
+        .stat-badge.fail { color: #ef4444; }
+        .stat-badge.skip { color: #f59e0b; }
+        .stat-badge.pending { color: #9ca3af; }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 24px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            display: flex;
+            transition: all 0.3s;
+        }
+
+        .progress-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            font-weight: 600;
+            transition: width 0.3s;
+        }
+
+        .progress-segment.pass { background: #10b981; }
+        .progress-segment.fail { background: #ef4444; }
+        .progress-segment.skip { background: #f59e0b; }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        /* 子菜单统计表格 */
+        .submenu-stats-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .submenu-stats-card h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .submenu-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .submenu-table thead {
+            background: #f9fafb;
+        }
+
+        .submenu-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .submenu-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .submenu-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .submenu-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .submenu-name {
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+        }
+
+        .submenu-name:hover {
+            text-decoration: underline;
+        }
+
+        .platform-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .platform-progress-text {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .mini-progress {
+            width: 80px;
+            height: 6px;
+            background: #f3f4f6;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .mini-progress-fill.high { background: #10b981; }
+        .mini-progress-fill.medium { background: #f59e0b; }
+        .mini-progress-fill.low { background: #ef4444; }
+
+        .pass-rate {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .pass-rate.high { color: #10b981; }
+        .pass-rate.medium { color: #f59e0b; }
+        .pass-rate.low { color: #ef4444; }
+
+        .submenu-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
     </style>
 </head>
 <body>
@@ -1449,6 +1754,119 @@
                     <span id="username2">Admin</span>
                 </div>
                 <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+            </div>
+        </div>
+
+        <!-- 进度统计模块 -->
+        <div class="stats-module">
+            <!-- 统计头部 -->
+            <div class="stats-header-section">
+                <h2>📈 进度统计</h2>
+                <div class="menu-selector">
+                    <label>选择版本/菜单：</label>
+                    <select id="statsMenuSelect" onchange="loadStatsData()">
+                        <option value="">请选择...</option>
+                    </select>
+                    <button class="refresh-btn" onclick="refreshStats()">🔄 刷新统计</button>
+                </div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div id="statsLoading" class="stats-loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>正在加载统计数据...</p>
+            </div>
+
+            <!-- 空状态 -->
+            <div id="statsEmpty" class="stats-empty-state">
+                <div class="empty-state-icon">📊</div>
+                <p>请选择一个版本/菜单查看进度统计</p>
+            </div>
+
+            <!-- 统计内容 -->
+            <div id="statsContent" style="display: none;">
+                <!-- 整体统计 -->
+                <div class="overall-stats-card">
+                    <h3>📦 当前菜单整体进度</h3>
+                    <div class="menu-title" id="statsCurrentMenuName">-</div>
+                    <div class="total-count">总用例数: <strong id="statsTotalCount">0</strong></div>
+
+                    <!-- Android 统计 -->
+                    <div class="platform-stat">
+                        <div class="platform-header">
+                            <div class="platform-name">📱 Android</div>
+                            <div class="platform-numbers">
+                                <span class="stat-badge pass">✓ <span id="statsAndroidPass">0</span></span>
+                                <span class="stat-badge fail">✗ <span id="statsAndroidFail">0</span></span>
+                                <span class="stat-badge skip">〇 <span id="statsAndroidSkip">0</span></span>
+                                <span class="stat-badge pending">⏸️ <span id="statsAndroidPending">0</span></span>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="statsAndroidProgressBar"></div>
+                            <div class="progress-text" id="statsAndroidRate">通过率: 0%</div>
+                        </div>
+                    </div>
+
+                    <!-- iOS 统计 -->
+                    <div class="platform-stat">
+                        <div class="platform-header">
+                            <div class="platform-name">🍎 iOS</div>
+                            <div class="platform-numbers">
+                                <span class="stat-badge pass">✓ <span id="statsIosPass">0</span></span>
+                                <span class="stat-badge fail">✗ <span id="statsIosFail">0</span></span>
+                                <span class="stat-badge skip">〇 <span id="statsIosSkip">0</span></span>
+                                <span class="stat-badge pending">⏸️ <span id="statsIosPending">0</span></span>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="statsIosProgressBar"></div>
+                            <div class="progress-text" id="statsIosRate">通过率: 0%</div>
+                        </div>
+                    </div>
+
+                    <!-- H5 统计 -->
+                    <div class="platform-stat">
+                        <div class="platform-header">
+                            <div class="platform-name">🌐 H5</div>
+                            <div class="platform-numbers">
+                                <span class="stat-badge pass">✓ <span id="statsH5Pass">0</span></span>
+                                <span class="stat-badge fail">✗ <span id="statsH5Fail">0</span></span>
+                                <span class="stat-badge skip">〇 <span id="statsH5Skip">0</span></span>
+                                <span class="stat-badge pending">⏸️ <span id="statsH5Pending">0</span></span>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="statsH5ProgressBar"></div>
+                            <div class="progress-text" id="statsH5Rate">通过率: 0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 子菜单进度明细 -->
+                <div class="submenu-stats-card">
+                    <h3>📊 子菜单进度明细</h3>
+                    <div id="submenuStatsTableContainer">
+                        <table class="submenu-table">
+                            <thead>
+                                <tr>
+                                    <th>子菜单名称</th>
+                                    <th style="text-align: center;">总数</th>
+                                    <th style="text-align: center;">Android</th>
+                                    <th style="text-align: center;">iOS</th>
+                                    <th style="text-align: center;">H5</th>
+                                    <th style="text-align: center;">通过率</th>
+                                </tr>
+                            </thead>
+                            <tbody id="submenuStatsTableBody">
+                                <!-- 子菜单数据将动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="submenuStatsEmpty" class="submenu-empty" style="display: none;">
+                        <p>该菜单下暂无子菜单</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -4870,10 +5288,276 @@ for (let i = 0; i < rows.length; i++) {
         }
     }
 
+    // ========== 进度统计功能 ==========
+
+    let currentStatsMenuId = null; // 当前选中的统计菜单ID
+
+    // 初始化统计模块
+    async function initStatsModule() {
+        try {
+            // 加载一级菜单填充下拉框
+            const result = await apiService.getMenusByLevel(1);
+            if (result && result.success) {
+                const select = document.getElementById('statsMenuSelect');
+                select.innerHTML = '<option value="">请选择...</option>';
+
+                result.data.forEach(menu => {
+                    const option = document.createElement('option');
+                    option.value = menu.id;
+                    option.textContent = menu.name;
+                    select.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error('初始化统计模块失败:', e);
+        }
+    }
+
+    // 加载统计数据
+    async function loadStatsData() {
+        const select = document.getElementById('statsMenuSelect');
+        const menuId = select.value;
+
+        if (!menuId) {
+            // 未选择菜单，显示空状态
+            document.getElementById('statsLoading').style.display = 'none';
+            document.getElementById('statsContent').style.display = 'none';
+            document.getElementById('statsEmpty').style.display = 'block';
+            return;
+        }
+
+        currentStatsMenuId = menuId;
+
+        // 显示加载状态
+        document.getElementById('statsEmpty').style.display = 'none';
+        document.getElementById('statsContent').style.display = 'none';
+        document.getElementById('statsLoading').style.display = 'block';
+
+        try {
+            // 并行请求：当前菜单统计 + 子菜单列表
+            const [statsResult, childrenResult] = await Promise.all([
+                apiService.getStats(menuId),
+                apiService.getMenuChildren(menuId)
+            ]);
+
+            if (!statsResult || !statsResult.success) {
+                throw new Error('加载统计数据失败');
+            }
+
+            // 渲染整体统计
+            renderOverallStats(select.options[select.selectedIndex].text, statsResult.data);
+
+            // 加载子菜单统计
+            if (childrenResult && childrenResult.success && childrenResult.data.length > 0) {
+                await loadSubmenuStats(childrenResult.data);
+                document.getElementById('submenuStatsEmpty').style.display = 'none';
+                document.getElementById('submenuStatsTableContainer').style.display = 'block';
+            } else {
+                // 没有子菜单
+                document.getElementById('submenuStatsTableContainer').style.display = 'none';
+                document.getElementById('submenuStatsEmpty').style.display = 'block';
+            }
+
+            // 显示内容
+            document.getElementById('statsLoading').style.display = 'none';
+            document.getElementById('statsContent').style.display = 'block';
+
+        } catch (e) {
+            console.error('加载统计数据失败:', e);
+            document.getElementById('statsLoading').style.display = 'none';
+            alert('加载统计数据失败：' + e.message);
+        }
+    }
+
+    // 渲染整体统计
+    function renderOverallStats(menuName, stats) {
+        // 设置菜单名称和总数
+        document.getElementById('statsCurrentMenuName').textContent = menuName;
+        document.getElementById('statsTotalCount').textContent = stats.total;
+
+        // 渲染 Android 统计
+        renderPlatformStats('Android', stats.android);
+
+        // 渲染 iOS 统计
+        renderPlatformStats('Ios', stats.ios);
+
+        // 渲染 H5 统计
+        renderPlatformStats('H5', stats.h5);
+    }
+
+    // 渲染单个平台统计
+    function renderPlatformStats(platform, data) {
+        const prefix = 'stats' + platform;
+
+        // 更新数字
+        document.getElementById(prefix + 'Pass').textContent = data.passed;
+        document.getElementById(prefix + 'Fail').textContent = data.failed;
+        document.getElementById(prefix + 'Skip').textContent = data.skipped;
+        document.getElementById(prefix + 'Pending').textContent = data.pending;
+
+        // 计算通过率
+        const total = data.actualTotal || data.passed + data.failed + data.skipped + data.pending;
+        const passRate = total > 0 ? Math.round((data.passed / total) * 100) : 0;
+
+        // 更新通过率文本
+        document.getElementById(prefix + 'Rate').textContent = `通过率: ${passRate}%`;
+
+        // 渲染进度条
+        const progressBar = document.getElementById(prefix + 'ProgressBar');
+        progressBar.innerHTML = '';
+
+        if (total > 0) {
+            const passPercent = (data.passed / total) * 100;
+            const failPercent = (data.failed / total) * 100;
+            const skipPercent = (data.skipped / total) * 100;
+
+            if (data.passed > 0) {
+                const passSegment = document.createElement('div');
+                passSegment.className = 'progress-segment pass';
+                passSegment.style.width = passPercent + '%';
+                passSegment.textContent = data.passed;
+                progressBar.appendChild(passSegment);
+            }
+
+            if (data.failed > 0) {
+                const failSegment = document.createElement('div');
+                failSegment.className = 'progress-segment fail';
+                failSegment.style.width = failPercent + '%';
+                failSegment.textContent = data.failed;
+                progressBar.appendChild(failSegment);
+            }
+
+            if (data.skipped > 0) {
+                const skipSegment = document.createElement('div');
+                skipSegment.className = 'progress-segment skip';
+                skipSegment.style.width = skipPercent + '%';
+                skipSegment.textContent = data.skipped;
+                progressBar.appendChild(skipSegment);
+            }
+        }
+    }
+
+    // 加载子菜单统计
+    async function loadSubmenuStats(submenus) {
+        const tbody = document.getElementById('submenuStatsTableBody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">加载中...</td></tr>';
+
+        try {
+            // 并行请求所有子菜单的统计数据
+            const statsPromises = submenus.map(menu => apiService.getStats(menu.id));
+            const statsResults = await Promise.all(statsPromises);
+
+            // 清空表格
+            tbody.innerHTML = '';
+
+            // 渲染每个子菜单
+            submenus.forEach((menu, index) => {
+                const statsResult = statsResults[index];
+                if (statsResult && statsResult.success) {
+                    const row = createSubmenuRow(menu, statsResult.data);
+                    tbody.appendChild(row);
+                }
+            });
+
+        } catch (e) {
+            console.error('加载子菜单统计失败:', e);
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #ef4444;">加载失败</td></tr>';
+        }
+    }
+
+    // 创建子菜单表格行
+    function createSubmenuRow(menu, stats) {
+        const row = document.createElement('tr');
+
+        // 计算各平台通过率
+        const androidTotal = stats.android.actualTotal || stats.android.passed + stats.android.failed + stats.android.skipped + stats.android.pending;
+        const iosTotal = stats.ios.actualTotal || stats.ios.passed + stats.ios.failed + stats.ios.skipped + stats.ios.pending;
+        const h5Total = stats.h5.actualTotal || stats.h5.passed + stats.h5.failed + stats.h5.skipped + stats.h5.pending;
+
+        const androidPassRate = androidTotal > 0 ? (stats.android.passed / androidTotal) * 100 : 0;
+        const iosPassRate = iosTotal > 0 ? (stats.ios.passed / iosTotal) * 100 : 0;
+        const h5PassRate = h5Total > 0 ? (stats.h5.passed / h5Total) * 100 : 0;
+
+        // 整体通过率（三个平台的平均）
+        const overallPassRate = Math.round((androidPassRate + iosPassRate + h5PassRate) / 3);
+
+        // 子菜单名称
+        const nameCell = document.createElement('td');
+        nameCell.innerHTML = `<span class="submenu-name">${menu.name}</span>`;
+        row.appendChild(nameCell);
+
+        // 总数
+        const totalCell = document.createElement('td');
+        totalCell.style.textAlign = 'center';
+        totalCell.textContent = stats.total;
+        row.appendChild(totalCell);
+
+        // Android 进度
+        row.appendChild(createPlatformProgressCell(stats.android.passed, androidTotal, androidPassRate));
+
+        // iOS 进度
+        row.appendChild(createPlatformProgressCell(stats.ios.passed, iosTotal, iosPassRate));
+
+        // H5 进度
+        row.appendChild(createPlatformProgressCell(stats.h5.passed, h5Total, h5PassRate));
+
+        // 通过率
+        const rateCell = document.createElement('td');
+        rateCell.style.textAlign = 'center';
+        const rateClass = overallPassRate >= 70 ? 'high' : (overallPassRate >= 50 ? 'medium' : 'low');
+        rateCell.innerHTML = `<span class="pass-rate ${rateClass}">${overallPassRate}%</span>`;
+        row.appendChild(rateCell);
+
+        return row;
+    }
+
+    // 创建平台进度单元格
+    function createPlatformProgressCell(passed, total, passRate) {
+        const cell = document.createElement('td');
+        cell.style.textAlign = 'center';
+
+        const progressClass = passRate >= 70 ? 'high' : (passRate >= 50 ? 'medium' : 'low');
+
+        cell.innerHTML = `
+            <div class="platform-progress">
+                <span class="platform-progress-text">${passed}/${total}</span>
+                <div class="mini-progress">
+                    <div class="mini-progress-fill ${progressClass}" style="width: ${passRate}%;"></div>
+                </div>
+            </div>
+        `;
+
+        return cell;
+    }
+
+    // 刷新统计数据
+    async function refreshStats() {
+        if (!currentStatsMenuId) {
+            alert('请先选择一个菜单');
+            return;
+        }
+
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '🔄 刷新中...';
+
+        try {
+            await loadStatsData();
+            showToast('统计数据已刷新');
+        } catch (e) {
+            console.error('刷新统计失败:', e);
+            alert('刷新失败：' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🔄 刷新统计';
+        }
+    }
+
     // 页面加载时加载数据
     window.addEventListener('DOMContentLoaded', () => {
         loadUserInfo();
         loadFromLocalStorage();
+        initStatsModule(); // 初始化统计模块
     });
 </script>
 </body>
