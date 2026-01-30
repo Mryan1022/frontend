@@ -1728,9 +1728,6 @@
                     <button class="btn-export" onclick="exportResults()">
                         💾 导出测试结果
                     </button>
-                    <button class="btn-export" onclick="clearData()" style="background: #ef4444;">
-                        🗑️ 清除数据
-                    </button>
                 </div>
             </div>
             <div class="header-right">
@@ -4893,30 +4890,6 @@ for (let i = 0; i < rows.length; i++) {
         showToast('日志已下载');
     }
 
-    // 清除所有数据
-    function clearData() {
-        if (confirm('确定要清除所有本地数据吗？此操作不可恢复！')) {
-            const menuCount = menus.length;
-            const caseCount = testCases.length;
-            const logCount = logs.length;
-
-            addLog('清除所有数据', `清除前统计: 菜单 ${menuCount}个, 测试用例 ${caseCount}条, 日志 ${logCount}条`);
-
-            localStorage.removeItem('testCaseData');
-            menus = [];
-            testCases = [];
-            logs = []; // 清空日志
-            currentTestCase = null;
-
-            // 隐藏详情面板
-            document.getElementById('testCaseDetail').style.display = 'none';
-            document.getElementById('emptyState').style.display = 'flex';
-
-            renderMenuList();
-            updateStats();
-            showToast('数据已清除');
-        }
-    }
 
     // 导出测试结果
     function exportResults() {
