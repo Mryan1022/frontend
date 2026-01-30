@@ -1856,11 +1856,36 @@
             </div>
         </div>
 
+        <!-- 全局统计卡片 -->
+        <div class="global-stats-card" style="background: white; padding: 20px; margin: 20px 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 15px 0; color: #667eea; display: flex; align-items: center; gap: 10px;">
+                📊 全局统计
+            </h3>
+            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">用例总数</div>
+                    <div style="font-size: 32px; font-weight: bold; color: #667eea;" id="globalTotalCount">-</div>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">📱 Android 通过</div>
+                    <div style="font-size: 32px; font-weight: bold; color: #10b981;" id="globalAndroidPass">-</div>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">🍎 iOS 通过</div>
+                    <div style="font-size: 32px; font-weight: bold; color: #10b981;" id="globalIosPass">-</div>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">🌐 H5 通过</div>
+                    <div style="font-size: 32px; font-weight: bold; color: #10b981;" id="globalH5Pass">-</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 进度统计模块 -->
         <div class="stats-module">
             <!-- 统计头部 -->
             <div class="stats-header-section">
-                <h2>📈 进度统计</h2>
+                <h2>📈 按菜单统计</h2>
                 <div class="menu-selector">
                     <label>选择版本/菜单：</label>
                     <select id="statsMenuSelect" onchange="loadStatsData()">
@@ -1903,7 +1928,7 @@
                         </div>
                         <div class="progress-bar-container">
                             <div class="progress-bar" id="statsAndroidProgressBar"></div>
-                            <div class="progress-text" id="statsAndroidRate">通过率: 0%</div>
+                            <div class="progress-text" id="statsAndroidRate">执行率: 0%</div>
                         </div>
                     </div>
 
@@ -1920,7 +1945,7 @@
                         </div>
                         <div class="progress-bar-container">
                             <div class="progress-bar" id="statsIosProgressBar"></div>
-                            <div class="progress-text" id="statsIosRate">通过率: 0%</div>
+                            <div class="progress-text" id="statsIosRate">执行率: 0%</div>
                         </div>
                     </div>
 
@@ -1937,7 +1962,7 @@
                         </div>
                         <div class="progress-bar-container">
                             <div class="progress-bar" id="statsH5ProgressBar"></div>
-                            <div class="progress-text" id="statsH5Rate">通过率: 0%</div>
+                            <div class="progress-text" id="statsH5Rate">执行率: 0%</div>
                         </div>
                     </div>
                 </div>
@@ -1954,7 +1979,7 @@
                                     <th style="text-align: center;">Android</th>
                                     <th style="text-align: center;">iOS</th>
                                     <th style="text-align: center;">H5</th>
-                                    <th style="text-align: center;">通过率</th>
+                                    <th style="text-align: center;">执行率</th>
                                 </tr>
                             </thead>
                             <tbody id="submenuStatsTableBody">
@@ -5250,9 +5275,33 @@ for (let i = 0; i < rows.length; i++) {
 
     let currentStatsMenuId = null; // 当前选中的统计菜单ID
 
+    // 加载全局统计
+    async function loadGlobalStats() {
+        try {
+            // 不传 menuId，获取全局统计
+            const result = await apiService.getStats();
+            if (result && result.success) {
+                const stats = result.data;
+
+                // 更新全局统计数字
+                document.getElementById('globalTotalCount').textContent = stats.total || 0;
+                document.getElementById('globalAndroidPass').textContent = stats.android?.passed || 0;
+                document.getElementById('globalIosPass').textContent = stats.ios?.passed || 0;
+                document.getElementById('globalH5Pass').textContent = stats.h5?.passed || 0;
+            }
+        } catch (e) {
+            console.error('加载全局统计失败:', e);
+            // 显示错误状态
+            document.getElementById('globalTotalCount').textContent = '加载失败';
+        }
+    }
+
     // 初始化统计模块
     async function initStatsModule() {
         try {
+            // 加载全局统计
+            await loadGlobalStats();
+
             // 加载一级菜单填充下拉框
             const result = await apiService.getMenusByLevel(1);
             if (result && result.success) {
@@ -5353,12 +5402,13 @@ for (let i = 0; i < rows.length; i++) {
         document.getElementById(prefix + 'Skip').textContent = data.skipped;
         document.getElementById(prefix + 'Pending').textContent = data.pending;
 
-        // 计算通过率
+        // 计算执行率（已执行 = 通过 + 失败 + 跳过）
         const total = data.actualTotal || data.passed + data.failed + data.skipped + data.pending;
-        const passRate = total > 0 ? Math.round((data.passed / total) * 100) : 0;
+        const executed = data.passed + data.failed + data.skipped;
+        const executionRate = total > 0 ? Math.round((executed / total) * 100) : 0;
 
-        // 更新通过率文本
-        document.getElementById(prefix + 'Rate').textContent = `通过率: ${passRate}%`;
+        // 更新执行率文本
+        document.getElementById(prefix + 'Rate').textContent = `执行率: ${executionRate}%`;
 
         // 渲染进度条
         const progressBar = document.getElementById(prefix + 'ProgressBar');
@@ -5427,17 +5477,21 @@ for (let i = 0; i < rows.length; i++) {
     function createSubmenuRow(menu, stats) {
         const row = document.createElement('tr');
 
-        // 计算各平台通过率
+        // 计算各平台执行率（已执行 = 通过 + 失败 + 跳过）
         const androidTotal = stats.android.actualTotal || stats.android.passed + stats.android.failed + stats.android.skipped + stats.android.pending;
         const iosTotal = stats.ios.actualTotal || stats.ios.passed + stats.ios.failed + stats.ios.skipped + stats.ios.pending;
         const h5Total = stats.h5.actualTotal || stats.h5.passed + stats.h5.failed + stats.h5.skipped + stats.h5.pending;
 
-        const androidPassRate = androidTotal > 0 ? (stats.android.passed / androidTotal) * 100 : 0;
-        const iosPassRate = iosTotal > 0 ? (stats.ios.passed / iosTotal) * 100 : 0;
-        const h5PassRate = h5Total > 0 ? (stats.h5.passed / h5Total) * 100 : 0;
+        const androidExecuted = stats.android.passed + stats.android.failed + stats.android.skipped;
+        const iosExecuted = stats.ios.passed + stats.ios.failed + stats.ios.skipped;
+        const h5Executed = stats.h5.passed + stats.h5.failed + stats.h5.skipped;
 
-        // 整体通过率（三个平台的平均）
-        const overallPassRate = Math.round((androidPassRate + iosPassRate + h5PassRate) / 3);
+        const androidExecRate = androidTotal > 0 ? (androidExecuted / androidTotal) * 100 : 0;
+        const iosExecRate = iosTotal > 0 ? (iosExecuted / iosTotal) * 100 : 0;
+        const h5ExecRate = h5Total > 0 ? (h5Executed / h5Total) * 100 : 0;
+
+        // 整体执行率（三个平台的平均）
+        const overallExecRate = Math.round((androidExecRate + iosExecRate + h5ExecRate) / 3);
 
         // 子菜单名称
         const nameCell = document.createElement('td');
@@ -5451,36 +5505,36 @@ for (let i = 0; i < rows.length; i++) {
         row.appendChild(totalCell);
 
         // Android 进度
-        row.appendChild(createPlatformProgressCell(stats.android.passed, androidTotal, androidPassRate));
+        row.appendChild(createPlatformProgressCell(androidExecuted, androidTotal, androidExecRate));
 
         // iOS 进度
-        row.appendChild(createPlatformProgressCell(stats.ios.passed, iosTotal, iosPassRate));
+        row.appendChild(createPlatformProgressCell(iosExecuted, iosTotal, iosExecRate));
 
         // H5 进度
-        row.appendChild(createPlatformProgressCell(stats.h5.passed, h5Total, h5PassRate));
+        row.appendChild(createPlatformProgressCell(h5Executed, h5Total, h5ExecRate));
 
-        // 通过率
+        // 执行率
         const rateCell = document.createElement('td');
         rateCell.style.textAlign = 'center';
-        const rateClass = overallPassRate >= 70 ? 'high' : (overallPassRate >= 50 ? 'medium' : 'low');
-        rateCell.innerHTML = `<span class="pass-rate ${rateClass}">${overallPassRate}%</span>`;
+        const rateClass = overallExecRate >= 70 ? 'high' : (overallExecRate >= 50 ? 'medium' : 'low');
+        rateCell.innerHTML = `<span class="pass-rate ${rateClass}">${overallExecRate}%</span>`;
         row.appendChild(rateCell);
 
         return row;
     }
 
     // 创建平台进度单元格
-    function createPlatformProgressCell(passed, total, passRate) {
+    function createPlatformProgressCell(executed, total, execRate) {
         const cell = document.createElement('td');
         cell.style.textAlign = 'center';
 
-        const progressClass = passRate >= 70 ? 'high' : (passRate >= 50 ? 'medium' : 'low');
+        const progressClass = execRate >= 70 ? 'high' : (execRate >= 50 ? 'medium' : 'low');
 
         cell.innerHTML = `
             <div class="platform-progress">
-                <span class="platform-progress-text">${passed}/${total}</span>
+                <span class="platform-progress-text">${executed}/${total}</span>
                 <div class="mini-progress">
-                    <div class="mini-progress-fill ${progressClass}" style="width: ${passRate}%;"></div>
+                    <div class="mini-progress-fill ${progressClass}" style="width: ${execRate}%;"></div>
                 </div>
             </div>
         `;
@@ -5490,17 +5544,19 @@ for (let i = 0; i < rows.length; i++) {
 
     // 刷新统计数据
     async function refreshStats() {
-        if (!currentStatsMenuId) {
-            alert('请先选择一个菜单');
-            return;
-        }
-
         const btn = event.target;
         btn.disabled = true;
         btn.textContent = '🔄 刷新中...';
 
         try {
-            await loadStatsData();
+            // 刷新全局统计
+            await loadGlobalStats();
+
+            // 如果选择了菜单，也刷新菜单统计
+            if (currentStatsMenuId) {
+                await loadStatsData();
+            }
+
             showToast('统计数据已刷新');
         } catch (e) {
             console.error('刷新统计失败:', e);
