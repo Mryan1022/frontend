@@ -1898,6 +1898,187 @@
             align-items: center;
             gap: 8px;
         }
+
+        /* 创建版本模态弹窗 */
+        .create-version-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .create-version-modal.show {
+            display: flex;
+        }
+
+        .create-version-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .create-version-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .create-version-modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            color: #374151;
+            flex: 1;
+        }
+
+        .create-version-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .create-version-modal-close:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .create-version-modal-body {
+            margin-bottom: 20px;
+        }
+
+        .create-version-form-group {
+            margin-bottom: 20px;
+        }
+
+        .create-version-form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .create-version-form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .create-version-form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .create-version-summary {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .create-version-summary-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .create-version-summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .create-version-summary-label {
+            color: #6b7280;
+        }
+
+        .create-version-summary-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .create-version-modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .create-version-btn-cancel {
+            padding: 10px 20px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .create-version-btn-cancel:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .create-version-btn-confirm {
+            padding: 10px 20px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .create-version-btn-confirm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .create-version-btn-confirm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -2296,6 +2477,45 @@
     </div>
 </div>
 
+<!-- 创建版本模态弹窗 -->
+<div id="createVersionModal" class="create-version-modal" onclick="closeCreateVersionModalOnBackdrop(event)">
+    <div class="create-version-modal-content" onclick="event.stopPropagation()">
+        <div class="create-version-modal-header">
+            <h3>🎯 创建新版本</h3>
+            <button class="create-version-modal-close" onclick="closeCreateVersionModal()">×</button>
+        </div>
+
+        <div class="create-version-modal-body">
+            <div class="create-version-form-group">
+                <label class="create-version-form-label">版本名称 <span style="color: #ef4444;">*</span></label>
+                <input
+                    type="text"
+                    id="versionNameInput"
+                    class="create-version-form-input"
+                    placeholder="请输入版本名称，例如：132回归用例"
+                    maxlength="50"
+                >
+            </div>
+
+            <div class="create-version-summary">
+                <div class="create-version-summary-title">📊 选择统计</div>
+                <div class="create-version-summary-item">
+                    <span class="create-version-summary-label">已选模块：</span>
+                    <span class="create-version-summary-value" id="modalSelectedMenuCount">0 个</span>
+                </div>
+                <div class="create-version-summary-item">
+                    <span class="create-version-summary-label">已选用例：</span>
+                    <span class="create-version-summary-value" id="modalSelectedTestCaseCount">0 条</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="create-version-modal-footer">
+            <button class="create-version-btn-cancel" onclick="closeCreateVersionModal()">取消</button>
+            <button class="create-version-btn-confirm" onclick="confirmCreateVersion()">创建版本</button>
+        </div>
+    </div>
+</div>
 
 <script>
     // ========== 立即执行登录检查 ==========
@@ -6288,22 +6508,12 @@ for (let i = 0; i < rows.length; i++) {
         }
     }
 
-    // 创建版本
-    async function createVersionFromRepository() {
-        const versionName = prompt('请输入版本名称：', '132回归用例');
-
-        if (!versionName) {
-            return; // 用户取消
-        }
-
-        if (!versionName.trim()) {
-            alert('版本名称不能为空！');
-            return;
-        }
-
+    // 打开创建版本弹窗
+    function createVersionFromRepository() {
         const menuCount = selectedRepositoryMenus.size;
         const testCaseCount = selectedRepositoryTestCases.size;
 
+        // 验证是否选择了模块
         if (menuCount === 0) {
             alert('请至少选择一个模块！');
             return;
@@ -6314,7 +6524,67 @@ for (let i = 0; i < rows.length; i++) {
             return;
         }
 
+        // 更新弹窗中的统计数据
+        document.getElementById('modalSelectedMenuCount').textContent = menuCount + ' 个';
+        document.getElementById('modalSelectedTestCaseCount').textContent = testCaseCount + ' 条';
+
+        // 设置默认版本名称
+        const versionInput = document.getElementById('versionNameInput');
+        versionInput.value = '132回归用例';
+
+        // 显示模态弹窗
+        const modal = document.getElementById('createVersionModal');
+        modal.classList.add('show');
+
+        // 聚焦到输入框并选中文本
+        setTimeout(() => {
+            versionInput.focus();
+            versionInput.select();
+        }, 100);
+
+        // 添加回车键快捷创建
+        versionInput.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                confirmCreateVersion();
+            }
+        };
+    }
+
+    // 关闭创建版本弹窗
+    function closeCreateVersionModal() {
+        const modal = document.getElementById('createVersionModal');
+        modal.classList.remove('show');
+
+        // 清空输入框
+        document.getElementById('versionNameInput').value = '';
+    }
+
+    // 点击背景关闭弹窗
+    function closeCreateVersionModalOnBackdrop(event) {
+        if (event.target.id === 'createVersionModal') {
+            closeCreateVersionModal();
+        }
+    }
+
+    // 确认创建版本
+    async function confirmCreateVersion() {
+        const versionInput = document.getElementById('versionNameInput');
+        const versionName = versionInput.value.trim();
+
+        if (!versionName) {
+            alert('版本名称不能为空！');
+            versionInput.focus();
+            return;
+        }
+
+        const menuCount = selectedRepositoryMenus.size;
+        const testCaseCount = selectedRepositoryTestCases.size;
+
         try {
+            // 关闭弹窗
+            closeCreateVersionModal();
+
+            // 显示加载提示
             showLoading('正在创建版本...');
 
             // 调用API创建版本
@@ -6326,7 +6596,7 @@ for (let i = 0; i < rows.length; i++) {
 
             if (response.success) {
                 hideLoading();
-                alert(`✅ 创建成功！\n\n版本名称: ${versionName}\n已选模块: ${menuCount} 个\n已选用例: ${testCaseCount} 条\n\n新版本已添加到首页，并标记为蓝色背景（来自仓库）。`);
+                showToast(`✅ 创建成功！版本"${versionName}"已添加到首页`);
 
                 // 切换到首页并刷新
                 switchTab('home');
@@ -6346,6 +6616,16 @@ for (let i = 0; i < rows.length; i++) {
         loadUserInfo();
         loadFromLocalStorage();
         initStatsModule(); // 初始化统计模块
+
+        // 添加ESC键关闭模态弹窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('createVersionModal');
+                if (modal && modal.classList.contains('show')) {
+                    closeCreateVersionModal();
+                }
+            }
+        });
     });
 </script>
 </body>
