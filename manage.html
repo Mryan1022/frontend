@@ -1717,6 +1717,123 @@
                 <button class="logout-btn" onclick="handleLogout()">退出登录</button>
             </div>
         </div>
+
+        <div class="container">
+            <div class="sidebar">
+                <!-- 侧边栏Tab导航 -->
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="testcase" onclick="switchSidebarTab('testcase')">
+                        📋 测试用例
+                    </button>
+                    <button class="sidebar-tab" data-tab="smoke" onclick="switchSidebarTab('smoke')">
+                        🔥 冒烟用例
+                    </button>
+                </div>
+
+                <!-- 测试用例菜单 -->
+                <div id="testcaseMenuContent" class="sidebar-content active">
+                    <ul class="project-list" id="projectList">
+                        <!-- 项目列表将动态生成 -->
+                    </ul>
+                </div>
+
+                <!-- 冒烟用例菜单 -->
+                <div id="smokeMenuContent" class="sidebar-content" style="display: none;">
+                    <ul class="project-list" id="smokeProjectList">
+                        <!-- 冒烟用例列表将动态生成 -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="empty-state" id="emptyState">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p>请上传测试用例文件开始测试</p>
+                </div>
+
+                <div class="test-case-detail" id="testCaseDetail" style="display: none;">
+                    <!-- 测试用例详情将动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 菜单右键菜单 -->
+        <div id="contextMenu" class="context-menu">
+            <div class="context-menu-item" onclick="uploadTestCasesToMenu()">
+                📁 上传测试用例
+            </div>
+            <div class="context-menu-item" onclick="renameMenu()">
+                ✏️ 修改名称
+            </div>
+            <div class="context-menu-item danger" onclick="deleteMenu()">
+                🗑️ 删除菜单
+            </div>
+        </div>
+
+        <!-- 项目右键菜单 -->
+        <div id="projectContextMenu" class="context-menu">
+            <div class="context-menu-item danger" onclick="deleteProject()">
+                🗑️ 删除项目
+            </div>
+        </div>
+
+        <!-- 测试用例右键菜单 -->
+        <div id="testCaseContextMenu" class="context-menu">
+            <div class="context-menu-item" onclick="copyTestCase()">
+                📋 复制
+            </div>
+            <div class="context-menu-item" onclick="pasteTestCase()" id="pasteMenuItem">
+                📄 粘贴
+            </div>
+            <div class="context-menu-item danger" onclick="deleteTestCaseFromContextMenu()">
+                🗑️ 删除
+            </div>
+        </div>
+
+        <!-- 不通过原因弹窗 -->
+        <div id="failReasonModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    ❌ 填写不通过原因
+                </div>
+                <div class="modal-body">
+                    <label class="modal-label">请详细说明测试不通过的原因：</label>
+                    <textarea id="failReasonInput" class="modal-textarea" placeholder="请输入不通过的具体原因..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-secondary" onclick="closeFailReasonModal()">取消</button>
+                    <button class="modal-btn modal-btn-primary" onclick="confirmFailReason()">确认</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 工具提示 -->
+        <div id="progressTooltip" class="progress-tooltip"></div>
+
+        <!-- Loading 遮罩层 -->
+        <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px 50px; border-radius: 10px; text-align: center;">
+                <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                <div id="loadingText" style="color: #333; font-size: 16px; font-weight: 500;">正在加载...</div>
+            </div>
+        </div>
+
+        <!-- 加载错误提示 -->
+        <div id="loadErrorOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+                <button onclick="retryLoadData()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                    🔄 重新加载
+                </button>
+            </div>
+        </div>
+
+        <!-- 日志下载按钮 -->
+        <button id="downloadLogsBtn" class="download-logs-btn" onclick="downloadLogs()" title="下载操作日志">
+            📋 下载日志
+        </button>
     </div>
 
     <!-- TAB 2: 数据管理 -->
@@ -1852,123 +1969,6 @@
             </div>
         </div>
     </div>
-
-    <div class="container">
-        <div class="sidebar">
-            <!-- 侧边栏Tab导航 -->
-            <div class="sidebar-tabs">
-                <button class="sidebar-tab active" data-tab="testcase" onclick="switchSidebarTab('testcase')">
-                    📋 测试用例
-                </button>
-                <button class="sidebar-tab" data-tab="smoke" onclick="switchSidebarTab('smoke')">
-                    🔥 冒烟用例
-                </button>
-            </div>
-
-            <!-- 测试用例菜单 -->
-            <div id="testcaseMenuContent" class="sidebar-content active">
-                <ul class="project-list" id="projectList">
-                    <!-- 项目列表将动态生成 -->
-                </ul>
-            </div>
-
-            <!-- 冒烟用例菜单 -->
-            <div id="smokeMenuContent" class="sidebar-content" style="display: none;">
-                <ul class="project-list" id="smokeProjectList">
-                    <!-- 冒烟用例列表将动态生成 -->
-                </ul>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="empty-state" id="emptyState">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <p>请上传测试用例文件开始测试</p>
-            </div>
-
-            <div class="test-case-detail" id="testCaseDetail" style="display: none;">
-                <!-- 测试用例详情将动态生成 -->
-            </div>
-        </div>
-    </div>
-
-    <!-- 菜单右键菜单 -->
-    <div id="contextMenu" class="context-menu">
-        <div class="context-menu-item" onclick="uploadTestCasesToMenu()">
-            📁 上传测试用例
-        </div>
-        <div class="context-menu-item" onclick="renameMenu()">
-            ✏️ 修改名称
-        </div>
-        <div class="context-menu-item danger" onclick="deleteMenu()">
-            🗑️ 删除菜单
-        </div>
-    </div>
-
-    <!-- 项目右键菜单 -->
-    <div id="projectContextMenu" class="context-menu">
-        <div class="context-menu-item danger" onclick="deleteProject()">
-            🗑️ 删除项目
-        </div>
-    </div>
-
-    <!-- 测试用例右键菜单 -->
-    <div id="testCaseContextMenu" class="context-menu">
-        <div class="context-menu-item" onclick="copyTestCase()">
-            📋 复制
-        </div>
-        <div class="context-menu-item" onclick="pasteTestCase()" id="pasteMenuItem">
-            📄 粘贴
-        </div>
-        <div class="context-menu-item danger" onclick="deleteTestCaseFromContextMenu()">
-            🗑️ 删除
-        </div>
-    </div>
-
-    <!-- 不通过原因弹窗 -->
-    <div id="failReasonModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                ❌ 填写不通过原因
-            </div>
-            <div class="modal-body">
-                <label class="modal-label">请详细说明测试不通过的原因：</label>
-                <textarea id="failReasonInput" class="modal-textarea" placeholder="请输入不通过的具体原因..."></textarea>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn modal-btn-secondary" onclick="closeFailReasonModal()">取消</button>
-                <button class="modal-btn modal-btn-primary" onclick="confirmFailReason()">确认</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 工具提示 -->
-    <div id="progressTooltip" class="progress-tooltip"></div>
-
-    <!-- Loading 遮罩层 -->
-    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 30px 50px; border-radius: 10px; text-align: center;">
-            <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-            <div id="loadingText" style="color: #333; font-size: 16px; font-weight: 500;">正在加载...</div>
-        </div>
-    </div>
-
-    <!-- 加载错误提示 -->
-    <div id="loadErrorOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
-            <button onclick="retryLoadData()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-                🔄 重新加载
-            </button>
-        </div>
-    </div>
-
-    <!-- 日志下载按钮 -->
-    <button id="downloadLogsBtn" class="download-logs-btn" onclick="downloadLogs()" title="下载操作日志">
-        📋 下载日志
-    </button>
 </div>
 
 
