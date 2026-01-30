@@ -254,6 +254,37 @@ class APIService {
         return await this.request(`/test-cases/smoke-menus?level=${level}`);
     }
 
+    // ==================== 用例仓库相关 ====================
+
+    // 获取菜单列表（支持仓库过滤）
+    async getMenus(params = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.is_repository !== undefined) {
+            queryParams.append('is_repository', params.is_repository);
+        }
+        if (params.level !== undefined) {
+            queryParams.append('level', params.level);
+        }
+
+        const queryString = queryParams.toString();
+        const endpoint = `/menus${queryString ? '?' + queryString : ''}`;
+
+        return await this.request(endpoint);
+    }
+
+    // 获取菜单下的测试用例
+    async getTestCases(menuId) {
+        return await this.request(`/test-cases/menus/${menuId}/test-cases`);
+    }
+
+    // 创建版本（从仓库复制）
+    async createVersion(data) {
+        return await this.request('/versions/create', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
     // ==================== 用户相关 ====================
 
     // 获取当前用户信息

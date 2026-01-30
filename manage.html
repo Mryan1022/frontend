@@ -302,6 +302,18 @@
             color: #1f2937;
         }
 
+        /* 从仓库创建的菜单样式 */
+        .project-name.from-repository {
+            background: linear-gradient(90deg, #dbeafe 0%, #f0f9ff 50%, transparent 100%);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .project-name.from-repository:hover {
+            background: linear-gradient(90deg, #bfdbfe 0%, #dbeafe 50%, #f0f9ff 100%);
+            border-left-color: #2563eb;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+        }
+
         .test-case-list {
             list-style: none;
             margin-left: 15px;
@@ -1674,6 +1686,218 @@
             padding: 40px 20px;
             color: #9ca3af;
         }
+
+        /* ========== TAB 3: 用例仓库样式 ========== */
+        .version-create-panel {
+            background: white;
+            padding: 25px;
+            margin: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-create {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .repository-main-container {
+            display: flex;
+            gap: 20px;
+            margin: 0 30px 30px;
+        }
+
+        .repository-section {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .repository-testcase-section {
+            flex: 1.5;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .repository-section-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .repository-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .repository-menu-item:hover {
+            background: #f3f4f6;
+        }
+
+        .repository-menu-item.selected {
+            background: #dbeafe;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .repository-menu-checkbox {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .repository-submenu-list {
+            margin-left: 35px;
+        }
+
+        .repository-testcase-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .repository-testcase-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .repository-testcase-list-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .repository-testcase-list {
+            max-height: 500px;
+        }
+
+        .repository-testcase-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin: 5px 0;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .repository-testcase-item:hover {
+            border-color: #3b82f6;
+            background: #f9fafb;
+        }
+
+        .repository-testcase-item.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+
+        .repository-testcase-checkbox {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .repository-testcase-detail {
+            border-top: 2px solid #e5e7eb;
+            padding-top: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .repository-detail-header {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .repository-detail-section {
+            margin-bottom: 15px;
+        }
+
+        .repository-detail-label {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .repository-detail-content {
+            font-size: 14px;
+            color: #374151;
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            line-height: 1.6;
+        }
+
+        .repository-detail-content ul {
+            margin-left: 20px;
+        }
+
+        .repository-detail-content li {
+            margin: 5px 0;
+        }
+
+        .repository-selection-summary {
+            background: white;
+            padding: 15px 30px;
+            margin: 0 30px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .repository-summary-stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .repository-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1685,6 +1909,9 @@
         </button>
         <button class="tab-btn" onclick="switchTab('data')">
             📊 数据管理
+        </button>
+        <button class="tab-btn" onclick="switchTab('repository')">
+            📦 用例仓库
         </button>
     </div>
 
@@ -1994,6 +2221,79 @@
             </div>
         </div>
     </div>
+
+    <!-- TAB 3: 用例仓库 -->
+    <div id="tab-repository" class="tab-content">
+        <!-- 创建版本面板 -->
+        <div class="version-create-panel">
+            <div>
+                <h2 style="color: #667eea; margin: 0; display: flex; align-items: center; gap: 10px;">🎯 创建新版本</h2>
+                <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; margin-top: 10px; border-radius: 4px;">
+                    <p style="margin: 0; color: #1e40af; font-size: 14px;">💡 从全量用例中选择需要的模块，点击"创建版本"按钮即可创建新版本测试。</p>
+                </div>
+            </div>
+            <button class="btn btn-create" onclick="createVersionFromRepository()">✅ 创建版本</button>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="repository-main-container">
+            <!-- 左侧：仓库菜单树 -->
+            <div class="repository-section">
+                <div class="repository-section-header">全量用例</div>
+                <div class="menu-tree" id="repositoryMenuTree">
+                    <!-- JavaScript 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 右侧：用例列表 + 详情 -->
+            <div class="repository-testcase-section">
+                <div class="repository-section-header">📋 用例列表</div>
+
+                <div class="repository-testcase-toolbar">
+                    <div style="color: #6b7280; font-size: 14px;">
+                        当前菜单: <strong style="color: #374151;" id="repositoryCurrentMenuName">请选择菜单</strong>
+                    </div>
+                    <div class="repository-testcase-actions">
+                        <button class="btn-small" onclick="selectAllRepositoryTestCases()">☑️ 全选</button>
+                        <button class="btn-small" onclick="unselectAllRepositoryTestCases()">☐ 全不选</button>
+                    </div>
+                </div>
+
+                <div class="repository-testcase-list-container">
+                    <div class="repository-testcase-list" id="repositoryTestcaseList">
+                        <div class="empty-state" style="text-align: center; padding: 60px 20px; color: #9ca3af;">
+                            <div style="font-size: 64px; margin-bottom: 15px;">📋</div>
+                            <p>请在左侧选择菜单查看用例</p>
+                        </div>
+                    </div>
+
+                    <!-- 用例详情 -->
+                    <div class="repository-testcase-detail" id="repositoryTestcaseDetail" style="display: none;">
+                        <!-- JavaScript 动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部统计 -->
+        <div class="repository-selection-summary">
+            <div class="repository-summary-stats">
+                <div class="repository-stat-item">
+                    <span style="color: #6b7280; font-size: 14px;">已选模块:</span>
+                    <span style="color: #667eea; font-size: 20px; font-weight: bold; margin: 0 5px;" id="repositorySelectedMenuCount">0</span>
+                    <span style="color: #6b7280; font-size: 14px;">个</span>
+                </div>
+                <div class="repository-stat-item">
+                    <span style="color: #6b7280; font-size: 14px;">已选用例:</span>
+                    <span style="color: #667eea; font-size: 20px; font-weight: bold; margin: 0 5px;" id="repositorySelectedTestCaseCount">0</span>
+                    <span style="color: #6b7280; font-size: 14px;">条</span>
+                </div>
+            </div>
+            <div style="color: #6b7280; font-size: 13px;">
+                💡 点击"创建版本"将选中的模块和用例复制到首页
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -2049,6 +2349,11 @@
         // 如果切换到数据管理TAB，更新统计数据
         if (tabName === 'data') {
             updateStats();
+        }
+
+        // 如果切换到用例仓库TAB，初始化仓库数据
+        if (tabName === 'repository') {
+            initRepositoryTab();
         }
     }
 
@@ -3546,11 +3851,19 @@ for (let i = 0; i < rows.length; i++) {
         menuDiv.style.paddingLeft = '10px';
         menuDiv.dataset.menuId = menuNode.id; // 添加菜单 ID 用于状态保存
 
+        // 如果是从仓库创建的菜单，添加特殊class
+        if (menuNode.is_from_repository && level === 1) {
+            menuDiv.classList.add('project-name', 'from-repository');
+        }
+
         // 根据层级添加不同的样式
         if (level === 1) {
             menuDiv.style.fontWeight = 'bold';
             menuDiv.style.fontSize = '14px';
-            menuDiv.style.background = '#f5f7fa';
+            // 如果不是从仓库创建的，才设置默认背景
+            if (!menuNode.is_from_repository) {
+                menuDiv.style.background = '#f5f7fa';
+            }
         } else if (level === 2) {
             menuDiv.style.fontWeight = '600';
             menuDiv.style.fontSize = '13px';
@@ -5564,6 +5877,467 @@ for (let i = 0; i < rows.length; i++) {
         } finally {
             btn.disabled = false;
             btn.textContent = '🔄 刷新统计';
+        }
+    }
+
+    // ========== 用例仓库相关代码 ==========
+    let repositoryMenus = []; // 仓库菜单列表
+    let selectedRepositoryMenus = new Set(); // 已选菜单
+    let selectedRepositoryTestCases = new Set(); // 已选用例
+    let currentRepositoryMenu = null; // 当前选中的菜单
+    let currentRepositoryTestCase = null; // 当前选中的用例
+    let repositoryInitialized = false; // 标记是否已初始化
+
+    // 初始化用例仓库TAB
+    async function initRepositoryTab() {
+        if (repositoryInitialized) return;
+
+        try {
+            showLoading('正在加载仓库数据...');
+            await loadRepositoryMenus();
+            repositoryInitialized = true;
+        } catch (error) {
+            console.error('初始化仓库失败:', error);
+            alert('加载仓库数据失败：' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // 加载仓库菜单
+    async function loadRepositoryMenus() {
+        try {
+            const response = await apiService.getMenus({ is_repository: true });
+
+            if (response.success) {
+                repositoryMenus = response.data;
+                renderRepositoryMenuTree();
+                updateRepositoryStatistics();
+            } else {
+                throw new Error(response.error || '加载菜单失败');
+            }
+        } catch (error) {
+            console.error('加载仓库菜单失败:', error);
+            throw error;
+        }
+    }
+
+    // 渲染仓库菜单树
+    function renderRepositoryMenuTree() {
+        const container = document.getElementById('repositoryMenuTree');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // 获取一级菜单
+        const level1Menus = repositoryMenus.filter(m => m.level === 1);
+
+        level1Menus.forEach(menu => {
+            // 创建一级菜单
+            const menuItem = createRepositoryMenuItem(menu);
+            container.appendChild(menuItem);
+
+            // 获取子菜单
+            const childMenus = repositoryMenus.filter(m => m.parentId === menu.id);
+            if (childMenus.length > 0) {
+                const submenuList = document.createElement('div');
+                submenuList.className = 'repository-submenu-list';
+
+                childMenus.forEach(child => {
+                    const childItem = createRepositoryMenuItem(child);
+                    submenuList.appendChild(childItem);
+                });
+
+                container.appendChild(submenuList);
+            }
+        });
+    }
+
+    // 创建仓库菜单项
+    function createRepositoryMenuItem(menu) {
+        const div = document.createElement('div');
+        div.className = 'repository-menu-item';
+        div.id = `repo_menuitem_${menu.id}`;
+
+        const icon = menu.level === 1 ? '📂' : '📄';
+        const isChecked = menu.level === 1 || menu.level === 2; // 默认全选
+
+        div.innerHTML = `
+            <input type="checkbox" class="repository-menu-checkbox" id="repo_checkbox_${menu.id}" ${isChecked ? 'checked' : ''}>
+            <span class="menu-icon">${icon}</span>
+            <span class="menu-name">${menu.name}</span>
+            <span class="menu-count">加载中...</span>
+        `;
+
+        // 复选框事件
+        const checkbox = div.querySelector('.repository-menu-checkbox');
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation();
+            handleRepositoryMenuCheckboxChange(menu, checkbox.checked);
+        });
+
+        // 点击菜单项显示用例
+        div.addEventListener('click', (e) => {
+            if (e.target.type === 'checkbox') return;
+            selectRepositoryMenu(menu);
+        });
+
+        // 默认勾选
+        if (isChecked) {
+            selectedRepositoryMenus.add(menu.id);
+        }
+
+        // 加载用例数量
+        loadRepositoryTestCaseCount(menu.id);
+
+        return div;
+    }
+
+    // 加载用例数量
+    async function loadRepositoryTestCaseCount(menuId) {
+        try {
+            const response = await apiService.getTestCases(menuId);
+            if (response.success) {
+                const count = response.data.length;
+                const countSpan = document.querySelector(`#repo_menuitem_${menuId} .menu-count`);
+                if (countSpan) {
+                    countSpan.textContent = `${count} 用例`;
+                }
+            }
+        } catch (error) {
+            console.error('加载用例数量失败:', error);
+        }
+    }
+
+    // 处理菜单复选框变化
+    function handleRepositoryMenuCheckboxChange(menu, checked) {
+        if (checked) {
+            selectedRepositoryMenus.add(menu.id);
+        } else {
+            selectedRepositoryMenus.delete(menu.id);
+        }
+
+        // 如果是一级菜单，联动子菜单
+        if (menu.level === 1) {
+            const childMenus = repositoryMenus.filter(m => m.parentId === menu.id);
+            childMenus.forEach(child => {
+                const childCheckbox = document.getElementById(`repo_checkbox_${child.id}`);
+                if (childCheckbox) {
+                    childCheckbox.checked = checked;
+                    if (checked) {
+                        selectedRepositoryMenus.add(child.id);
+                    } else {
+                        selectedRepositoryMenus.delete(child.id);
+                    }
+                }
+                // 联动子菜单的用例
+                updateRepositoryTestCasesSelection(child.id, checked);
+            });
+
+            // 联动用例
+            updateRepositoryTestCasesSelection(menu.id, checked);
+        }
+
+        // 如果是二级菜单，更新父菜单状态
+        if (menu.level === 2) {
+            updateRepositoryParentCheckboxState(menu.parentId);
+            updateRepositoryTestCasesSelection(menu.id, checked);
+        }
+
+        updateRepositoryStatistics();
+    }
+
+    // 更新父菜单复选框状态
+    function updateRepositoryParentCheckboxState(parentId) {
+        const childMenus = repositoryMenus.filter(m => m.parentId === parentId);
+        if (childMenus.length === 0) return;
+
+        const checkedCount = childMenus.filter(c => {
+            const cb = document.getElementById(`repo_checkbox_${c.id}`);
+            return cb && cb.checked;
+        }).length;
+
+        const parentCheckbox = document.getElementById(`repo_checkbox_${parentId}`);
+        if (parentCheckbox) {
+            if (checkedCount === 0) {
+                parentCheckbox.checked = false;
+                parentCheckbox.indeterminate = false;
+            } else if (checkedCount === childMenus.length) {
+                parentCheckbox.checked = true;
+                parentCheckbox.indeterminate = false;
+            } else {
+                parentCheckbox.checked = false;
+                parentCheckbox.indeterminate = true;
+            }
+        }
+    }
+
+    // 更新用例勾选状态
+    async function updateRepositoryTestCasesSelection(menuId, checked) {
+        try {
+            const response = await apiService.getTestCases(menuId);
+            if (response.success) {
+                const testCases = response.data;
+                testCases.forEach(tc => {
+                    if (checked) {
+                        selectedRepositoryTestCases.add(tc.id);
+                    } else {
+                        selectedRepositoryTestCases.delete(tc.id);
+                    }
+
+                    // 更新界面
+                    const checkbox = document.getElementById(`repo_tc_checkbox_${tc.id}`);
+                    if (checkbox) {
+                        checkbox.checked = checked;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('更新用例勾选状态失败:', error);
+        }
+    }
+
+    // 选择菜单
+    function selectRepositoryMenu(menu) {
+        currentRepositoryMenu = menu;
+
+        // 更新选中状态
+        document.querySelectorAll('.repository-menu-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        const menuItem = document.getElementById(`repo_menuitem_${menu.id}`);
+        if (menuItem) {
+            menuItem.classList.add('selected');
+        }
+
+        // 显示用例列表
+        renderRepositoryTestCaseList(menu);
+
+        // 更新当前菜单名
+        const menuNameEl = document.getElementById('repositoryCurrentMenuName');
+        if (menuNameEl) {
+            menuNameEl.textContent = menu.name;
+        }
+
+        // 隐藏详情
+        const detailEl = document.getElementById('repositoryTestcaseDetail');
+        if (detailEl) {
+            detailEl.style.display = 'none';
+        }
+    }
+
+    // 渲染用例列表
+    async function renderRepositoryTestCaseList(menu) {
+        const container = document.getElementById('repositoryTestcaseList');
+        if (!container) return;
+
+        try {
+            const response = await apiService.getTestCases(menu.id);
+
+            if (!response.success || response.data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 60px 20px; color: #9ca3af;">
+                        <div style="font-size: 64px; margin-bottom: 15px;">📋</div>
+                        <p>该菜单下暂无用例</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const testCases = response.data;
+            container.innerHTML = '';
+
+            testCases.forEach(tc => {
+                const div = document.createElement('div');
+                div.className = 'repository-testcase-item';
+                div.id = `repo_testcase_${tc.id}`;
+
+                const isChecked = selectedRepositoryTestCases.has(tc.id);
+
+                div.innerHTML = `
+                    <input type="checkbox" class="repository-testcase-checkbox" id="repo_tc_checkbox_${tc.id}" ${isChecked ? 'checked' : ''}>
+                    <div class="testcase-id">${tc.id}</div>
+                    <div class="testcase-name">${tc.name}</div>
+                    <div class="testcase-priority priority-${(tc.priority || 'P2').toLowerCase()}">${tc.priority || 'P2'}</div>
+                `;
+
+                // 复选框事件
+                const checkbox = div.querySelector('.repository-testcase-checkbox');
+                checkbox.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    if (checkbox.checked) {
+                        selectedRepositoryTestCases.add(tc.id);
+                    } else {
+                        selectedRepositoryTestCases.delete(tc.id);
+                    }
+                    updateRepositoryStatistics();
+                });
+
+                // 点击显示详情
+                div.addEventListener('click', (e) => {
+                    if (e.target.type === 'checkbox') return;
+                    showRepositoryTestCaseDetail(tc);
+                });
+
+                container.appendChild(div);
+            });
+        } catch (error) {
+            console.error('渲染用例列表失败:', error);
+            container.innerHTML = `
+                <div class="empty-state" style="text-align: center; padding: 60px 20px; color: #ef4444;">
+                    <div style="font-size: 64px; margin-bottom: 15px;">❌</div>
+                    <p>加载用例失败：${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    // 显示用例详情
+    function showRepositoryTestCaseDetail(testCase) {
+        currentRepositoryTestCase = testCase;
+
+        // 更新选中状态
+        document.querySelectorAll('.repository-testcase-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        const tcItem = document.getElementById(`repo_testcase_${testCase.id}`);
+        if (tcItem) {
+            tcItem.classList.add('selected');
+        }
+
+        const detailDiv = document.getElementById('repositoryTestcaseDetail');
+        if (!detailDiv) return;
+
+        detailDiv.style.display = 'block';
+
+        const preconditions = testCase.preconditions || '无';
+        const steps = testCase.steps || '无';
+        const expectedResults = testCase.expectedResults || '无';
+
+        detailDiv.innerHTML = `
+            <div class="repository-detail-header">
+                📄 ${testCase.id} - ${testCase.name}
+                <span class="testcase-priority priority-${(testCase.priority || 'P2').toLowerCase()}">${testCase.priority || 'P2'}</span>
+            </div>
+
+            <div class="repository-detail-section">
+                <div class="repository-detail-label">前置条件</div>
+                <div class="repository-detail-content">${preconditions}</div>
+            </div>
+
+            <div class="repository-detail-section">
+                <div class="repository-detail-label">操作步骤</div>
+                <div class="repository-detail-content">${steps}</div>
+            </div>
+
+            <div class="repository-detail-section">
+                <div class="repository-detail-label">预期结果</div>
+                <div class="repository-detail-content">${expectedResults}</div>
+            </div>
+        `;
+    }
+
+    // 全选用例
+    async function selectAllRepositoryTestCases() {
+        if (!currentRepositoryMenu) return;
+
+        try {
+            const response = await apiService.getTestCases(currentRepositoryMenu.id);
+            if (response.success) {
+                response.data.forEach(tc => {
+                    selectedRepositoryTestCases.add(tc.id);
+                    const checkbox = document.getElementById(`repo_tc_checkbox_${tc.id}`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                updateRepositoryStatistics();
+            }
+        } catch (error) {
+            console.error('全选用例失败:', error);
+        }
+    }
+
+    // 全不选用例
+    async function unselectAllRepositoryTestCases() {
+        if (!currentRepositoryMenu) return;
+
+        try {
+            const response = await apiService.getTestCases(currentRepositoryMenu.id);
+            if (response.success) {
+                response.data.forEach(tc => {
+                    selectedRepositoryTestCases.delete(tc.id);
+                    const checkbox = document.getElementById(`repo_tc_checkbox_${tc.id}`);
+                    if (checkbox) checkbox.checked = false;
+                });
+                updateRepositoryStatistics();
+            }
+        } catch (error) {
+            console.error('取消选择用例失败:', error);
+        }
+    }
+
+    // 更新统计
+    function updateRepositoryStatistics() {
+        const menuCountEl = document.getElementById('repositorySelectedMenuCount');
+        if (menuCountEl) {
+            menuCountEl.textContent = selectedRepositoryMenus.size;
+        }
+
+        const tcCountEl = document.getElementById('repositorySelectedTestCaseCount');
+        if (tcCountEl) {
+            tcCountEl.textContent = selectedRepositoryTestCases.size;
+        }
+    }
+
+    // 创建版本
+    async function createVersionFromRepository() {
+        const versionName = prompt('请输入版本名称：', '132回归用例');
+
+        if (!versionName) {
+            return; // 用户取消
+        }
+
+        if (!versionName.trim()) {
+            alert('版本名称不能为空！');
+            return;
+        }
+
+        const menuCount = selectedRepositoryMenus.size;
+        const testCaseCount = selectedRepositoryTestCases.size;
+
+        if (menuCount === 0) {
+            alert('请至少选择一个模块！');
+            return;
+        }
+
+        if (testCaseCount === 0) {
+            alert('选中的模块中没有用例！');
+            return;
+        }
+
+        try {
+            showLoading('正在创建版本...');
+
+            // 调用API创建版本
+            const response = await apiService.createVersion({
+                versionName: versionName,
+                selectedMenus: Array.from(selectedRepositoryMenus),
+                selectedTestCases: Array.from(selectedRepositoryTestCases)
+            });
+
+            if (response.success) {
+                hideLoading();
+                alert(`✅ 创建成功！\n\n版本名称: ${versionName}\n已选模块: ${menuCount} 个\n已选用例: ${testCaseCount} 条\n\n新版本已添加到首页，并标记为蓝色背景（来自仓库）。`);
+
+                // 切换到首页并刷新
+                switchTab('home');
+                loadMenus();
+            } else {
+                throw new Error(response.error || '创建版本失败');
+            }
+        } catch (error) {
+            console.error('创建版本失败:', error);
+            hideLoading();
+            alert('创建版本失败：' + error.message);
         }
     }
 
