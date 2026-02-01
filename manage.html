@@ -2264,31 +2264,6 @@
             </div>
         </div>
 
-        <!-- 全局统计卡片 -->
-        <div class="global-stats-card" style="background: white; padding: 20px; margin: 20px 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h3 style="margin: 0 0 15px 0; color: #667eea; display: flex; align-items: center; gap: 10px;">
-                📊 全局统计
-            </h3>
-            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px;">
-                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">用例总数</div>
-                    <div style="font-size: 32px; font-weight: bold; color: #667eea;" id="globalTotalCount">-</div>
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">📱 Android 通过</div>
-                    <div style="font-size: 32px; font-weight: bold; color: #10b981;" id="globalAndroidPass">-</div>
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">🍎 iOS 通过</div>
-                    <div style="font-size: 32px; font-weight: bold; color: #10b981;" id="globalIosPass">-</div>
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">🌐 H5 通过</div>
-                    <div style="font-size: 32px; font-weight: bold; color: #10b981;" id="globalH5Pass">-</div>
-                </div>
-            </div>
-        </div>
-
         <!-- 进度统计模块 -->
         <div class="stats-module">
             <!-- 统计头部 -->
@@ -5808,33 +5783,9 @@ for (let i = 0; i < rows.length; i++) {
 
     let currentStatsMenuId = null; // 当前选中的统计菜单ID
 
-    // 加载全局统计
-    async function loadGlobalStats() {
-        try {
-            // 不传 menuId，获取全局统计
-            const result = await apiService.getStats();
-            if (result && result.success) {
-                const stats = result.data;
-
-                // 更新全局统计数字
-                document.getElementById('globalTotalCount').textContent = stats.total || 0;
-                document.getElementById('globalAndroidPass').textContent = stats.android?.passed || 0;
-                document.getElementById('globalIosPass').textContent = stats.ios?.passed || 0;
-                document.getElementById('globalH5Pass').textContent = stats.h5?.passed || 0;
-            }
-        } catch (e) {
-            console.error('加载全局统计失败:', e);
-            // 显示错误状态
-            document.getElementById('globalTotalCount').textContent = '加载失败';
-        }
-    }
-
     // 初始化统计模块
     async function initStatsModule() {
         try {
-            // 加载全局统计
-            await loadGlobalStats();
-
             // 加载一级菜单填充下拉框
             const result = await apiService.getMenusByLevel(1);
             if (result && result.success) {
@@ -6082,10 +6033,7 @@ for (let i = 0; i < rows.length; i++) {
         btn.textContent = '🔄 刷新中...';
 
         try {
-            // 刷新全局统计
-            await loadGlobalStats();
-
-            // 如果选择了菜单，也刷新菜单统计
+            // 如果选择了菜单，刷新菜单统计
             if (currentStatsMenuId) {
                 await loadStatsData();
             }
