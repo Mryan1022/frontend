@@ -2596,10 +2596,15 @@
 
             if (result && result.success) {
                 smokeMenus = result.data || [];
-                renderSmokeMenuList();
+            } else {
+                smokeMenus = [];  // API失败时设置为空数组
             }
+            renderSmokeMenuList();
         } catch (error) {
-            showToast('加载失败: ' + error.message);
+            console.error('加载冒烟菜单失败:', error);
+            smokeMenus = [];  // 异常时设置为空数组
+            renderSmokeMenuList();
+            showToast('加载失败: ' + (error.message || '未知错误'));
         } finally {
             hideLoading();
         }
