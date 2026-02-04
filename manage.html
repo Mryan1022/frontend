@@ -2711,10 +2711,12 @@
             const currentMenu = menus.find(m => m.id === currentMenuId);
             const menuName = currentMenu ? currentMenu.name : '未知菜单';
             const fileType = file.name.split('.').pop().toUpperCase();
-            addLog('上传测试用例', `文件: ${file.name}, 类型: ${fileType}, 菜单: ${menuName}, 导入用例数: ${result.data.imported_count}`);
+            const importedCount = result.data.test_cases_imported || result.data.imported_count || 0;
+            const p0Count = result.data.p0_cases_synced || 0;
+            addLog('上传测试用例', `文件: ${file.name}, 类型: ${fileType}, 菜单: ${menuName}, 导入用例数: ${importedCount}, P0用例: ${p0Count}`);
 
             hideLoading();
-            showToast(result.message || `测试用例上传成功，共导入 ${result.data.imported_count} 条用例`);
+            showToast(result.message || `测试用例上传成功，共导入 ${importedCount} 条用例，其中${p0Count}个P0用例已同步`);
 
         } catch (error) {
             console.error('文件上传错误:', error);
@@ -4081,7 +4083,7 @@ for (let i = 0; i < rows.length; i++) {
             hasContent = menuNode.has_children || menuNode.stats.total_test_cases > 0;
         } else {
             // 兼容旧模式：使用已加载的数据判断
-            hasContent = menuNode.children.length > 0 || menuTestCases.filter(tc => tc.menuId === menuNode.id).length > 0;
+            hasContent = (menuNode.children && menuNode.children.length > 0) || menuTestCases.filter(tc => tc.menuId === menuNode.id).length > 0;
         }
 
         // 检查菜单是否应该展开（使用菜单 ID）
@@ -4092,7 +4094,7 @@ for (let i = 0; i < rows.length; i++) {
         let displayCount;
         if (menuNode.has_children) {
             // 有子菜单：显示子菜单数量
-            displayCount = menuNode.children_count || menuNode.children.length;
+            displayCount = menuNode.children_count || (menuNode.children && menuNode.children.length) || 0;
         } else {
             // 没有子菜单：显示测试用例数量
             displayCount = menuNode.stats ? menuNode.stats.total_test_cases : menuTestCases.length;
