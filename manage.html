@@ -2583,8 +2583,8 @@
         document.getElementById('smokeMenuContent').style.display =
             tab === 'smoke' ? 'block' : 'none';
 
-        if (tab === 'smoke' && smokeMenus.length === 0) {
-            loadSmokeMenus();
+        if (tab === 'smoke') {
+            loadSmokeMenus();  // 每次切换都重新加载，确保数据最新
         }
     }
 
