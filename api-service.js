@@ -254,6 +254,11 @@ class APIService {
         return await this.request(`/test-cases/smoke-menus?level=${level}`);
     }
 
+    // 获取冒烟用例列表（Plan A新增）
+    async getSmokeTestCasesByMenu(menuId) {
+        return await this.request(`/test-cases/menus/${menuId}/smoke-test-cases`);
+    }
+
     // ==================== 用例仓库相关 ====================
 
     // 获取菜单列表（支持仓库过滤）

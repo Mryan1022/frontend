@@ -2850,14 +2850,19 @@
     }
 
     // 懒加载测试用例列表
-    async function loadTestCaseList(menuId) {
+    async function loadTestCaseList(menuId, isSmokeMenu = false) {
         // 如果已经加载过，直接返回缓存
-        if (testCaseListCache[menuId]) {
-            return testCaseListCache[menuId];
+        const cacheKey = isSmokeMenu ? `smoke_${menuId}` : menuId;
+        if (testCaseListCache[cacheKey]) {
+            return testCaseListCache[cacheKey];
         }
 
         try {
-            const result = await apiService.getTestCasesByMenu(menuId);
+            // 冒烟菜单调用冒烟用例API，普通菜单调用普通测试用例API
+            const result = isSmokeMenu
+                ? await apiService.getSmokeTestCasesByMenu(menuId)
+                : await apiService.getTestCasesByMenu(menuId);
+
             if (result && result.success) {
                 const cases = (result.data || []).map(tc => ({
                     id: tc.id,
@@ -2870,12 +2875,14 @@
                     iosFailReason: tc.ios_fail_reason || '',
                     h5Status: tc.h5_status,
                     h5FailReason: tc.h5_fail_reason || '',
+                    // 冒烟用例特有字段
+                    originalTestCaseId: tc.original_test_case_id,
                     // 详情字段暂时不加载，等点击时再加载
                     preconditions: [],
                     steps: [],
                     expectedResults: []
                 }));
-                testCaseListCache[menuId] = cases;
+                testCaseListCache[cacheKey] = cases;
                 // 将测试用例添加到全局testCases数组中
                 cases.forEach(tc => {
                     const existingIndex = testCases.findIndex(t => t.id === tc.id);
@@ -4030,7 +4037,7 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 递归渲染菜单节点
-    function renderMenuNode(menuNode, level = 1) {
+    function renderMenuNode(menuNode, level = 1, isSmokeMenu = false) {
         const displayTestCases = searchKeyword && searchResults.length > 0
             ? searchResults.map(r => r.testCase)
             : testCases;
@@ -4409,11 +4416,15 @@ for (let i = 0; i < rows.length; i++) {
 
                         // 加载子菜单
                         const children = await loadMenuChildren(menuNode.id);
-                        // 加载测试用例
-                        await loadTestCaseList(menuNode.id);
+                        // 加载测试用例（冒烟菜单加载冒烟用例）
+                        await loadTestCaseList(menuNode.id, isSmokeMenu);
 
                         // 重新渲染这个菜单节点
-                        renderMenuList();
+                        if (isSmokeMenu) {
+                            renderSmokeMenuList();
+                        } else {
+                            renderMenuList();
+                        }
                     }
                 } else {
                     icon.classList.add('collapsed');
