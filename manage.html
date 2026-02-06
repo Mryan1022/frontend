@@ -2897,7 +2897,18 @@
         // 如果已经加载过，直接返回缓存
         const cacheKey = isSmokeMenu ? `smoke_${menuId}` : menuId;
         if (testCaseListCache[cacheKey]) {
-            return testCaseListCache[cacheKey];
+            const cachedCases = testCaseListCache[cacheKey];
+            // 即使从缓存返回，也要确保这些用例在全局 testCases 数组中
+            // 这样重新渲染时才能正确显示
+            cachedCases.forEach(tc => {
+                const existingIndex = testCases.findIndex(t => t.id === tc.id);
+                if (existingIndex >= 0) {
+                    testCases[existingIndex] = tc;
+                } else {
+                    testCases.push(tc);
+                }
+            });
+            return cachedCases;
         }
 
         try {
