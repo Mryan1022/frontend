@@ -2516,7 +2516,13 @@
     const menuChildrenCache = {}; // 子菜单缓存 { parentId: [children] }
     const testCaseListCache = {}; // 测试用例列表缓存 { menuId: [testCases] }
     const testCaseDetailCache = {}; // 测试用例详情缓存 { testCaseId: testCase }
-    let loadedMenuIds = new Set(); // 已加载子菜单的menu ID集合
+    let loadedTestCaseMenuIds = new Set(); // 已加载测试用例子菜单的menu ID集合
+    let loadedSmokeMenuIds = new Set(); // 已加载冒烟用例子菜单的menu ID集合
+
+    // 获取当前使用的 loadedMenuIds Set
+    function getLoadedMenuIds() {
+        return currentSidebarTab === 'smoke' ? loadedSmokeMenuIds : loadedTestCaseMenuIds;
+    }
     let currentMenuId = null; // 当前右键点击的菜单ID
     let currentProjectName = null; // 当前右键点击的项目名称
     let currentProjectMenuId = null; // 当前项目所属的菜单ID
@@ -2640,6 +2646,9 @@
                 expandedSmokeMenus.add(projectDiv.dataset.projectKey);
             }
         });
+
+        // 清空已加载状态（DOM重建后需要重新懒加载）
+        loadedSmokeMenuIds.clear();
 
         smokeList.innerHTML = '';
 
@@ -2841,13 +2850,13 @@
         if (menuId) {
             delete menuChildrenCache[menuId];
             delete testCaseListCache[menuId];
-            loadedMenuIds.delete(menuId);
+            getLoadedMenuIds().delete(menuId);
         } else {
             // 清除所有缓存
             Object.keys(menuChildrenCache).forEach(key => delete menuChildrenCache[key]);
             Object.keys(testCaseListCache).forEach(key => delete testCaseListCache[key]);
             Object.keys(testCaseDetailCache).forEach(key => delete testCaseDetailCache[key]);
-            loadedMenuIds.clear();
+            getLoadedMenuIds().clear();
         }
     }
 
@@ -4437,8 +4446,8 @@ for (let i = 0; i < rows.length; i++) {
                     getExpandedMenus().add(menuNode.id);
 
                     // 懒加载：如果还没加载过子内容，则加载
-                    if (!loadedMenuIds.has(menuNode.id)) {
-                        loadedMenuIds.add(menuNode.id);
+                    if (!getLoadedMenuIds().has(menuNode.id)) {
+                        getLoadedMenuIds().add(menuNode.id);
 
                         // 显示加载提示
                         const loadingDiv = document.createElement('div');
