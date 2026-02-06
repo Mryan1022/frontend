@@ -2824,23 +2824,29 @@
     }
 
     // 懒加载子菜单
-    async function loadMenuChildren(menuId) {
+    async function loadMenuChildren(menuId, isSmokeMenu = false) {
         // 如果已经加载过，直接返回缓存
-        if (menuChildrenCache[menuId]) {
-            return menuChildrenCache[menuId];
+        const cacheKey = isSmokeMenu ? `smoke_${menuId}` : menuId;
+        if (menuChildrenCache[cacheKey]) {
+            return menuChildrenCache[cacheKey];
         }
 
         try {
-            const result = await apiService.getMenuChildren(menuId);
+            // 冒烟菜单调用冒烟子菜单API，普通菜单调用普通子菜单API
+            const result = isSmokeMenu
+                ? await apiService.getSmokeMenuChildren(menuId)
+                : await apiService.getMenuChildren(menuId);
+
             if (result && result.success) {
-                menuChildrenCache[menuId] = result.data || [];
-                // 将子菜单添加到全局menus数组中
+                menuChildrenCache[cacheKey] = result.data || [];
+                // 将子菜单添加到对应的全局数组中
+                const targetArray = isSmokeMenu ? smokeMenus : menus;
                 result.data.forEach(childMenu => {
-                    if (!menus.find(m => m.id === childMenu.id)) {
-                        menus.push(childMenu);
+                    if (!targetArray.find(m => m.id === childMenu.id)) {
+                        targetArray.push(childMenu);
                     }
                 });
-                return menuChildrenCache[menuId];
+                return menuChildrenCache[cacheKey];
             }
             return [];
         } catch (error) {
@@ -4414,8 +4420,8 @@ for (let i = 0; i < rows.length; i++) {
                         loadingDiv.textContent = '加载中...';
                         menuContent.appendChild(loadingDiv);
 
-                        // 加载子菜单
-                        const children = await loadMenuChildren(menuNode.id);
+                        // 加载子菜单（冒烟菜单加载冒烟子菜单）
+                        const children = await loadMenuChildren(menuNode.id, isSmokeMenu);
                         // 加载测试用例（冒烟菜单加载冒烟用例）
                         await loadTestCaseList(menuNode.id, isSmokeMenu);
 
