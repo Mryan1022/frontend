@@ -2525,11 +2525,17 @@
     let pendingFailStatus = false; // 是否有待处理的不通过状态
     let searchKeyword = ''; // 搜索关键词
     let searchResults = []; // 搜索结果
-    let expandedMenus = new Set(); // 保存展开的菜单ID
+    let expandedTestCaseMenus = new Set(); // 保存测试用例展开的菜单ID
+    let expandedSmokeMenus = new Set(); // 保存冒烟用例展开的菜单ID
 
     // 冒烟用例相关
     let currentSidebarTab = 'testcase'; // 当前侧边栏Tab
     let smokeMenus = []; // 冒烟用例菜单列表
+
+    // 获取当前使用的 expandedMenus Set
+    function getExpandedMenus() {
+        return currentSidebarTab === 'smoke' ? expandedSmokeMenus : expandedTestCaseMenus;
+    }
 
     // TAB 切换函数
     function switchTab(tabName) {
@@ -2613,6 +2619,28 @@
     // 渲染冒烟菜单列表
     function renderSmokeMenuList() {
         const smokeList = document.getElementById('smokeProjectList');
+
+        // 保存当前展开的菜单状态（使用菜单ID）
+        expandedSmokeMenus.clear();
+
+        // 保存展开的菜单
+        const currentExpandedMenus = smokeList.querySelectorAll('.menu-content[style*="display: block"]');
+        currentExpandedMenus.forEach(content => {
+            const menuDiv = content.previousElementSibling;
+            if (menuDiv && menuDiv.dataset.menuId) {
+                expandedSmokeMenus.add(menuDiv.dataset.menuId);
+            }
+        });
+
+        // 保存展开的项目分组
+        const currentExpandedProjects = smokeList.querySelectorAll('.test-case-list[style*="display: block"]');
+        currentExpandedProjects.forEach(caseList => {
+            const projectDiv = caseList.previousElementSibling;
+            if (projectDiv && projectDiv.dataset.projectKey) {
+                expandedSmokeMenus.add(projectDiv.dataset.projectKey);
+            }
+        });
+
         smokeList.innerHTML = '';
 
         if (smokeMenus.length === 0) {
@@ -4100,7 +4128,7 @@ for (let i = 0; i < rows.length; i++) {
         }
 
         // 检查菜单是否应该展开（使用菜单 ID）
-        const shouldExpand = expandedMenus.has(menuNode.id);
+        const shouldExpand = getExpandedMenus().has(menuNode.id);
         const collapseIcon = hasContent ? `<span class="collapse-icon ${shouldExpand ? '' : 'collapsed'}">${shouldExpand ? '▼' : '▶'}</span> ` : '';
 
         // 显示逻辑：有子菜单显示子菜单数量，没有子菜单显示测试用例数量
@@ -4227,7 +4255,7 @@ for (let i = 0; i < rows.length; i++) {
 
                     // 检查项目分组是否应该展开
                     const projectKey = `${menuNode.id}:${project}`;
-                    const shouldExpandProject = expandedMenus.has(projectKey);
+                    const shouldExpandProject = getExpandedMenus().has(projectKey);
 
                     projectName.innerHTML = `
                         <span><span class="collapse-icon ${shouldExpandProject ? '' : 'collapsed'}">${shouldExpandProject ? '▼' : '▶'}</span> ${project}</span>
@@ -4306,12 +4334,12 @@ for (let i = 0; i < rows.length; i++) {
                             icon.classList.remove('collapsed');
                             icon.textContent = '▼';
                             caseList.style.display = 'block';
-                            expandedMenus.add(projectKey);
+                            getExpandedMenus().add(projectKey);
                         } else {
                             icon.classList.add('collapsed');
                             icon.textContent = '▶';
                             caseList.style.display = 'none';
-                            expandedMenus.delete(projectKey);
+                            getExpandedMenus().delete(projectKey);
                         }
 
                         if (isExpanding) {
@@ -4406,7 +4434,7 @@ for (let i = 0; i < rows.length; i++) {
                     icon.classList.remove('collapsed');
                     icon.textContent = '▼';
                     menuContent.style.display = 'block';
-                    expandedMenus.add(menuNode.id);
+                    getExpandedMenus().add(menuNode.id);
 
                     // 懒加载：如果还没加载过子内容，则加载
                     if (!loadedMenuIds.has(menuNode.id)) {
@@ -4436,7 +4464,7 @@ for (let i = 0; i < rows.length; i++) {
                     icon.classList.add('collapsed');
                     icon.textContent = '▶';
                     menuContent.style.display = 'none';
-                    expandedMenus.delete(menuNode.id);
+                    getExpandedMenus().delete(menuNode.id);
                 }
 
                 if (isExpanding) {
@@ -4460,14 +4488,14 @@ for (let i = 0; i < rows.length; i++) {
         const projectList = document.getElementById('projectList');
 
         // 保存当前展开的菜单状态（使用菜单ID）
-        expandedMenus.clear();
+        getExpandedMenus().clear();
 
         // 保存展开的菜单
         const currentExpandedMenus = projectList.querySelectorAll('.menu-content[style*="display: block"]');
         currentExpandedMenus.forEach(content => {
             const menuDiv = content.previousElementSibling;
             if (menuDiv && menuDiv.dataset.menuId) {
-                expandedMenus.add(menuDiv.dataset.menuId);
+                getExpandedMenus().add(menuDiv.dataset.menuId);
             }
         });
 
@@ -4476,7 +4504,7 @@ for (let i = 0; i < rows.length; i++) {
         currentExpandedProjects.forEach(caseList => {
             const projectDiv = caseList.previousElementSibling;
             if (projectDiv && projectDiv.dataset.projectKey) {
-                expandedMenus.add(projectDiv.dataset.projectKey);
+                getExpandedMenus().add(projectDiv.dataset.projectKey);
             }
         });
 
