@@ -2659,8 +2659,12 @@
             return;
         }
 
-        smokeMenus.forEach(menu => {
-            const menuElement = renderMenuNode(menu, 1, true);
+        // 构建菜单树（与测试用例一致）
+        const smokeMenuTree = buildMenuTree(smokeMenus);
+
+        // 渲染所有根菜单
+        smokeMenuTree.forEach(rootMenu => {
+            const menuElement = renderMenuNode(rootMenu, 1, true);
             if (menuElement) {
                 smokeList.appendChild(menuElement);
             }
