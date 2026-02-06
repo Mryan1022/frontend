@@ -4,7 +4,7 @@
 
 class APIService {
     constructor() {
-        this.baseURL = 'https://backend-production-2050.up.railway.app/api';
+        this.baseURL = 'https://test-management-backend-3fib.onrender.com/api';
         this.token = localStorage.getItem('token');
     }
 

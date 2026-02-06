@@ -5,7 +5,7 @@
 ## 技术栈
 
 - 纯 HTML/CSS/JavaScript
-- 连接到 Railway 部署的后端 API
+- 连接到 Render 部署的后端 API
 
 ## 功能
 
@@ -22,7 +22,7 @@
 
 ## 后端 API
 
-后端 API 地址：`https://backend-production-2050.up.railway.app`
+后端 API 地址：`https://test-management-backend-3fib.onrender.com`
 
 ## 登录凭据
 
