@@ -2956,14 +2956,18 @@
     }
 
     // 懒加载测试用例详情
-    async function loadTestCaseDetail(testCaseId) {
+    async function loadTestCaseDetail(testCaseId, isSmokeTestCase = false) {
         // 如果已经加载过，直接返回缓存
         if (testCaseDetailCache[testCaseId]) {
             return testCaseDetailCache[testCaseId];
         }
 
         try {
-            const result = await apiService.getTestCaseDetail(testCaseId);
+            // 根据是否为冒烟用例调用不同的API
+            const result = isSmokeTestCase
+                ? await apiService.getSmokeTestCaseDetail(testCaseId)
+                : await apiService.getTestCaseDetail(testCaseId);
+
             if (result && result.success) {
                 const tc = result.data;
                 const detail = {
@@ -2979,7 +2983,9 @@
                     iosStatus: tc.ios_status,
                     iosFailReason: tc.ios_fail_reason || '',
                     h5Status: tc.h5_status,
-                    h5FailReason: tc.h5_fail_reason || ''
+                    h5FailReason: tc.h5_fail_reason || '',
+                    // 冒烟用例特有字段
+                    originalTestCaseId: tc.original_test_case_id
                 };
                 testCaseDetailCache[testCaseId] = detail;
                 // 更新全局testCases数组
@@ -4241,7 +4247,7 @@ for (let i = 0; i < rows.length; i++) {
         // 渲染子菜单
         if (menuNode.children && menuNode.children.length > 0) {
             menuNode.children.forEach(childNode => {
-                const childElement = renderMenuNode(childNode, level + 1);
+                const childElement = renderMenuNode(childNode, level + 1, isSmokeMenu);
                 if (childElement) {
                     menuContent.appendChild(childElement);
                 }
@@ -4569,8 +4575,11 @@ for (let i = 0; i < rows.length; i++) {
             // 显示加载状态
             detail.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">加载中...</div>';
 
+            // 判断是否为冒烟用例（通过 originalTestCaseId 字段或当前tab）
+            const isSmokeTestCase = currentSidebarTab === 'smoke' || !!testCase.originalTestCaseId;
+
             // 加载完整详情
-            const fullTestCase = await loadTestCaseDetail(testCase.id);
+            const fullTestCase = await loadTestCaseDetail(testCase.id, isSmokeTestCase);
             if (fullTestCase) {
                 currentTestCase = fullTestCase;
             }

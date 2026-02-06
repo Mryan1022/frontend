@@ -264,6 +264,11 @@ class APIService {
         return await this.request(`/test-cases/menus/${menuId}/smoke-test-cases`);
     }
 
+    // 获取冒烟用例详情
+    async getSmokeTestCaseDetail(id) {
+        return await this.request(`/test-cases/smoke-test-cases/${id}/detail`);
+    }
+
     // ==================== 用例仓库相关 ====================
 
     // 获取菜单列表（支持仓库过滤）
