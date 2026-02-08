@@ -2648,6 +2648,9 @@
         });
 
         // 清空已加载状态（DOM重建后需要重新懒加载）
+        console.log('[清空缓存标记] loadedSmokeMenuIds 已清空，但缓存数据保留');
+        console.log('[缓存数据] menuChildrenCache keys:', Object.keys(menuChildrenCache).filter(k => k.startsWith('smoke_')));
+        console.log('[缓存数据] testCaseListCache keys:', Object.keys(testCaseListCache).filter(k => k.startsWith('smoke_')));
         loadedSmokeMenuIds.clear();
 
         smokeList.innerHTML = '';
@@ -2869,8 +2872,10 @@
         // 如果已经加载过，直接返回缓存
         const cacheKey = isSmokeMenu ? `smoke_${menuId}` : menuId;
         if (menuChildrenCache[cacheKey]) {
+            console.log(`[缓存命中] 子菜单缓存 - ${isSmokeMenu ? '冒烟' : '测试用例'} - cacheKey: ${cacheKey}, 子菜单数: ${menuChildrenCache[cacheKey].length}`);
             return menuChildrenCache[cacheKey];
         }
+        console.log(`[缓存未命中] 调用API加载子菜单 - ${isSmokeMenu ? '冒烟' : '测试用例'} - menuId: ${menuId}`);
 
         try {
             // 冒烟菜单调用冒烟子菜单API，普通菜单调用普通子菜单API
@@ -2902,6 +2907,7 @@
         const cacheKey = isSmokeMenu ? `smoke_${menuId}` : menuId;
         if (testCaseListCache[cacheKey]) {
             const cachedCases = testCaseListCache[cacheKey];
+            console.log(`[缓存命中] 测试用例缓存 - ${isSmokeMenu ? '冒烟' : '测试用例'} - cacheKey: ${cacheKey}, 用例数: ${cachedCases.length}`);
             // 即使从缓存返回，也要确保这些用例在全局 testCases 数组中
             // 这样重新渲染时才能正确显示
             cachedCases.forEach(tc => {
@@ -2914,6 +2920,7 @@
             });
             return cachedCases;
         }
+        console.log(`[缓存未命中] 调用API加载测试用例 - ${isSmokeMenu ? '冒烟' : '测试用例'} - menuId: ${menuId}`);
 
         try {
             // 冒烟菜单调用冒烟用例API，普通菜单调用普通测试用例API
@@ -4468,6 +4475,8 @@ for (let i = 0; i < rows.length; i++) {
 
                     // 懒加载：如果还没加载过子内容，则加载
                     if (!getLoadedMenuIds().has(menuNode.id)) {
+                        console.log(`[加载菜单] ${isSmokeMenu ? '冒烟' : '测试用例'} - 菜单ID: ${menuNode.id}, 名称: ${menuNode.name}`);
+                        console.log(`[缓存状态] loadedMenuIds:`, Array.from(getLoadedMenuIds()));
                         getLoadedMenuIds().add(menuNode.id);
 
                         // 显示加载提示
@@ -4491,6 +4500,7 @@ for (let i = 0; i < rows.length; i++) {
                         }
                     }
                 } else {
+                    console.log(`[折叠菜单] ${isSmokeMenu ? '冒烟' : '测试用例'} - 菜单ID: ${menuNode.id}, 名称: ${menuNode.name}`);
                     icon.classList.add('collapsed');
                     icon.textContent = '▶';
                     menuContent.style.display = 'none';
