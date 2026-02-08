@@ -2873,7 +2873,15 @@
         const cacheKey = isSmokeMenu ? `smoke_${menuId}` : menuId;
         if (menuChildrenCache[cacheKey]) {
             console.log(`[缓存命中] 子菜单缓存 - ${isSmokeMenu ? '冒烟' : '测试用例'} - cacheKey: ${cacheKey}, 子菜单数: ${menuChildrenCache[cacheKey].length}`);
-            return menuChildrenCache[cacheKey];
+            const cachedChildren = menuChildrenCache[cacheKey];
+            // 即使从缓存返回，也要确保子菜单在全局数组中
+            const targetArray = isSmokeMenu ? smokeMenus : menus;
+            cachedChildren.forEach(childMenu => {
+                if (!targetArray.find(m => m.id === childMenu.id)) {
+                    targetArray.push(childMenu);
+                }
+            });
+            return cachedChildren;
         }
         console.log(`[缓存未命中] 调用API加载子菜单 - ${isSmokeMenu ? '冒烟' : '测试用例'} - menuId: ${menuId}`);
 
