@@ -378,47 +378,77 @@
             flex: 1;
         }
 
-        /* 执行按钮样式 */
+        /* 执行按钮样式 - 冒烟用例专用 */
         .execute-btn {
-            padding: 4px 8px;
+            padding: 5px 12px;
             font-size: 12px;
+            font-weight: 600;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
-            transition: all 0.2s;
+            transition: all 0.3s;
             margin-left: 8px;
             white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .execute-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .execute-btn:hover::before {
+            left: 100%;
         }
 
         .execute-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
         }
 
         .execute-btn:active {
             transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
         }
 
         .execute-btn.executing {
-            background: #f59e0b;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             cursor: wait;
+            animation: pulse 1.5s infinite;
         }
 
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* 批量执行按钮样式 */
         .execute-btn-menu {
-            padding: 3px 8px;
+            padding: 4px 10px;
             font-size: 11px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
         }
 
         .execute-btn-menu:hover {
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
         }
 
         .test-case-actions {
             display: flex;
-            gap: 4px;
+            gap: 6px;
             align-items: center;
         }
 
@@ -4230,9 +4260,9 @@ for (let i = 0; i < rows.length; i++) {
             displayCount = menuNode.stats ? menuNode.stats.total_test_cases : menuTestCases.length;
         }
 
-        // 根据层级决定是否显示执行按钮
-        const showExecuteBtn = level === 1 || (level > 1 && !menuNode.has_children);
-        const executeBtnHtml = showExecuteBtn ? `<button class="execute-btn execute-btn-menu execute-menu" data-menu-id="${menuNode.id}" data-menu-name="${menuNode.name}" data-menu-level="${level}" title="执行此菜单下的所有用例">▶</button>` : '';
+        // 只在冒烟用例tab显示执行按钮
+        const showExecuteBtn = isSmokeMenu && (level === 1 || (level > 1 && !menuNode.has_children));
+        const executeBtnHtml = showExecuteBtn ? `<button class="execute-btn execute-btn-menu execute-menu" data-menu-id="${menuNode.id}" data-menu-name="${menuNode.name}" data-menu-level="${level}" title="批量执行此菜单下的所有用例">⚡ 批量执行</button>` : '';
 
         menuDiv.innerHTML = `
             <span>${collapseIcon}${menuNode.name}</span>
@@ -4388,6 +4418,9 @@ for (let i = 0; i < rows.length; i++) {
                             caseItem.classList.add('search-highlight');
                         }
 
+                        // 只在冒烟用例时显示执行按钮
+                        const executeSingleBtnHtml = isSmokeMenu ? `<button class="execute-btn execute-single" data-test-case-id="${tc.id}" data-test-case-name="${tc.name}" title="自动化执行此用例">🚀 执行</button>` : '';
+
                         caseItem.innerHTML = `
                             <span class="test-case-name">${tc.name.replace(/\*/g, '')}</span>
                             <div class="test-case-actions">
@@ -4396,7 +4429,7 @@ for (let i = 0; i < rows.length; i++) {
                                     <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
                                     <span class="status-badge status-${tc.h5Status}" data-platform="h5" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
                                 </div>
-                                <button class="execute-btn execute-single" data-test-case-id="${tc.id}" data-test-case-name="${tc.name}" title="执行此用例">▶</button>
+                                ${executeSingleBtnHtml}
                             </div>
                         `;
 
@@ -4496,6 +4529,9 @@ for (let i = 0; i < rows.length; i++) {
                         caseItem.classList.add('search-highlight');
                     }
 
+                    // 只在冒烟用例时显示执行按钮
+                    const executeSingleBtnHtml = isSmokeMenu ? `<button class="execute-btn execute-single" data-test-case-id="${tc.id}" data-test-case-name="${tc.name}" title="自动化执行此用例">🚀 执行</button>` : '';
+
                     caseItem.innerHTML = `
                         <span class="test-case-name">${tc.name.replace(/\*/g, '')}</span>
                         <div class="test-case-actions">
@@ -4504,7 +4540,7 @@ for (let i = 0; i < rows.length; i++) {
                                 <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
                                 <span class="status-badge status-${tc.h5Status}" data-platform="h5" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
                             </div>
-                            <button class="execute-btn execute-single" data-test-case-id="${tc.id}" data-test-case-name="${tc.name}" title="执行此用例">▶</button>
+                            ${executeSingleBtnHtml}
                         </div>
                     `;
 
@@ -5837,97 +5873,194 @@ for (let i = 0; i < rows.length; i++) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
+            animation: fadeIn 0.2s ease;
         `;
 
         dialog.innerHTML = `
             <div style="
-                background: white;
-                padding: 30px;
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                min-width: 300px;
+                background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+                padding: 40px;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                min-width: 360px;
+                animation: slideUp 0.3s ease;
             ">
-                <h3 style="margin: 0 0 20px 0; color: #333;">选择执行平台</h3>
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="
+                        display: inline-block;
+                        width: 60px;
+                        height: 60px;
+                        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 32px;
+                        margin-bottom: 16px;
+                        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+                    ">🚀</div>
+                    <h3 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: 700;">选择执行平台</h3>
+                    <p style="margin: 8px 0 0 0; color: #64748b; font-size: 14px;">请选择要执行自动化测试的平台</p>
+                </div>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <button class="platform-btn" data-platform="android" style="
-                        padding: 12px 20px;
-                        border: 2px solid #667eea;
-                        background: #667eea;
+                        padding: 16px 24px;
+                        border: 2px solid transparent;
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
                         color: white;
-                        border-radius: 8px;
+                        border-radius: 12px;
                         cursor: pointer;
                         font-size: 16px;
-                        transition: all 0.2s;
-                    ">📱 Android</button>
+                        font-weight: 600;
+                        transition: all 0.3s;
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 12px;
+                    ">
+                        <span style="font-size: 24px;">📱</span>
+                        <span>Android 平台</span>
+                    </button>
                     <button class="platform-btn" data-platform="ios" style="
-                        padding: 12px 20px;
-                        border: 2px solid #667eea;
-                        background: #667eea;
+                        padding: 16px 24px;
+                        border: 2px solid transparent;
+                        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
                         color: white;
-                        border-radius: 8px;
+                        border-radius: 12px;
                         cursor: pointer;
                         font-size: 16px;
-                        transition: all 0.2s;
-                    ">🍎 iOS</button>
+                        font-weight: 600;
+                        transition: all 0.3s;
+                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 12px;
+                    ">
+                        <span style="font-size: 24px;">🍎</span>
+                        <span>iOS 平台</span>
+                    </button>
                     <button class="platform-btn" data-platform="h5" style="
-                        padding: 12px 20px;
-                        border: 2px solid #667eea;
-                        background: #667eea;
+                        padding: 16px 24px;
+                        border: 2px solid transparent;
+                        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
                         color: white;
-                        border-radius: 8px;
+                        border-radius: 12px;
                         cursor: pointer;
                         font-size: 16px;
-                        transition: all 0.2s;
-                    ">🌐 H5</button>
+                        font-weight: 600;
+                        transition: all 0.3s;
+                        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 12px;
+                    ">
+                        <span style="font-size: 24px;">🌐</span>
+                        <span>H5 平台</span>
+                    </button>
                     <button id="cancelExecute" style="
-                        padding: 12px 20px;
-                        border: 2px solid #ccc;
+                        padding: 14px 24px;
+                        border: 2px solid #e2e8f0;
                         background: white;
-                        color: #666;
-                        border-radius: 8px;
+                        color: #64748b;
+                        border-radius: 12px;
                         cursor: pointer;
-                        font-size: 16px;
-                        margin-top: 8px;
+                        font-size: 15px;
+                        font-weight: 600;
+                        margin-top: 12px;
+                        transition: all 0.3s;
                     ">取消</button>
                 </div>
             </div>
         `;
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
 
         document.body.appendChild(dialog);
 
         // 平台按钮点击事件
         dialog.querySelectorAll('.platform-btn').forEach(btn => {
             btn.onmouseover = () => {
-                btn.style.transform = 'translateY(-2px)';
-                btn.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                btn.style.transform = 'translateY(-3px) scale(1.02)';
+                btn.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
             };
             btn.onmouseout = () => {
-                btn.style.transform = 'translateY(0)';
-                btn.style.boxShadow = 'none';
+                btn.style.transform = 'translateY(0) scale(1)';
+                const platform = btn.dataset.platform;
+                if (platform === 'android') {
+                    btn.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.2)';
+                } else if (platform === 'ios') {
+                    btn.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
+                } else {
+                    btn.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.2)';
+                }
             };
             btn.onclick = () => {
                 const platform = btn.dataset.platform;
-                dialog.remove();
-                callback(platform);
+                dialog.style.animation = 'fadeOut 0.2s ease';
+                setTimeout(() => {
+                    dialog.remove();
+                    callback(platform);
+                }, 200);
             };
         });
 
         // 取消按钮
-        dialog.querySelector('#cancelExecute').onclick = () => {
-            dialog.remove();
+        const cancelBtn = dialog.querySelector('#cancelExecute');
+        cancelBtn.onmouseover = () => {
+            cancelBtn.style.background = '#f1f5f9';
+            cancelBtn.style.borderColor = '#cbd5e1';
+        };
+        cancelBtn.onmouseout = () => {
+            cancelBtn.style.background = 'white';
+            cancelBtn.style.borderColor = '#e2e8f0';
+        };
+        cancelBtn.onclick = () => {
+            dialog.style.animation = 'fadeOut 0.2s ease';
+            setTimeout(() => dialog.remove(), 200);
         };
 
         // 点击背景关闭
         dialog.onclick = (e) => {
             if (e.target === dialog) {
-                dialog.remove();
+                dialog.style.animation = 'fadeOut 0.2s ease';
+                setTimeout(() => dialog.remove(), 200);
             }
         };
+
+        // 添加fadeOut动画
+        style.textContent += `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
     }
 
     // 添加CSS动画

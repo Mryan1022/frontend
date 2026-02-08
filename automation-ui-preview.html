@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冒烟用例自动化执行 UI 预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 40px;
+        }
+
+        .preview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #1e293b;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #334155;
+            margin-bottom: 20px;
+            font-weight: 700;
+            border-left: 4px solid #f59e0b;
+            padding-left: 12px;
+        }
+
+        .demo-area {
+            background: #fafbfc;
+            border-radius: 12px;
+            padding: 30px;
+            border: 2px dashed #e2e8f0;
+        }
+
+        /* 菜单样式 */
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .menu-item-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 测试用例样式 */
+        .test-case-item {
+            padding: 10px 16px;
+            margin: 8px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-case-item:hover {
+            background: #e8e8e8;
+        }
+
+        .test-case-name {
+            flex: 1;
+        }
+
+        .test-case-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .status-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 3px 6px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .status-badge:hover {
+            transform: scale(1.15);
+        }
+
+        .status-pending {
+            background: #e5e7eb;
+        }
+
+        .status-passed {
+            background: #86efac;
+        }
+
+        /* 执行按钮样式 */
+        .execute-btn {
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            transition: all 0.3s;
+            margin-left: 8px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .execute-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .execute-btn:hover::before {
+            left: 100%;
+        }
+
+        .execute-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+        }
+
+        .execute-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+        }
+
+        .execute-btn-menu {
+            padding: 4px 10px;
+            font-size: 11px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+        }
+
+        .execute-btn-menu:hover {
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        }
+
+        /* 对话框样式 */
+        .dialog-preview {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .dialog-icon {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .dialog-title {
+            margin: 0;
+            color: #1e293b;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .dialog-desc {
+            margin: 8px 0 0 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .platform-btn {
+            padding: 16px 24px;
+            border: 2px solid transparent;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .platform-android {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .platform-ios {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .platform-h5 {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+        }
+
+        .platform-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .cancel-btn {
+            padding: 14px 24px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 12px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .cancel-btn:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <h1>🚀 冒烟用例自动化执行 UI 设计</h1>
+        <p class="subtitle">为冒烟测试tab设计的自动化执行界面，支持单条执行和批量执行</p>
+
+        <!-- 执行按钮预览 -->
+        <div class="section">
+            <h2 class="section-title">1. 执行按钮设计</h2>
+            <div class="demo-area">
+                <h3 style="margin-bottom: 20px; color: #475569;">一级菜单（批量执行）</h3>
+                <div class="menu-item">
+                    <div class="menu-item-content">
+                        <span>▼ 133版本</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>35</span>
+                        <button class="execute-btn execute-btn-menu">⚡ 批量执行</button>
+                    </div>
+                </div>
+
+                <h3 style="margin: 30px 0 20px; color: #475569;">二级菜单（批量执行）</h3>
+                <div class="menu-item" style="margin-left: 20px; background: #fafbfc;">
+                    <div class="menu-item-content">
+                        <span>▼ 登录模块</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>8</span>
+                        <button class="execute-btn execute-btn-menu">⚡ 批量执行</button>
+                    </div>
+                </div>
+
+                <h3 style="margin: 30px 0 20px; color: #475569;">测试用例（单条执行）</h3>
+                <div class="test-case-item">
+                    <span class="test-case-name">登录-手机号验证码登录</span>
+                    <div class="test-case-actions">
+                        <div class="status-group">
+                            <span class="status-badge status-pending" title="Android: pending">📱</span>
+                            <span class="status-badge status-pending" title="iOS: pending">🍎</span>
+                            <span class="status-badge status-pending" title="H5: pending">🌐</span>
+                        </div>
+                        <button class="execute-btn">🚀 执行</button>
+                    </div>
+                </div>
+
+                <div class="test-case-item">
+                    <span class="test-case-name">登录-微信一键登录</span>
+                    <div class="test-case-actions">
+                        <div class="status-group">
+                            <span class="status-badge status-passed" title="Android: passed">📱</span>
+                            <span class="status-badge status-pending" title="iOS: pending">🍎</span>
+                            <span class="status-badge status-pending" title="H5: pending">🌐</span>
+                        </div>
+                        <button class="execute-btn">🚀 执行</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 平台选择对话框 -->
+        <div class="section">
+            <h2 class="section-title">2. 平台选择对话框</h2>
+            <div class="demo-area" style="background: rgba(0, 0, 0, 0.05);">
+                <div class="dialog-preview">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div class="dialog-icon">🚀</div>
+                        <h3 class="dialog-title">选择执行平台</h3>
+                        <p class="dialog-desc">请选择要执行自动化测试的平台</p>
+                    </div>
+                    <div>
+                        <button class="platform-btn platform-android">
+                            <span style="font-size: 24px;">📱</span>
+                            <span>Android 平台</span>
+                        </button>
+                        <button class="platform-btn platform-ios">
+                            <span style="font-size: 24px;">🍎</span>
+                            <span>iOS 平台</span>
+                        </button>
+                        <button class="platform-btn platform-h5">
+                            <span style="font-size: 24px;">🌐</span>
+                            <span>H5 平台</span>
+                        </button>
+                        <button class="cancel-btn">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能特性 -->
+        <div class="section">
+            <h2 class="section-title">3. 功能特性</h2>
+            <div class="demo-area">
+                <ul class="feature-list">
+                    <li>
+                        <span class="feature-icon">🎯</span>
+                        <span><strong>三种执行方式：</strong>单条用例执行、一级菜单批量执行、当前菜单批量执行</span>
+                    </li>
+                    <li>
+                        <span class="feature-icon">🎨</span>
+                        <span><strong>渐变按钮设计：</strong>橙色渐变单条执行按钮，紫色渐变批量执行按钮</span>
+                    </li>
+                    <li>
+                        <span class="feature-icon">✨</span>
+                        <span><strong>流畅动画效果：</strong>悬停时光泽扫过效果，点击时缩放反馈</span>
+                    </li>
+                    <li>
+                        <span class="feature-icon">🌈</span>
+                        <span><strong>彩色平台选择：</strong>Android绿色、iOS蓝色、H5橙色，一目了然</span>
+                    </li>
+                    <li>
+                        <span class="feature-icon">⚡</span>
+                        <span><strong>实时状态反馈：</strong>执行中状态显示，自动轮询结果并刷新列表</span>
+                    </li>
+                    <li>
+                        <span class="feature-icon">🔒</span>
+                        <span><strong>只在冒烟用例显示：</strong>测试用例tab不显示执行按钮，保持界面简洁</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 颜色方案 -->
+        <div class="section">
+            <h2 class="section-title">4. 颜色方案</h2>
+            <div class="demo-area">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="
+                            height: 80px;
+                            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                            border-radius: 12px;
+                            margin-bottom: 12px;
+                            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+                        "></div>
+                        <strong>单条执行</strong>
+                        <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">橙色 #f59e0b</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="
+                            height: 80px;
+                            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+                            border-radius: 12px;
+                            margin-bottom: 12px;
+                            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+                        "></div>
+                        <strong>批量执行</strong>
+                        <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">紫色 #8b5cf6</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="
+                            height: 80px;
+                            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                            border-radius: 12px;
+                            margin-bottom: 12px;
+                            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+                        "></div>
+                        <strong>Android</strong>
+                        <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">绿色 #10b981</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="
+                            height: 80px;
+                            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                            border-radius: 12px;
+                            margin-bottom: 12px;
+                            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                        "></div>
+                        <strong>iOS</strong>
+                        <p style="color: #64748b; font-size: 14px; margin: 4px 0 0 0;">蓝色 #3b82f6</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加按钮点击效果演示
+        document.querySelectorAll('.execute-btn, .platform-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const ripple = document.createElement('span');
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: 10px;
+                    height: 10px;
+                    background: rgba(255, 255, 255, 0.6);
+                    border-radius: 50%;
+                    animation: ripple 0.6s ease;
+                    pointer-events: none;
+                `;
+                this.style.position = 'relative';
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(20);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
