@@ -446,7 +446,7 @@
             background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
         }
 
-        .test-case-actions {
+        .test-case-item-actions {
             display: flex;
             gap: 6px;
             align-items: center;
@@ -689,6 +689,12 @@
 
         .buttons-section:last-child {
             margin-bottom: 0;
+        }
+
+        .action-buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
         .section-label {
@@ -1045,6 +1051,51 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-edit:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-execute-detail {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+        }
+
+        .btn-execute-detail:hover {
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+        }
+
+        .btn-execute-detail:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-execute-detail.executing {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            cursor: wait;
+            animation: pulse 1.5s infinite;
         }
 
         .btn-edit:hover {
@@ -4423,7 +4474,7 @@ for (let i = 0; i < rows.length; i++) {
 
                         caseItem.innerHTML = `
                             <span class="test-case-name">${tc.name.replace(/\*/g, '')}</span>
-                            <div class="test-case-actions">
+                            <div class="test-case-item-actions">
                                 <div class="status-group">
                                     <span class="status-badge status-${tc.androidStatus}" data-platform="android" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
                                     <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
@@ -4534,7 +4585,7 @@ for (let i = 0; i < rows.length; i++) {
 
                     caseItem.innerHTML = `
                         <span class="test-case-name">${tc.name.replace(/\*/g, '')}</span>
-                        <div class="test-case-actions">
+                        <div class="test-case-item-actions">
                             <div class="status-group">
                                 <span class="status-badge status-${tc.androidStatus}" data-platform="android" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
                                 <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
@@ -4952,13 +5003,21 @@ for (let i = 0; i < rows.length; i++) {
                                 </div>
                             </div>
 
-                            <!-- 编辑按钮 -->
+                            <!-- 用例操作按钮 -->
                             <div class="buttons-section">
                                 <div class="section-label">用例操作</div>
-                                <button class="btn-edit" onclick="enterEditMode()" style="width: 100%;">
-                                    <span>✏️</span>
-                                    <span>编辑测试用例</span>
-                                </button>
+                                <div class="action-buttons-grid">
+                                    <button class="btn-edit" onclick="enterEditMode()">
+                                        <span>✏️</span>
+                                        <span>编辑</span>
+                                    </button>
+                                    ${isSmokeMenu ? `
+                                    <button class="btn-execute-detail" onclick="executeDetailTestCase()">
+                                        <span>🚀</span>
+                                        <span>执行</span>
+                                    </button>
+                                    ` : ''}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -5862,6 +5921,21 @@ for (let i = 0; i < rows.length; i++) {
                 console.error('查询执行状态失败:', error);
             }
         }, 5000); // 每5秒查询一次
+    }
+
+    // 从详情页执行测试用例
+    function executeDetailTestCase() {
+        if (!currentTestCase) {
+            showToast('请先选择一个测试用例');
+            return;
+        }
+
+        const testCaseId = currentTestCase.id;
+        const testCaseName = currentTestCase.name;
+
+        showExecutionDialog((platform) => {
+            executeSingleTestCase(testCaseId, testCaseName, platform);
+        });
     }
 
     // 显示平台选择对话框
