@@ -269,6 +269,34 @@ class APIService {
         return await this.request(`/test-cases/smoke-test-cases/${id}/detail`);
     }
 
+    // ==================== 自动化执行相关 ====================
+
+    // 执行单条测试用例
+    async executeTestCase(testCaseId, platform, deviceId = null) {
+        return await this.request(`/test-cases/${testCaseId}/execute`, {
+            method: 'POST',
+            body: JSON.stringify({ platform, deviceId })
+        });
+    }
+
+    // 批量执行测试用例
+    async executeBatchTestCases(testCaseIds, platform, deviceId = null) {
+        return await this.request(`/automation/execute/batch`, {
+            method: 'POST',
+            body: JSON.stringify({ testCaseIds, platform, deviceId })
+        });
+    }
+
+    // 获取执行状态
+    async getExecutionStatus(executionId) {
+        return await this.request(`/test-cases/executions/${executionId}`);
+    }
+
+    // 获取执行历史
+    async getExecutionHistory(testCaseId, limit = 10) {
+        return await this.request(`/test-cases/${testCaseId}/executions?limit=${limit}`);
+    }
+
     // ==================== 用例仓库相关 ====================
 
     // 获取菜单列表（支持仓库过滤）

@@ -378,6 +378,50 @@
             flex: 1;
         }
 
+        /* 执行按钮样式 */
+        .execute-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.2s;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .execute-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .execute-btn:active {
+            transform: translateY(0);
+        }
+
+        .execute-btn.executing {
+            background: #f59e0b;
+            cursor: wait;
+        }
+
+        .execute-btn-menu {
+            padding: 3px 8px;
+            font-size: 11px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .execute-btn-menu:hover {
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .test-case-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
         .status-badge {
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -4186,10 +4230,32 @@ for (let i = 0; i < rows.length; i++) {
             displayCount = menuNode.stats ? menuNode.stats.total_test_cases : menuTestCases.length;
         }
 
+        // 根据层级决定是否显示执行按钮
+        const showExecuteBtn = level === 1 || (level > 1 && !menuNode.has_children);
+        const executeBtnHtml = showExecuteBtn ? `<button class="execute-btn execute-btn-menu execute-menu" data-menu-id="${menuNode.id}" data-menu-name="${menuNode.name}" data-menu-level="${level}" title="执行此菜单下的所有用例">▶</button>` : '';
+
         menuDiv.innerHTML = `
             <span>${collapseIcon}${menuNode.name}</span>
-            <span>${displayCount}</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>${displayCount}</span>
+                ${executeBtnHtml}
+            </div>
         `;
+
+        // 执行按钮点击事件（需要在innerHTML设置之后添加）
+        setTimeout(() => {
+            const executeMenuBtn = menuDiv.querySelector('.execute-menu');
+            if (executeMenuBtn) {
+                executeMenuBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const menuId = executeMenuBtn.dataset.menuId;
+                    const menuName = executeMenuBtn.dataset.menuName;
+                    showExecutionDialog((platform) => {
+                        executeMenuTestCases(menuId, menuName, platform, isSmokeMenu);
+                    });
+                };
+            }
+        }, 0);
 
         // 右键菜单
         menuDiv.oncontextmenu = (e) => showContextMenu(e, menuNode.id);
@@ -4324,10 +4390,13 @@ for (let i = 0; i < rows.length; i++) {
 
                         caseItem.innerHTML = `
                             <span class="test-case-name">${tc.name.replace(/\*/g, '')}</span>
-                            <div class="status-group">
-                                <span class="status-badge status-${tc.androidStatus}" data-platform="android" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
-                                <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
-                                <span class="status-badge status-${tc.h5Status}" data-platform="h5" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
+                            <div class="test-case-actions">
+                                <div class="status-group">
+                                    <span class="status-badge status-${tc.androidStatus}" data-platform="android" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
+                                    <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
+                                    <span class="status-badge status-${tc.h5Status}" data-platform="h5" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
+                                </div>
+                                <button class="execute-btn execute-single" data-test-case-id="${tc.id}" data-test-case-name="${tc.name}" title="执行此用例">▶</button>
                             </div>
                         `;
 
@@ -4366,6 +4435,19 @@ for (let i = 0; i < rows.length; i++) {
                                 showTestCase(tc, platform);
                             };
                         });
+
+                        // 执行按钮点击事件
+                        const executeBtn = caseItem.querySelector('.execute-single');
+                        if (executeBtn) {
+                            executeBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                const testCaseId = executeBtn.dataset.testCaseId;
+                                const testCaseName = executeBtn.dataset.testCaseName;
+                                showExecutionDialog((platform) => {
+                                    executeSingleTestCase(testCaseId, testCaseName, platform);
+                                });
+                            };
+                        }
 
                         caseList.appendChild(caseItem);
                     });
@@ -4416,10 +4498,13 @@ for (let i = 0; i < rows.length; i++) {
 
                     caseItem.innerHTML = `
                         <span class="test-case-name">${tc.name.replace(/\*/g, '')}</span>
-                        <div class="status-group">
-                            <span class="status-badge status-${tc.androidStatus}" data-platform="android" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
-                            <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
-                            <span class="status-badge status-${tc.h5Status}" data-platform="h5" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
+                        <div class="test-case-actions">
+                            <div class="status-group">
+                                <span class="status-badge status-${tc.androidStatus}" data-platform="android" title="Android: ${getStatusText(tc.androidStatus)}">📱</span>
+                                <span class="status-badge status-${tc.iosStatus}" data-platform="ios" title="iOS: ${getStatusText(tc.iosStatus)}">🍎</span>
+                                <span class="status-badge status-${tc.h5Status}" data-platform="h5" title="H5: ${getStatusText(tc.h5Status)}">🌐</span>
+                            </div>
+                            <button class="execute-btn execute-single" data-test-case-id="${tc.id}" data-test-case-name="${tc.name}" title="执行此用例">▶</button>
                         </div>
                     `;
 
@@ -4458,6 +4543,19 @@ for (let i = 0; i < rows.length; i++) {
                             showTestCase(tc, platform);
                         };
                     });
+
+                    // 执行按钮点击事件
+                    const executeBtn = caseItem.querySelector('.execute-single');
+                    if (executeBtn) {
+                        executeBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            const testCaseId = executeBtn.dataset.testCaseId;
+                            const testCaseName = executeBtn.dataset.testCaseName;
+                            showExecutionDialog((platform) => {
+                                executeSingleTestCase(testCaseId, testCaseName, platform);
+                            });
+                        };
+                    }
 
                     caseList.appendChild(caseItem);
                 });
@@ -5597,6 +5695,239 @@ for (let i = 0; i < rows.length; i++) {
             toast.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
         }, 2000);
+    }
+
+    // ==================== 自动化执行相关函数 ====================
+
+    // 执行单条测试用例
+    async function executeSingleTestCase(testCaseId, testCaseName, platform) {
+        try {
+            console.log(`[执行测试用例] ID: ${testCaseId}, 平台: ${platform}`);
+            showLoading(`正在执行测试用例: ${testCaseName}...`);
+
+            const result = await apiService.executeTestCase(testCaseId, platform);
+
+            if (result && result.success) {
+                const executionId = result.data.taskId || result.data.executionId;
+                showToast(`测试用例已提交执行，任务ID: ${executionId}`);
+
+                // 轮询查询执行状态
+                pollExecutionStatus(executionId, testCaseName);
+            } else {
+                hideLoading();
+                showToast('执行失败: ' + (result.error || '未知错误'));
+            }
+        } catch (error) {
+            console.error('执行测试用例失败:', error);
+            hideLoading();
+            showToast('执行失败: ' + error.message);
+        }
+    }
+
+    // 执行菜单下的所有测试用例
+    async function executeMenuTestCases(menuId, menuName, platform, isSmokeMenu = false) {
+        try {
+            console.log(`[批量执行] 菜单: ${menuName}, 平台: ${platform}`);
+
+            // 获取菜单下的所有测试用例
+            showLoading('正在获取测试用例列表...');
+            const cacheKey = isSmokeMenu ? `smoke_${menuId}` : menuId;
+            let testCasesList = testCaseListCache[cacheKey];
+
+            if (!testCasesList) {
+                // 如果缓存中没有，从API加载
+                testCasesList = await loadTestCaseList(menuId, isSmokeMenu);
+            }
+
+            if (!testCasesList || testCasesList.length === 0) {
+                hideLoading();
+                showToast('该菜单下没有测试用例');
+                return;
+            }
+
+            const testCaseIds = testCasesList.map(tc => tc.id);
+            console.log(`[批量执行] 共 ${testCaseIds.length} 条用例`);
+
+            showLoading(`正在批量执行 ${testCaseIds.length} 条测试用例...`);
+
+            const result = await apiService.executeBatchTestCases(testCaseIds, platform);
+
+            if (result && result.success) {
+                hideLoading();
+                showToast(`已提交 ${testCaseIds.length} 条测试用例执行`);
+
+                // 可以选择轮询批量执行状态
+                if (result.data && result.data.taskIds) {
+                    result.data.taskIds.forEach((taskId, index) => {
+                        setTimeout(() => {
+                            pollExecutionStatus(taskId, `${menuName} - 用例${index + 1}`);
+                        }, index * 1000); // 错开轮询时间
+                    });
+                }
+            } else {
+                hideLoading();
+                showToast('批量执行失败: ' + (result.error || '未知错误'));
+            }
+        } catch (error) {
+            console.error('批量执行失败:', error);
+            hideLoading();
+            showToast('批量执行失败: ' + error.message);
+        }
+    }
+
+    // 轮询执行状态
+    function pollExecutionStatus(executionId, testCaseName) {
+        const maxAttempts = 60; // 最多轮询60次（5分钟）
+        let attempts = 0;
+
+        const pollInterval = setInterval(async () => {
+            attempts++;
+
+            if (attempts > maxAttempts) {
+                clearInterval(pollInterval);
+                hideLoading();
+                showToast(`执行超时: ${testCaseName}`);
+                return;
+            }
+
+            try {
+                const result = await apiService.getExecutionStatus(executionId);
+
+                if (result && result.success) {
+                    const status = result.data.status;
+                    console.log(`[执行状态] ${testCaseName}: ${status}`);
+
+                    if (status === 'passed') {
+                        clearInterval(pollInterval);
+                        hideLoading();
+                        showToast(`✅ 测试通过: ${testCaseName}`);
+                        // 刷新测试用例列表
+                        if (currentSidebarTab === 'smoke') {
+                            loadSmokeMenus();
+                        } else {
+                            loadMenus();
+                        }
+                    } else if (status === 'failed') {
+                        clearInterval(pollInterval);
+                        hideLoading();
+                        showToast(`❌ 测试失败: ${testCaseName}`);
+                        // 刷新测试用例列表
+                        if (currentSidebarTab === 'smoke') {
+                            loadSmokeMenus();
+                        } else {
+                            loadMenus();
+                        }
+                    } else if (status === 'running') {
+                        // 继续轮询
+                        showLoading(`正在执行: ${testCaseName} (${attempts * 5}秒)`);
+                    }
+                }
+            } catch (error) {
+                console.error('查询执行状态失败:', error);
+            }
+        }, 5000); // 每5秒查询一次
+    }
+
+    // 显示平台选择对话框
+    function showExecutionDialog(callback) {
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+
+        dialog.innerHTML = `
+            <div style="
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                min-width: 300px;
+            ">
+                <h3 style="margin: 0 0 20px 0; color: #333;">选择执行平台</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="platform-btn" data-platform="android" style="
+                        padding: 12px 20px;
+                        border: 2px solid #667eea;
+                        background: #667eea;
+                        color: white;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        transition: all 0.2s;
+                    ">📱 Android</button>
+                    <button class="platform-btn" data-platform="ios" style="
+                        padding: 12px 20px;
+                        border: 2px solid #667eea;
+                        background: #667eea;
+                        color: white;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        transition: all 0.2s;
+                    ">🍎 iOS</button>
+                    <button class="platform-btn" data-platform="h5" style="
+                        padding: 12px 20px;
+                        border: 2px solid #667eea;
+                        background: #667eea;
+                        color: white;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        transition: all 0.2s;
+                    ">🌐 H5</button>
+                    <button id="cancelExecute" style="
+                        padding: 12px 20px;
+                        border: 2px solid #ccc;
+                        background: white;
+                        color: #666;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        margin-top: 8px;
+                    ">取消</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+
+        // 平台按钮点击事件
+        dialog.querySelectorAll('.platform-btn').forEach(btn => {
+            btn.onmouseover = () => {
+                btn.style.transform = 'translateY(-2px)';
+                btn.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+            };
+            btn.onmouseout = () => {
+                btn.style.transform = 'translateY(0)';
+                btn.style.boxShadow = 'none';
+            };
+            btn.onclick = () => {
+                const platform = btn.dataset.platform;
+                dialog.remove();
+                callback(platform);
+            };
+        });
+
+        // 取消按钮
+        dialog.querySelector('#cancelExecute').onclick = () => {
+            dialog.remove();
+        };
+
+        // 点击背景关闭
+        dialog.onclick = (e) => {
+            if (e.target === dialog) {
+                dialog.remove();
+            }
+        };
     }
 
     // 添加CSS动画
