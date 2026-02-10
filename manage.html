@@ -3246,7 +3246,7 @@
             if (!confirm('确定要取消执行吗？')) return;
 
             try {
-                await apiService.request(`/test-executions/${this.executionId}`, {
+                await apiService.request(`/test-cases/executions/${this.executionId}`, {
                     method: 'PUT',
                     body: JSON.stringify({
                         status: 'cancelled',
@@ -3280,7 +3280,7 @@
         async fetchProgress() {
             try {
                 // 获取执行状态
-                const response = await apiService.request(`/test-executions/${this.executionId}`);
+                const response = await apiService.request(`/test-cases/executions/${this.executionId}`);
 
                 if (response.success) {
                     const execution = response.execution || response.data;
