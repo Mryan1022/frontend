@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据统计功能 - UI 预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .stats-header h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .menu-selector {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .menu-selector label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .menu-selector select {
+            flex: 1;
+            max-width: 400px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        /* 整体统计卡片 */
+        .overall-stats {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .overall-stats h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-title {
+            font-size: 16px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .total-count {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .platform-stat {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .platform-stat:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .platform-name {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .platform-numbers {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-badge.pass { color: #10b981; }
+        .stat-badge.fail { color: #ef4444; }
+        .stat-badge.skip { color: #f59e0b; }
+        .stat-badge.pending { color: #9ca3af; }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 24px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            display: flex;
+            transition: all 0.3s;
+        }
+
+        .progress-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .progress-segment.pass { background: #10b981; }
+        .progress-segment.fail { background: #ef4444; }
+        .progress-segment.skip { background: #f59e0b; }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        /* 子菜单进度表格 */
+        .submenu-stats {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .submenu-stats h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .submenu-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .submenu-table thead {
+            background: #f9fafb;
+        }
+
+        .submenu-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .submenu-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .submenu-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .submenu-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .submenu-name {
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+        }
+
+        .submenu-name:hover {
+            text-decoration: underline;
+        }
+
+        .platform-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .platform-progress-text {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .mini-progress {
+            width: 80px;
+            height: 6px;
+            background: #f3f4f6;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .mini-progress-fill.high { background: #10b981; }
+        .mini-progress-fill.medium { background: #f59e0b; }
+        .mini-progress-fill.low { background: #ef4444; }
+
+        .pass-rate {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .pass-rate.high { color: #10b981; }
+        .pass-rate.medium { color: #f59e0b; }
+        .pass-rate.low { color: #ef4444; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 统计头部 -->
+        <div class="stats-header">
+            <h2>📈 进度统计</h2>
+            <div class="menu-selector">
+                <label>选择版本/菜单：</label>
+                <select id="menuSelect">
+                    <option value="menu_1">版本 2.0</option>
+                    <option value="menu_2">版本 1.9</option>
+                    <option value="menu_3">版本 1.8</option>
+                </select>
+                <button class="refresh-btn">🔄 刷新统计</button>
+            </div>
+        </div>
+
+        <!-- 整体统计 -->
+        <div class="overall-stats">
+            <h3>📦 当前菜单整体进度</h3>
+            <div class="menu-title">版本 2.0</div>
+            <div class="total-count">总用例数: <strong>150</strong></div>
+
+            <!-- Android 统计 -->
+            <div class="platform-stat">
+                <div class="platform-header">
+                    <div class="platform-name">📱 Android</div>
+                    <div class="platform-numbers">
+                        <span class="stat-badge pass">✓ 80</span>
+                        <span class="stat-badge fail">✗ 10</span>
+                        <span class="stat-badge skip">〇 5</span>
+                        <span class="stat-badge pending">⏸️ 55</span>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-segment pass" style="width: 53.3%;">80</div>
+                        <div class="progress-segment fail" style="width: 6.7%;">10</div>
+                        <div class="progress-segment skip" style="width: 3.3%;">5</div>
+                    </div>
+                    <div class="progress-text">通过率: 53%</div>
+                </div>
+            </div>
+
+            <!-- iOS 统计 -->
+            <div class="platform-stat">
+                <div class="platform-header">
+                    <div class="platform-name">🍎 iOS</div>
+                    <div class="platform-numbers">
+                        <span class="stat-badge pass">✓ 75</span>
+                        <span class="stat-badge fail">✗ 12</span>
+                        <span class="stat-badge skip">〇 8</span>
+                        <span class="stat-badge pending">⏸️ 55</span>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-segment pass" style="width: 50%;">75</div>
+                        <div class="progress-segment fail" style="width: 8%;">12</div>
+                        <div class="progress-segment skip" style="width: 5.3%;">8</div>
+                    </div>
+                    <div class="progress-text">通过率: 50%</div>
+                </div>
+            </div>
+
+            <!-- H5 统计 -->
+            <div class="platform-stat">
+                <div class="platform-header">
+                    <div class="platform-name">🌐 H5</div>
+                    <div class="platform-numbers">
+                        <span class="stat-badge pass">✓ 70</span>
+                        <span class="stat-badge fail">✗ 15</span>
+                        <span class="stat-badge skip">〇 10</span>
+                        <span class="stat-badge pending">⏸️ 55</span>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-segment pass" style="width: 46.7%;">70</div>
+                        <div class="progress-segment fail" style="width: 10%;">15</div>
+                        <div class="progress-segment skip" style="width: 6.7%;">10</div>
+                    </div>
+                    <div class="progress-text">通过率: 47%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 子菜单进度明细 -->
+        <div class="submenu-stats">
+            <h3>📊 子菜单进度明细</h3>
+            <table class="submenu-table">
+                <thead>
+                    <tr>
+                        <th>子菜单名称</th>
+                        <th style="text-align: center;">总数</th>
+                        <th style="text-align: center;">Android</th>
+                        <th style="text-align: center;">iOS</th>
+                        <th style="text-align: center;">H5</th>
+                        <th style="text-align: center;">通过率</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="submenu-name">登录模块</span></td>
+                        <td style="text-align: center;">50</td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">40/50</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill high" style="width: 80%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">38/50</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill high" style="width: 76%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">35/50</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill medium" style="width: 70%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="pass-rate high">75%</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="submenu-name">支付模块</span></td>
+                        <td style="text-align: center;">45</td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">35/45</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill high" style="width: 78%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">33/45</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill medium" style="width: 73%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">30/45</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill medium" style="width: 67%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="pass-rate medium">72%</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="submenu-name">直播模块</span></td>
+                        <td style="text-align: center;">55</td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">5/55</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill low" style="width: 9%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">4/55</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill low" style="width: 7%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="platform-progress">
+                                <span class="platform-progress-text">5/55</span>
+                                <div class="mini-progress">
+                                    <div class="mini-progress-fill low" style="width: 9%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="pass-rate low">8%</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 添加一些简单的交互效果
+        document.querySelector('.refresh-btn').addEventListener('click', function() {
+            this.textContent = '🔄 刷新中...';
+            this.disabled = true;
+            setTimeout(() => {
+                this.textContent = '🔄 刷新统计';
+                this.disabled = false;
+                alert('统计数据已刷新！');
+            }, 1000);
+        });
+
+        document.getElementById('menuSelect').addEventListener('change', function() {
+            alert('切换菜单: ' + this.options[this.selectedIndex].text);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - 测试管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .welcome-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .welcome-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .status-section {
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .status-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-item {
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .next-steps {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .next-steps h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .next-steps ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .next-steps li {
+            padding: 10px 0;
+            color: #555;
+        }
+
+        .next-steps li:before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .action-section {
+            margin-top: 40px;
+            padding: 30px;
+        }
+
+        .manage-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .manage-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .manage-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>测试管理系统</h1>
+        <div class="user-info">
+            <span class="user-name" id="userName">加载中...</span>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-card">
+            <h2>🎉 登录成功！</h2>
+            <p>欢迎使用测试用例管理系统</p>
+            <p>您已成功连接到云端后端服务</p>
+
+            <div class="status-section">
+                <h3>🔍 系统状态</h3>
+                <div id="statusContainer">
+                    <div class="loading">正在检查系统状态...</div>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <button class="manage-btn" onclick="window.location.href='manage.html'">
+                    进入测试用例管理系统 →
+                </button>
+            </div>
+
+            <div class="next-steps">
+                <h4>✅ 已完成的部署步骤：</h4>
+                <ul>
+                    <li>后端 API 部署到 Railway</li>
+                    <li>PostgreSQL 数据库配置完成</li>
+                    <li>用户认证系统正常运行</li>
+                    <li>CORS 跨域配置成功</li>
+                    <li>管理员账号创建成功</li>
+                    <li>测试用例管理界面已完成</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://test-management-backend-3fib.onrender.com/api';
+
+        // 检查是否已登录
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+
+            if (!token || !user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 显示用户信息
+            try {
+                const userData = JSON.parse(user);
+                document.getElementById('userName').textContent =
+                    `${userData.username} (${userData.role})`;
+            } catch (error) {
+                console.error('解析用户数据失败:', error);
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+
+        // 检查系统状态
+        async function checkSystemStatus() {
+            const statusContainer = document.getElementById('statusContainer');
+
+            try {
+                // 检查后端健康状态
+                const healthResponse = await fetch(`${API_BASE_URL.replace('/api', '')}/health`);
+                const healthData = await healthResponse.json();
+
+                // 检查用户信息
+                const token = localStorage.getItem('token');
+                const userResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const userValid = userResponse.ok;
+
+                // 显示状态
+                statusContainer.innerHTML = `
+                    <div class="status-item">
+                        <span>🌐 后端 API</span>
+                        <span class="status-badge success">✓ 正常运行</span>
+                    </div>
+                    <div class="status-item">
+                        <span>🗄️ 数据库连接</span>
+                        <span class="status-badge ${healthData.database === 'connected' ? 'success' : 'error'}">
+                            ${healthData.database === 'connected' ? '✓ 已连接' : '✗ 未连接'}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span>🔐 用户认证</span>
+                        <span class="status-badge ${userValid ? 'success' : 'error'}">
+                            ${userValid ? '✓ 已认证' : '✗ 认证失败'}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span>📋 API 端点</span>
+                        <span class="status-badge info">backend-production-2050.up.railway.app</span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('检查系统状态失败:', error);
+                statusContainer.innerHTML = `
+                    <div class="error-message">
+                        ⚠️ 无法获取系统状态：${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时执行
+        checkAuth();
+        checkSystemStatus();
+    </script>
+</body>
+</html>

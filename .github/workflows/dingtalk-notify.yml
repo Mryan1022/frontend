@@ -1,0 +1,58 @@
+name: DingTalk Notification
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Send DingTalk notification
+        env:
+          DINGTALK_WEBHOOK: 'https://oapi.dingtalk.com/robot/send?access_token=4a9730173b7e436c2449789d3fcad107925bd013454671bbcaca19e4d1fb6b09'
+          DINGTALK_SECRET: 'SEC1c94eff36587ada3b8ebdbcea3e0e98138d505ad4b7303ef0383c0a78d1df1b5'
+        run: |
+          # 获取提交信息
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          COMMIT_AUTHOR=$(git log -1 --pretty=%an)
+          COMMIT_SHA=$(git log -1 --pretty=%h)
+          COMMIT_URL="https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          
+          # 生成时间戳和签名
+          TIMESTAMP=$(date +%s000)
+          SECRET="${DINGTALK_SECRET}"
+          SIGN_STRING="${TIMESTAMP}\n${SECRET}"
+          SIGN=$(echo -ne "${SIGN_STRING}" | openssl dgst -sha256 -hmac "${SECRET}" -binary | base64 | python3 -c "import sys; from urllib.parse import quote_plus; print(quote_plus(sys.stdin.read().strip()))")
+          
+          # 构建消息
+          if [ "${{ github.event_name }}" == "push" ]; then
+            ACTION="🚀 代码推送"
+          else
+            ACTION="🔀 PR 请求"
+          fi
+          
+          MESSAGE=$(cat <<-END
+          {
+            "msgtype": "markdown",
+            "markdown": {
+              "title": "Frontend 构建通知",
+              "text": "## ${ACTION}\n\n**仓库**: Frontend\n\n**提交者**: ${COMMIT_AUTHOR}\n\n**提交信息**: ${COMMIT_MESSAGE}\n\n**提交SHA**: ${COMMIT_SHA}\n\n**分支**: ${{ github.ref_name }}\n\n**查看详情**: [点击查看](${COMMIT_URL})\n\n---\n\n⏰ $(date +'%Y-%m-%d %H:%M:%S')"
+            }
+          }
+          END
+          )
+          
+          # 发送通知
+          curl -X POST "${DINGTALK_WEBHOOK}&timestamp=${TIMESTAMP}&sign=${SIGN}" \
+            -H 'Content-Type: application/json' \
+            -d "${MESSAGE}"
+          
+          echo "✅ 钉钉通知已发送"

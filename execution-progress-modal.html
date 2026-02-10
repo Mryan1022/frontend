@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>执行进度弹窗 - UI设计</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
+            background: #f5f7fa;
+            padding: 40px;
+        }
+
+        .preview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+        }
+
+        /* 遮罩层 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        /* 弹窗主体 */
+        .execution-modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* 弹窗头部 */
+        .modal-header {
+            padding: 24px 28px;
+            border-bottom: 1px solid #e8ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-title .icon {
+            font-size: 24px;
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* 测试用例信息 */
+        .test-case-info {
+            padding: 20px 28px;
+            background: #f8f9fb;
+            border-bottom: 1px solid #e8ecef;
+        }
+
+        .test-case-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .test-case-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #6b7785;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 进度条区域 */
+        .progress-section {
+            padding: 28px;
+        }
+
+        .overall-progress {
+            margin-bottom: 28px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .progress-percentage {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .progress-bar-container {
+            height: 8px;
+            background: #e8ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255,255,255,0.3) 50%,
+                transparent 100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 步骤列表 */
+        .steps-list {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .step-item {
+            padding: 16px;
+            border-left: 3px solid #e8ecef;
+            margin-bottom: 12px;
+            background: #f8f9fb;
+            border-radius: 8px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .step-item.completed {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .step-item.running {
+            border-left-color: #667eea;
+            background: #eef2ff;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .step-item.pending {
+            border-left-color: #e8ecef;
+            background: #f8f9fb;
+            opacity: 0.6;
+        }
+
+        .step-item.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(102, 126, 234, 0); }
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .step-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .step-item.completed .step-icon {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-item.running .step-icon {
+            background: #667eea;
+            color: white;
+            animation: rotate 2s linear infinite;
+        }
+
+        .step-item.pending .step-icon {
+            background: #e8ecef;
+            color: #9ca3af;
+        }
+
+        .step-item.error .step-icon {
+            background: #ef4444;
+            color: white;
+        }
+
+        .step-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .step-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .step-description {
+            font-size: 13px;
+            color: #6b7785;
+            margin-left: 40px;
+            line-height: 1.6;
+        }
+
+        .step-detail {
+            margin-top: 8px;
+            margin-left: 40px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #4b5563;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        /* 底部操作区 */
+        .modal-footer {
+            padding: 20px 28px;
+            border-top: 1px solid #e8ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fb;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-badge.running {
+            background: #eef2ff;
+            color: #667eea;
+        }
+
+        .status-badge.completed {
+            background: #f0fdf4;
+            color: #10b981;
+        }
+
+        .status-badge.failed {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: white;
+            color: #6b7785;
+            border: 1px solid #e8ecef;
+        }
+
+        .btn-cancel:hover {
+            background: #f8f9fb;
+        }
+
+        .btn-view-result {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-view-result:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* 滚动条样式 */
+        .steps-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .steps-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .steps-list::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .steps-list::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* 示例说明 */
+        .example-label {
+            text-align: center;
+            padding: 10px;
+            background: #2c3e50;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <h1>🎨 执行进度弹窗UI设计</h1>
+
+        <div class="preview-grid">
+            <!-- 示例1: 执行中状态 -->
+            <div>
+                <div class="example-label">状态: 执行中 (40%)</div>
+                <div class="modal-overlay" style="position: relative; height: 700px;">
+                    <div class="execution-modal">
+                        <div class="modal-header">
+                            <div class="modal-title">
+                                <span class="icon">⚙️</span>
+                                <span>测试执行中...</span>
+                            </div>
+                            <button class="close-btn">×</button>
+                        </div>
+
+                        <div class="test-case-info">
+                            <div class="test-case-name">已登录用户再次打开应用（自动登录）</div>
+                            <div class="test-case-meta">
+                                <div class="meta-item">
+                                    <span>📱</span>
+                                    <span>Android</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>📋</span>
+                                    <span>Simple模式</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>🔖</span>
+                                    <span>P0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="progress-section">
+                            <div class="overall-progress">
+                                <div class="progress-header">
+                                    <div class="progress-label">整体进度</div>
+                                    <div class="progress-percentage">40%</div>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: 40%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="steps-list">
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">检查设备连接</div>
+                                        <div class="step-time">1.2s</div>
+                                    </div>
+                                    <div class="step-description">已连接设备: OPPO PHQ110 (ac382f67)</div>
+                                </div>
+
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">检查APP安装状态</div>
+                                        <div class="step-time">0.8s</div>
+                                    </div>
+                                    <div class="step-description">APP已安装: com.dolilive (v1.2.9.9)</div>
+                                </div>
+
+                                <div class="step-item running">
+                                    <div class="step-header">
+                                        <div class="step-icon">⚙️</div>
+                                        <div class="step-title">启动APP并初始化</div>
+                                        <div class="step-time">进行中...</div>
+                                    </div>
+                                    <div class="step-description">正在启动 Doli Live APP...</div>
+                                    <div class="step-detail">Appium Server: http://localhost:4723<br/>Device: ac382f67 | Android 14</div>
+                                </div>
+
+                                <div class="step-item pending">
+                                    <div class="step-header">
+                                        <div class="step-icon">○</div>
+                                        <div class="step-title">解析测试用例</div>
+                                        <div class="step-time">等待中</div>
+                                    </div>
+                                    <div class="step-description">识别自动化级别和测试步骤</div>
+                                </div>
+
+                                <div class="step-item pending">
+                                    <div class="step-header">
+                                        <div class="step-icon">○</div>
+                                        <div class="step-title">执行前置条件</div>
+                                        <div class="step-time">等待中</div>
+                                    </div>
+                                    <div class="step-description">准备测试环境和数据</div>
+                                </div>
+
+                                <div class="step-item pending">
+                                    <div class="step-header">
+                                        <div class="step-icon">○</div>
+                                        <div class="step-title">执行测试步骤</div>
+                                        <div class="step-time">等待中</div>
+                                    </div>
+                                    <div class="step-description">按照用例步骤执行操作</div>
+                                </div>
+
+                                <div class="step-item pending">
+                                    <div class="step-header">
+                                        <div class="step-icon">○</div>
+                                        <div class="step-title">验证预期结果</div>
+                                        <div class="step-time">等待中</div>
+                                    </div>
+                                    <div class="step-description">对比实际结果与预期结果</div>
+                                </div>
+
+                                <div class="step-item pending">
+                                    <div class="step-header">
+                                        <div class="step-icon">○</div>
+                                        <div class="step-title">保存测试结果</div>
+                                        <div class="step-time">等待中</div>
+                                    </div>
+                                    <div class="step-description">上传截图和执行日志</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <div class="status-badge running">
+                                ⚙️ 执行中
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-cancel">取消执行</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 示例2: 完成状态 -->
+            <div>
+                <div class="example-label">状态: 执行完成 (100%)</div>
+                <div class="modal-overlay" style="position: relative; height: 700px;">
+                    <div class="execution-modal">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <div class="modal-title">
+                                <span class="icon" style="animation: none;">✓</span>
+                                <span>测试执行完成</span>
+                            </div>
+                            <button class="close-btn">×</button>
+                        </div>
+
+                        <div class="test-case-info">
+                            <div class="test-case-name">手机号验证码登录</div>
+                            <div class="test-case-meta">
+                                <div class="meta-item">
+                                    <span>📱</span>
+                                    <span>Android</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>📋</span>
+                                    <span>Standard模式</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>🔖</span>
+                                    <span>P0</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span>⏱️</span>
+                                    <span>总耗时: 45.3s</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="progress-section">
+                            <div class="overall-progress">
+                                <div class="progress-header">
+                                    <div class="progress-label">整体进度</div>
+                                    <div class="progress-percentage" style="color: #10b981;">100%</div>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%);"></div>
+                                </div>
+                            </div>
+
+                            <div class="steps-list">
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">检查设备连接</div>
+                                        <div class="step-time">1.2s</div>
+                                    </div>
+                                </div>
+
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">检查APP安装状态</div>
+                                        <div class="step-time">0.8s</div>
+                                    </div>
+                                </div>
+
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">启动APP并初始化</div>
+                                        <div class="step-time">8.5s</div>
+                                    </div>
+                                </div>
+
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">解析测试用例</div>
+                                        <div class="step-time">0.3s</div>
+                                    </div>
+                                    <div class="step-description">识别为Standard模式，共7个操作步骤</div>
+                                </div>
+
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">执行前置条件</div>
+                                        <div class="step-time">2.1s</div>
+                                    </div>
+                                    <div class="step-description">应用已安装，用户已退出登录</div>
+                                </div>
+
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">执行测试步骤</div>
+                                        <div class="step-time">28.7s</div>
+                                    </div>
+                                    <div class="step-description">成功执行7个操作: 点击登录 → 输入手机号 → 获取验证码 → 输入验证码 → 点击登录 → 验证成功</div>
+                                </div>
+
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">验证预期结果</div>
+                                        <div class="step-time">1.5s</div>
+                                    </div>
+                                    <div class="step-description">✓ 找到"登录成功"提示<br/>✓ 进入应用主页</div>
+                                </div>
+
+                                <div class="step-item completed">
+                                    <div class="step-header">
+                                        <div class="step-icon">✓</div>
+                                        <div class="step-title">保存测试结果</div>
+                                        <div class="step-time">2.2s</div>
+                                    </div>
+                                    <div class="step-description">已保存8张截图和完整日志</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <div class="status-badge completed">
+                                ✓ 测试通过
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-view-result">查看详细报告</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟动态更新（仅用于演示）
+        console.log('执行进度弹窗UI设计预览');
+    </script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试用例详情页按钮布局方案</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .solutions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .solution-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .solution-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .solution-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .preview-area {
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        /* 通用按钮样式 */
+        .platform-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .platform-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .platform-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-pass {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-pass:hover {
+            background: #059669;
+        }
+
+        .btn-fail {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-fail:hover {
+            background: #dc2626;
+        }
+
+        .btn-skip {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-skip:hover {
+            background: #d97706;
+        }
+
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+
+        /* 方案1：垂直布局 */
+        .layout-1 .platform-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .layout-1 .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .layout-1 .edit-section {
+            display: flex;
+        }
+
+        .layout-1 .btn-edit {
+            flex: 1;
+        }
+
+        /* 方案2：左右分栏布局 */
+        .layout-2 .content-wrapper {
+            display: flex;
+            gap: 20px;
+        }
+
+        .layout-2 .platform-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 100px;
+        }
+
+        .layout-2 .platform-sidebar .platform-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .layout-2 .actions-area {
+            flex: 1;
+        }
+
+        .layout-2 .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .layout-2 .action-buttons .action-btn {
+            flex: 1;
+        }
+
+        .layout-2 .btn-edit {
+            width: 100%;
+        }
+
+        /* 方案3：紧凑横向布局 */
+        .layout-3 .top-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .layout-3 .platform-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .layout-3 .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .layout-3 .action-buttons .action-btn {
+            flex: 1;
+        }
+
+        .layout-3 .edit-section {
+            display: flex;
+        }
+
+        .layout-3 .btn-edit {
+            width: 100%;
+        }
+
+        /* 优缺点列表 */
+        .pros-cons {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pros-cons h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .pros-cons ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .pros-cons li {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .pros-cons li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .pros-cons .cons li::before {
+            content: "✗";
+            color: #ef4444;
+        }
+
+        .recommendation {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recommendation-text {
+            color: #78350f;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .solutions {
+                grid-template-columns: 1fr;
+            }
+
+            .layout-2 .content-wrapper {
+                flex-direction: column;
+            }
+
+            .layout-2 .platform-sidebar {
+                flex-direction: row;
+                width: 100%;
+            }
+
+            .layout-3 .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 测试用例详情页 - 按钮布局方案</h1>
+
+        <div class="solutions">
+            <!-- 方案1：垂直分层布局 -->
+            <div class="solution-card">
+                <div class="solution-title">
+                    <span>🎯</span>
+                    <span>方案1：垂直分层布局</span>
+                </div>
+                <div class="solution-description">
+                    平台选择在顶部横向排列，状态操作按钮和编辑按钮分两行显示。布局清晰，层次分明。
+                </div>
+
+                <div class="preview-area layout-1">
+                    <!-- 平台选择 -->
+                    <div class="platform-tabs">
+                        <button class="platform-btn active">🤖 Android</button>
+                        <button class="platform-btn">🍎 iOS</button>
+                        <button class="platform-btn">🌐 H5</button>
+                    </div>
+
+                    <!-- 状态操作按钮 -->
+                    <div class="action-buttons">
+                        <button class="action-btn btn-pass">✅ 通过</button>
+                        <button class="action-btn btn-fail">❌ 不通过</button>
+                        <button class="action-btn btn-skip">⏭️ 跳过</button>
+                    </div>
+
+                    <!-- 编辑按钮 -->
+                    <div class="edit-section">
+                        <button class="btn-edit">✏️ 编辑测试用例</button>
+                    </div>
+                </div>
+
+                <div class="pros-cons">
+                    <h4>✅ 优点</h4>
+                    <ul>
+                        <li>层次清晰，功能分区明确</li>
+                        <li>按钮较大，易于点击</li>
+                        <li>适合移动端操作</li>
+                        <li>视觉舒适，不拥挤</li>
+                    </ul>
+
+                    <h4 style="margin-top: 10px;">❌ 缺点</h4>
+                    <ul class="cons">
+                        <li>占用垂直空间较多</li>
+                        <li>需要更多滚动操作</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 方案2：左右分栏布局 -->
+            <div class="solution-card">
+                <div class="solution-title">
+                    <span>📊</span>
+                    <span>方案2：左右分栏布局</span>
+                </div>
+                <div class="solution-description">
+                    平台选择在左侧竖向排列，状态和编辑按钮在右侧垂直排列。充分利用横向空间。
+                </div>
+
+                <div class="preview-area layout-2">
+                    <div class="content-wrapper">
+                        <!-- 左侧平台选择 -->
+                        <div class="platform-sidebar">
+                            <button class="platform-btn active">🤖 Android</button>
+                            <button class="platform-btn">🍎 iOS</button>
+                            <button class="platform-btn">🌐 H5</button>
+                        </div>
+
+                        <!-- 右侧操作区域 -->
+                        <div class="actions-area">
+                            <div class="action-buttons">
+                                <button class="action-btn btn-pass">✅ 通过</button>
+                                <button class="action-btn btn-fail">❌ 不通过</button>
+                                <button class="action-btn btn-skip">⏭️ 跳过</button>
+                            </div>
+                            <button class="btn-edit">✏️ 编辑测试用例</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pros-cons">
+                    <h4>✅ 优点</h4>
+                    <ul>
+                        <li>节省垂直空间</li>
+                        <li>平台切换独立明显</li>
+                        <li>充分利用宽屏空间</li>
+                        <li>视觉平衡感好</li>
+                    </ul>
+
+                    <h4 style="margin-top: 10px;">❌ 缺点</h4>
+                    <ul class="cons">
+                        <li>移动端需要特殊处理</li>
+                        <li>窄屏下可能拥挤</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 方案3：紧凑横向布局 -->
+            <div class="solution-card">
+                <div class="solution-title">
+                    <span>⚡</span>
+                    <span>方案3：紧凑横向布局</span>
+                </div>
+                <div class="solution-description">
+                    平台和状态操作在同一行，编辑按钮独立一行。紧凑高效，适合桌面端。
+                </div>
+
+                <div class="preview-area layout-3">
+                    <!-- 顶部操作栏 -->
+                    <div class="top-bar">
+                        <div class="platform-tabs">
+                            <button class="platform-btn active">🤖 Android</button>
+                            <button class="platform-btn">🍎 iOS</button>
+                            <button class="platform-btn">🌐 H5</button>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="action-btn btn-pass">✅ 通过</button>
+                            <button class="action-btn btn-fail">❌ 不通过</button>
+                            <button class="action-btn btn-skip">⏭️ 跳过</button>
+                        </div>
+                    </div>
+
+                    <!-- 编辑按钮 -->
+                    <div class="edit-section">
+                        <button class="btn-edit">✏️ 编辑测试用例</button>
+                    </div>
+                </div>
+
+                <div class="pros-cons">
+                    <h4>✅ 优点</h4>
+                    <ul>
+                        <li>最节省空间</li>
+                        <li>操作集中，效率高</li>
+                        <li>适合桌面端大屏</li>
+                        <li>一眼看清所有操作</li>
+                    </ul>
+
+                    <h4 style="margin-top: 10px;">❌ 缺点</h4>
+                    <ul class="cons">
+                        <li>按钮可能显得拥挤</li>
+                        <li>小屏幕下需要换行</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 推荐方案 -->
+        <div class="recommendation">
+            <div class="recommendation-title">
+                💡 推荐建议
+            </div>
+            <div class="recommendation-text">
+                <p><strong>综合推荐：方案1（垂直分层布局）</strong></p>
+                <p style="margin-top: 8px;">
+                    原因：
+                    <br>1. 层次清晰，用户一眼就能理解各个功能区域
+                    <br>2. 按钮足够大，点击不容易误操作
+                    <br>3. 兼容移动端和桌面端，响应式友好
+                    <br>4. 平台切换、状态操作、编辑功能各自独立，符合用户心智模型
+                </p>
+                <p style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed #d97706;">
+                    <strong>备选：方案2（左右分栏布局）</strong>
+                    <br>如果你的用户主要在桌面端使用，且屏幕宽度充足，方案2也是不错的选择。
+                </p>
+            </div>
+        </div>
+
+        <!-- 交互说明 -->
+        <div class="solution-card" style="margin-top: 30px;">
+            <div class="solution-title">
+                <span>🎨</span>
+                <span>交互效果说明</span>
+            </div>
+            <div class="solution-description">
+                <p style="margin-bottom: 10px;"><strong>当前页面为静态预览</strong>，所有按钮都可以点击查看hover效果：</p>
+                <ul style="list-style: none; padding-left: 20px;">
+                    <li style="margin-bottom: 8px;">• 平台按钮：hover时边框变蓝，背景变浅蓝色</li>
+                    <li style="margin-bottom: 8px;">• 状态按钮：hover时颜色加深</li>
+                    <li style="margin-bottom: 8px;">• 编辑按钮：hover时背景从蓝色变深蓝</li>
+                    <li style="margin-bottom: 8px;">• 所有按钮都有0.2s的过渡动画</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加简单的交互效果
+        document.querySelectorAll('.platform-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 移除同组其他按钮的active类
+                this.parentElement.querySelectorAll('.platform-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                // 添加active类到当前按钮
+                this.classList.add('active');
+            });
+        });
+
+        // 为操作按钮添加点击反馈
+        document.querySelectorAll('.action-btn, .btn-edit').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const originalText = this.textContent;
+                this.textContent = '✓ 已点击';
+                this.style.opacity = '0.7';
+
+                setTimeout(() => {
+                    this.textContent = originalText;
+                    this.style.opacity = '1';
+                }, 800);
+            });
+        });
+    </script>
+</body>
+</html>
