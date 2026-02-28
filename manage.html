@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="api-service.js"></script>
+    <script src="execution-config-dialog.js"></script>
     <style>
         * {
             margin: 0;
@@ -5132,8 +5133,8 @@ for (let i = 0; i < rows.length; i++) {
                     e.stopPropagation();
                     const menuId = executeMenuBtn.dataset.menuId;
                     const menuName = executeMenuBtn.dataset.menuName;
-                    showExecutionDialog((platform) => {
-                        executeMenuTestCases(menuId, menuName, platform, isSmokeMenu);
+                    showExecutionConfigDialog((platform, executionConfig) => {
+                        executeMenuTestCases(menuId, menuName, platform, isSmokeMenu, executionConfig);
                     });
                 };
             }
@@ -5328,8 +5329,8 @@ for (let i = 0; i < rows.length; i++) {
                                 e.stopPropagation();
                                 const testCaseId = executeBtn.dataset.testCaseId;
                                 const testCaseName = executeBtn.dataset.testCaseName;
-                                showExecutionDialog((platform) => {
-                                    executeSingleTestCase(testCaseId, testCaseName, platform);
+                                showExecutionConfigDialog((platform, executionConfig) => {
+                                    executeSingleTestCase(testCaseId, testCaseName, platform, executionConfig);
                                 });
                             };
                         }
@@ -5439,8 +5440,8 @@ for (let i = 0; i < rows.length; i++) {
                             e.stopPropagation();
                             const testCaseId = executeBtn.dataset.testCaseId;
                             const testCaseName = executeBtn.dataset.testCaseName;
-                            showExecutionDialog((platform) => {
-                                executeSingleTestCase(testCaseId, testCaseName, platform);
+                            showExecutionConfigDialog((platform, executionConfig) => {
+                                executeSingleTestCase(testCaseId, testCaseName, platform, executionConfig);
                             });
                         };
                     }
@@ -6611,12 +6612,12 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 执行单条测试用例
-    async function executeSingleTestCase(testCaseId, testCaseName, platform) {
+    async function executeSingleTestCase(testCaseId, testCaseName, platform, executionConfig = null) {
         try {
-            console.log(`[执行测试用例] ID: ${testCaseId}, 平台: ${platform}`);
+            console.log(`[执行测试用例] ID: ${testCaseId}, 平台: ${platform}, 配置:`, executionConfig);
             showLoading(`正在提交测试用例: ${testCaseName}...`);
 
-            const result = await apiService.executeTestCase(testCaseId, platform);
+            const result = await apiService.executeTestCase(testCaseId, platform, null, executionConfig);
 
             if (result && result.success) {
                 const executionId = result.data.taskId || result.data.executionId;
@@ -6627,7 +6628,7 @@ for (let i = 0; i < rows.length; i++) {
                     executionId,
                     testCaseName,
                     platform,
-                    'simple'
+                    executionConfig?.automation_level || 'simple'
                 );
                 progressModal.show();
             } else {
@@ -6642,7 +6643,7 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // 执行菜单下的所有测试用例
-    async function executeMenuTestCases(menuId, menuName, platform, isSmokeMenu = false) {
+    async function executeMenuTestCases(menuId, menuName, platform, isSmokeMenu = false, executionConfig = null) {
         try {
             console.log(`[批量执行] 菜单: ${menuName}, 平台: ${platform}`);
 
@@ -6772,13 +6773,13 @@ for (let i = 0; i < rows.length; i++) {
         const testCaseId = currentTestCase.id;
         const testCaseName = currentTestCase.name;
 
-        showExecutionDialog((platform) => {
-            executeSingleTestCase(testCaseId, testCaseName, platform);
+        showExecutionConfigDialog((platform, executionConfig) => {
+            executeSingleTestCase(testCaseId, testCaseName, platform, executionConfig);
         });
     }
 
-    // 显示平台选择对话框
-    function showExecutionDialog(callback) {
+    // 显示平台选择对话框（已弃用，使用 showExecutionConfigDialog 替代）
+    /* function showExecutionDialog(callback) {
         const dialog = document.createElement('div');
         dialog.style.cssText = `
             position: fixed;
@@ -6974,7 +6975,7 @@ for (let i = 0; i < rows.length; i++) {
                 to { opacity: 0; }
             }
         `;
-    }
+    } */
 
     // 添加CSS动画
     const style = document.createElement('style');

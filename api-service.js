@@ -272,10 +272,10 @@ class APIService {
     // ==================== 自动化执行相关 ====================
 
     // 执行单条测试用例
-    async executeTestCase(testCaseId, platform, deviceId = null) {
+    async executeTestCase(testCaseId, platform, deviceId = null, executionConfig = null) {
         return await this.request(`/test-cases/${testCaseId}/execute`, {
             method: 'POST',
-            body: JSON.stringify({ platform, deviceId })
+            body: JSON.stringify({ platform, deviceId, executionConfig })
         });
     }
 
