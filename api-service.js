@@ -4,7 +4,7 @@
 
 class APIService {
     constructor() {
-        this.baseURL = 'https://test-management-backend-3fib.onrender.com/api';
+        this.baseURL = 'http://localhost:3000/api';
         this.token = localStorage.getItem('token');
     }
 
