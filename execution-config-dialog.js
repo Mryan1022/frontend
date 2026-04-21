@@ -3,7 +3,7 @@
  * 用于替换原有的 showExecutionDialog 函数
  */
 
-function showExecutionConfigDialog(callback) {
+function showExecutionConfigDialog(callback, testCaseCtx) {
     const dialog = document.createElement('div');
     dialog.style.cssText = `
         position: fixed;
@@ -160,29 +160,45 @@ function showExecutionConfigDialog(callback) {
                 </div>
             </div>
 
+            <!-- 预检结果区 -->
+            <div id="previewResultArea" style="display:none; margin-top: 20px; padding: 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; max-height: 280px; overflow-y: auto;"></div>
+
             <!-- 操作按钮 -->
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <div style="display: flex; gap: 10px; margin-top: 24px;">
                 <button id="cancelExecuteConfig" style="
                     flex: 1;
-                    padding: 14px 24px;
+                    padding: 14px 16px;
                     border: 2px solid #e2e8f0;
                     background: white;
                     color: #64748b;
                     border-radius: 12px;
                     cursor: pointer;
-                    font-size: 15px;
+                    font-size: 14px;
                     font-weight: 600;
                     transition: all 0.3s;
                 ">取消</button>
+                <button id="previewStepsBtn" style="
+                    flex: 1;
+                    padding: 14px 16px;
+                    border: 2px solid #8b5cf6;
+                    background: white;
+                    color: #8b5cf6;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 600;
+                    transition: all 0.3s;
+                    ${testCaseCtx ? '' : 'display:none;'}
+                ">🔍 预检步骤</button>
                 <button id="confirmExecuteConfig" style="
                     flex: 2;
-                    padding: 14px 24px;
+                    padding: 14px 16px;
                     border: none;
                     background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
                     color: white;
                     border-radius: 12px;
                     cursor: pointer;
-                    font-size: 15px;
+                    font-size: 14px;
                     font-weight: 600;
                     transition: all 0.3s;
                     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
@@ -326,6 +342,65 @@ function showExecutionConfigDialog(callback) {
         dialog.style.animation = 'fadeOut 0.2s ease';
         setTimeout(() => dialog.remove(), 200);
     };
+
+    // 预检按钮
+    const previewBtn = dialog.querySelector('#previewStepsBtn');
+    const previewArea = dialog.querySelector('#previewResultArea');
+    if (previewBtn && testCaseCtx) {
+        previewBtn.onclick = async () => {
+            previewBtn.disabled = true;
+            previewBtn.innerText = '🔄 解析中…';
+            previewArea.style.display = 'block';
+            previewArea.innerHTML = '<div style="color:#64748b; font-size:13px;">正在翻译步骤…</div>';
+            try {
+                const token = (window.getAuthToken && window.getAuthToken()) || localStorage.getItem('token') || '';
+                const resp = await fetch('/api/automation/preview-steps', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    },
+                    body: JSON.stringify({
+                        steps: testCaseCtx.steps || '',
+                        preconditions: testCaseCtx.preconditions || '',
+                        expected: testCaseCtx.expected || ''
+                    })
+                });
+                const data = await resp.json();
+                if (!data.success) {
+                    previewArea.innerHTML = `<div style="color:#dc2626;">❌ 预检失败：${data.error || '未知错误'}</div>`;
+                    return;
+                }
+                const sections = data.sections || {};
+                const renderSection = (label, actions) => {
+                    if (!actions || !actions.length) return '';
+                    const rows = actions.map((a, i) => {
+                        const isManual = a.action === 'manual';
+                        const color = isManual ? '#dc2626' : '#059669';
+                        const icon = isManual ? '❌' : '✅';
+                        const detail = isManual ? (a.raw_text || a.description) : `${a.action}${a.element ? ' → ' + a.element : ''}${a.text ? ' = ' + a.text : ''}`;
+                        return `<div style="padding:4px 0; border-bottom:1px dashed #e2e8f0; font-size:12px;"><span style="color:${color}">${icon} ${i+1}. ${detail}</span></div>`;
+                    }).join('');
+                    return `<div style="margin-bottom:10px;"><div style="font-weight:600; font-size:13px; color:#334155; margin-bottom:4px;">${label}（${actions.length} 步）</div>${rows}</div>`;
+                };
+                const manualCount = data.manual_count || 0;
+                const summaryColor = manualCount ? '#dc2626' : '#059669';
+                previewArea.innerHTML = `
+                    <div style="margin-bottom:10px; padding:8px; background:white; border-radius:6px; color:${summaryColor}; font-weight:600; font-size:13px;">
+                        共 ${data.step_count || 0} 步，${manualCount} 步无法翻译（manual）
+                    </div>
+                    ${renderSection('前置条件', sections.pre)}
+                    ${renderSection('主步骤', sections.main)}
+                    ${renderSection('预期结果', sections.expected)}
+                `;
+            } catch (err) {
+                previewArea.innerHTML = `<div style="color:#dc2626;">❌ 请求失败：${err.message}</div>`;
+            } finally {
+                previewBtn.disabled = false;
+                previewBtn.innerText = '🔍 预检步骤';
+            }
+        };
+    }
 
     // 点击背景关闭
     dialog.onclick = (e) => {

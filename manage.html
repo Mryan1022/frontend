@@ -411,10 +411,9 @@
             transition: all 0.3s;
             font-size: 14px;
             display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
         }
 
         .test-case-item:hover {
@@ -456,8 +455,9 @@
             margin-left: 0;
         }
 
-        .test-case-name {
+        .test-case-item .test-case-name {
             flex: 1;
+            font-size: 13px;
         }
 
         /* 执行按钮样式 - 冒烟用例专用 */
@@ -3192,6 +3192,10 @@
                                 <span>📋</span>
                                 <span>${this.getModeName()}</span>
                             </div>
+                            <div class="meta-item elapsed-meta">
+                                <span>⏱️</span>
+                                <span class="elapsed-time">0.0s</span>
+                            </div>
                         </div>
                     </div>
 
@@ -3207,6 +3211,16 @@
                         </div>
 
                         <div class="steps-list"></div>
+
+                        <div class="error-section" style="display:none; margin-top:16px; padding:12px 16px; background:#fef2f2; border-left:3px solid #ef4444; border-radius:6px;">
+                            <div style="font-size:13px; font-weight:600; color:#b91c1c; margin-bottom:6px;">❌ 错误信息</div>
+                            <div class="error-message" style="font-size:12px; color:#4b5563; font-family:'Consolas','Monaco',monospace; white-space:pre-wrap; word-break:break-all;"></div>
+                        </div>
+
+                        <div class="screenshot-section" style="display:none; margin-top:16px;">
+                            <div style="font-size:13px; font-weight:600; color:#2c3e50; margin-bottom:8px;">📸 截图（<span class="screenshot-count">0</span>）</div>
+                            <div class="screenshot-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:8px;"></div>
+                        </div>
                     </div>
 
                     <div class="modal-footer">
@@ -3280,57 +3294,149 @@
 
         async fetchProgress() {
             try {
-                // 获取执行状态
                 const response = await apiService.request(`/test-cases/executions/${this.executionId}`);
+                if (!response.success) return;
 
-                if (response.success) {
-                    const execution = response.execution || response.data;
+                const execution = response.execution || response.data || {};
+                this.execution = execution;
 
-                    // 更新状态
-                    if (execution.status === 'completed' || execution.status === 'failed') {
-                        this.isRunning = false;
-                        this.stopPolling();
-                        this.updateStatus(execution.status, execution);
-                    } else if (execution.status === 'running') {
-                        // 根据日志推断进度
-                        this.inferProgressFromLogs(execution.logs || []);
-                    }
+                this.updateElapsed(execution);
+
+                const status = execution.status;
+
+                // 尝试从日志文件解析真实步骤状态；失败就退回基于时间的估算
+                const parsedFromLog = await this.tryParseStepsFromLog(execution);
+
+                if (status === 'passed' || status === 'completed') {
+                    this.isRunning = false;
+                    this.stopPolling();
+                    if (!parsedFromLog) this.markAllSteps('completed');
+                    this.updateStatus('passed', execution);
+                } else if (status === 'failed' || status === 'error') {
+                    this.isRunning = false;
+                    this.stopPolling();
+                    if (!parsedFromLog) this.markFailedStep(execution);
+                    this.updateStatus('failed', execution);
+                } else if (status === 'cancelled') {
+                    this.isRunning = false;
+                    this.stopPolling();
+                    this.updateStatus('cancelled', execution);
+                } else if (status === 'running') {
+                    if (!parsedFromLog) this.advanceRunningSteps(execution);
+                    this.render();
+                    this.updateOverallProgress();
                 }
+                // pending: 保持全部 pending，仅更新已用时
             } catch (error) {
                 console.error('获取进度失败:', error);
             }
         }
 
-        inferProgressFromLogs(logs) {
-            /**
-             * 根据日志内容推断执行进度
-             * 这是一个简化方案，实际应该通过专门的进度API
-             */
-            const logText = logs.join('\n').toLowerCase();
+        // 从 executor 日志文件解析每步真实状态
+        // 成功返回 true（并已调用 render + updateOverallProgress），失败返回 false
+        async tryParseStepsFromLog(execution) {
+            if (!execution || !execution.logFile) return false;
+            const logFile = String(execution.logFile).split(/[\\/]/).pop();
+            if (!logFile || !logFile.endsWith('.log')) return false;
+            try {
+                const host = (typeof EXEC_ASSET_HOST !== 'undefined') ? EXEC_ASSET_HOST : 'http://localhost:8888';
+                const resp = await fetch(`${host}/api/logs/read?file=${encodeURIComponent(logFile)}&lines=5000`);
+                if (!resp.ok) return false;
+                const data = await resp.json();
+                if (!data.success || !data.content) return false;
 
-            const checkpoints = [
-                { step: 1, keywords: ['检查设备', 'device', 'adb devices'] },
-                { step: 2, keywords: ['检查app', 'app安装', 'pm list packages'] },
-                { step: 3, keywords: ['启动app', 'appium', 'webdriver'] },
-                { step: 4, keywords: ['解析', '识别', 'automation_level'] },
-                { step: 5, keywords: ['前置条件', 'precondition'] },
-                { step: 6, keywords: ['执行步骤', '执行操作', 'execute step'] },
-                { step: 7, keywords: ['验证', 'verify', 'assert'] },
-                { step: 8, keywords: ['保存结果', '上传', 'save result'] }
-            ];
+                // 重置 8 步为 pending
+                this.steps.forEach(s => s.status = 'pending');
 
-            checkpoints.forEach(checkpoint => {
-                const matched = checkpoint.keywords.some(keyword =>
-                    logText.includes(keyword)
-                );
-
-                if (matched) {
-                    this.updateStep(checkpoint.step, 'completed');
+                // 扫描日志行
+                // 成功日志标记（常规执行成功不会打"步骤 N 成功"，只有失败会打"步骤 N 执行失败"）
+                // 所以：见到"步骤 N/M"认为第 N 步在跑；下一步起始前若没报错，前一步算 completed
+                let currentRunningIdx = -1;
+                const failedSteps = new Set();
+                const startedSteps = new Set();
+                const lines = data.content.split(/\r?\n/);
+                for (const line of lines) {
+                    // 匹配 "📌 步骤 3/8 [click]" 或 "📌 步骤 3/8"
+                    const m = line.match(/步骤\s+(\d+)\s*\/\s*(\d+)/);
+                    if (m) {
+                        const idx = parseInt(m[1], 10) - 1;
+                        startedSteps.add(idx);
+                        // 之前"running"的步骤，如果没失败，标完成
+                        if (currentRunningIdx >= 0 && currentRunningIdx !== idx && !failedSteps.has(currentRunningIdx)) {
+                            if (this.steps[currentRunningIdx]) this.steps[currentRunningIdx].status = 'completed';
+                        }
+                        currentRunningIdx = idx;
+                        if (this.steps[idx]) this.steps[idx].status = 'running';
+                        continue;
+                    }
+                    // 匹配 "❌ 步骤 3 执行失败"
+                    const mf = line.match(/步骤\s+(\d+)\s+执行失败/);
+                    if (mf) {
+                        const idx = parseInt(mf[1], 10) - 1;
+                        failedSteps.add(idx);
+                        if (this.steps[idx]) this.steps[idx].status = 'error';
+                    }
                 }
-            });
 
-            this.render();
-            this.updateOverallProgress();
+                // 终态：如果 execution 已结束，把最后一个未标记完成且未失败的 running 根据总状态决定
+                const status = execution.status;
+                const isTerminal = ['passed','completed','failed','error','cancelled'].includes(status);
+                if (isTerminal && currentRunningIdx >= 0) {
+                    const s = this.steps[currentRunningIdx];
+                    if (s && s.status === 'running') {
+                        if (status === 'passed' || status === 'completed') s.status = 'completed';
+                        else if (status === 'failed' || status === 'error') s.status = 'error';
+                    }
+                }
+
+                this.render();
+                this.updateOverallProgress();
+                return true;
+            } catch (e) {
+                console.warn('日志解析失败:', e);
+                return false;
+            }
+        }
+
+        // 根据起始时间把 8 步按估算时长线性推进（每步约 5s，总 40s 参考值）
+        advanceRunningSteps(execution) {
+            // startTime 可能为 null（旧版本执行器不回写），退回到 createdAt，保证 UI 有进度可算
+            const baseTime = execution.startTime || execution.createdAt;
+            const startTime = baseTime ? new Date(baseTime).getTime() : Date.now();
+            const elapsed = (Date.now() - startTime) / 1000;
+            const perStep = 5; // 估算每步 5 秒
+            const currentIdx = Math.min(Math.floor(elapsed / perStep), this.steps.length - 1);
+
+            this.steps.forEach((s, i) => {
+                if (i < currentIdx) s.status = 'completed';
+                else if (i === currentIdx) s.status = 'running';
+                else s.status = 'pending';
+            });
+        }
+
+        markAllSteps(status) {
+            this.steps.forEach(s => s.status = status);
+        }
+
+        // 失败时：无日志兜底——保留已完成步骤，把首个非完成步骤标记为 error；若全都"completed"（被时间估算误标），把所有步骤都标 error 避免误导
+        markFailedStep(execution) {
+            const firstNonDone = this.steps.findIndex(s => s.status !== 'completed');
+            if (firstNonDone >= 0) {
+                this.steps[firstNonDone].status = 'error';
+            } else {
+                // 所有步骤都被估算为 completed，但实际失败了：全部标红，避免 7 绿 1 红的误导
+                this.steps.forEach(s => s.status = 'error');
+            }
+        }
+
+        updateElapsed(execution) {
+            const baseTime = execution.startTime || execution.createdAt;
+            const start = baseTime ? new Date(baseTime).getTime() : null;
+            const end = execution.endTime ? new Date(execution.endTime).getTime() : Date.now();
+            if (!start) return;
+            const seconds = ((end - start) / 1000).toFixed(1);
+            const el = this.overlay.querySelector('.elapsed-time');
+            if (el) el.textContent = `${seconds}s`;
         }
 
         updateStep(stepId, status, details = {}) {
@@ -3345,35 +3451,73 @@
         updateStatus(status, execution = {}) {
             const statusBadge = this.overlay.querySelector('.status-badge');
             const actionButtons = this.overlay.querySelector('.action-buttons');
+            const headerIcon = this.overlay.querySelector('.modal-title .icon');
+            const headerTitle = this.overlay.querySelector('.modal-title span:last-child');
+            const header = this.overlay.querySelector('.modal-header');
 
-            if (status === 'completed') {
-                // 全部标记为完成
-                this.steps.forEach(step => {
-                    if (step.status !== 'completed') {
-                        step.status = 'completed';
-                    }
-                });
-
+            if (status === 'passed') {
                 statusBadge.className = 'status-badge completed';
-                statusBadge.innerHTML = '✓ 测试完成';
-
-                actionButtons.innerHTML = '<button class="btn btn-view-result" onclick="window.currentProgressModal?.viewResult()">查看详细报告</button>';
-
+                statusBadge.innerHTML = '✓ 测试通过';
+                actionButtons.innerHTML = '<button class="btn btn-cancel" onclick="window.currentProgressModal?.hide()">关闭</button><button class="btn btn-view-result" onclick="window.currentProgressModal?.viewResult()">查看详情</button>';
+                if (headerIcon) { headerIcon.textContent = '✓'; headerIcon.classList.remove('rotating'); headerIcon.style.animation = 'none'; }
+                if (headerTitle) headerTitle.textContent = '测试执行完成';
+                if (header) header.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                this.showScreenshots(execution.screenshots);
             } else if (status === 'failed') {
                 statusBadge.className = 'status-badge failed';
                 statusBadge.innerHTML = '✗ 测试失败';
-
-                actionButtons.innerHTML = '<button class="btn btn-view-result" onclick="window.currentProgressModal?.viewResult()">查看错误详情</button>';
+                actionButtons.innerHTML = '<button class="btn btn-cancel" onclick="window.currentProgressModal?.hide()">关闭</button><button class="btn btn-view-result" onclick="window.currentProgressModal?.viewResult()">查看详情</button>';
+                if (headerIcon) { headerIcon.textContent = '✗'; headerIcon.classList.remove('rotating'); headerIcon.style.animation = 'none'; }
+                if (headerTitle) headerTitle.textContent = '测试执行失败';
+                if (header) header.style.background = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+                this.showErrorMessage(execution.errorMessage);
+                this.showScreenshots(execution.screenshots);
+            } else if (status === 'cancelled') {
+                statusBadge.className = 'status-badge failed';
+                statusBadge.innerHTML = '⊘ 已取消';
+                actionButtons.innerHTML = '<button class="btn btn-cancel" onclick="window.currentProgressModal?.hide()">关闭</button>';
+                if (headerIcon) { headerIcon.textContent = '⊘'; headerIcon.classList.remove('rotating'); headerIcon.style.animation = 'none'; }
+                if (headerTitle) headerTitle.textContent = '执行已取消';
+                if (header) header.style.background = '#6b7785';
             }
 
             this.render();
             this.updateOverallProgress();
         }
 
+        showErrorMessage(message) {
+            if (!message) return;
+            const section = this.overlay.querySelector('.error-section');
+            const msgEl = this.overlay.querySelector('.error-message');
+            if (section && msgEl) {
+                msgEl.textContent = message;
+                section.style.display = 'block';
+            }
+        }
+
+        showScreenshots(screenshots) {
+            if (!Array.isArray(screenshots) || screenshots.length === 0) return;
+            const section = this.overlay.querySelector('.screenshot-section');
+            const grid = this.overlay.querySelector('.screenshot-grid');
+            const count = this.overlay.querySelector('.screenshot-count');
+            if (!section || !grid) return;
+
+            count.textContent = screenshots.length;
+            grid.innerHTML = screenshots.map((src, i) => `
+                <a href="${src}" target="_blank" rel="noopener" title="截图 ${i + 1}" style="display:block; aspect-ratio:9/16; border-radius:6px; overflow:hidden; border:1px solid #e8ecef; background:#f8f9fb;">
+                    <img src="${src}" alt="截图 ${i + 1}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:#9ca3af;font-size:11px;\\'>加载失败</div>'" />
+                </a>
+            `).join('');
+            section.style.display = 'block';
+        }
+
         viewResult() {
-            this.hide();
-            // 跳转到结果详情页或显示结果弹窗
-            console.log('查看结果:', this.executionId);
+            // 展开信息区（已显示截图/错误），若需要可跳转详情页
+            if (this.execution && this.execution.logFile) {
+                window.open(this.execution.logFile, '_blank', 'noopener');
+            } else {
+                console.log('执行详情:', this.execution);
+            }
         }
 
         updateOverallProgress() {
@@ -3909,10 +4053,21 @@
         }
 
         try {
-            // 根据是否为冒烟用例调用不同的API
-            const result = isSmokeTestCase
-                ? await apiService.getSmokeTestCaseDetail(testCaseId)
-                : await apiService.getTestCaseDetail(testCaseId);
+            // 根据是否为冒烟用例调用不同的API；若 smoke 404（id 其实在 test_cases 表），自动回退
+            let result;
+            try {
+                result = isSmokeTestCase
+                    ? await apiService.getSmokeTestCaseDetail(testCaseId)
+                    : await apiService.getTestCaseDetail(testCaseId);
+            } catch (apiErr) {
+                const msg = String(apiErr && apiErr.message || '');
+                if (isSmokeTestCase && /404|not.?found|不存在/i.test(msg)) {
+                    console.warn('[详情] smoke API 未找到，回退普通 test_cases 接口:', testCaseId);
+                    result = await apiService.getTestCaseDetail(testCaseId);
+                } else {
+                    throw apiErr;
+                }
+            }
 
             if (result && result.success) {
                 const tc = result.data;
@@ -5818,6 +5973,18 @@ for (let i = 0; i < rows.length; i++) {
                                         <span>🚀</span>
                                         <span>执行</span>
                                     </button>
+                                    <button class="btn-edit" onclick="viewLatestScreenshots()" title="查看最近一次执行的截图">
+                                        <span>📸</span>
+                                        <span>查看截图</span>
+                                    </button>
+                                    <button class="btn-edit" onclick="viewLatestExecutionLog()" title="查看最近一次执行的日志">
+                                        <span>📝</span>
+                                        <span>查看日志</span>
+                                    </button>
+                                    <button class="btn-edit" onclick="viewAutomationSteps()" title="预览中文步骤翻译成的自动化操作">
+                                        <span>🎮</span>
+                                        <span>自动化步骤</span>
+                                    </button>
                                     ` : ''}
                                 </div>
                             </div>
@@ -5890,15 +6057,19 @@ for (let i = 0; i < rows.length; i++) {
         try {
             showLoading('正在保存...');
 
-            // 调用 API 更新测试用例
+            // 调用 API 更新测试用例（统一用数组，后端会 JSON.stringify）
             const updates = {
                 name: editingTestCase.name,
-                preconditions: editingTestCase.preconditions.join('\n'),
-                steps: editingTestCase.steps.join('\n'),
-                expectedResults: editingTestCase.expectedResults.join('\n')
+                preconditions: editingTestCase.preconditions,
+                steps: editingTestCase.steps,
+                expectedResults: editingTestCase.expectedResults
             };
 
-            const response = await apiService.updateTestCase(currentTestCase.id, updates);
+            // 冒烟 Tab 下保存的是冒烟用例，走 smoke 独立接口（否则后端只更新 test_cases 表，smoke 表没变，刷新后回滚旧内容）
+            const isSmoke = currentSidebarTab === 'smoke';
+            const response = isSmoke
+                ? await apiService.updateSmokeTestCase(currentTestCase.id, updates)
+                : await apiService.updateTestCase(currentTestCase.id, updates);
 
             if (response.success || response.message) {
                 // 更新本地测试用例对象
@@ -6615,6 +6786,11 @@ for (let i = 0; i < rows.length; i++) {
     async function executeSingleTestCase(testCaseId, testCaseName, platform, executionConfig = null) {
         try {
             console.log(`[执行测试用例] ID: ${testCaseId}, 平台: ${platform}, 配置:`, executionConfig);
+            // 执行前按需检查执行器状态（刷新按钮显示 + 提醒离线情况）
+            const executorRunning = await checkExecutorStatus();
+            if (!executorRunning) {
+                showToast('⚠️ 执行服务未运行，任务会滞留在队列，请先启动执行器');
+            }
             showLoading(`正在提交测试用例: ${testCaseName}...`);
 
             const result = await apiService.executeTestCase(testCaseId, platform, null, executionConfig);
@@ -6646,6 +6822,10 @@ for (let i = 0; i < rows.length; i++) {
     async function executeMenuTestCases(menuId, menuName, platform, isSmokeMenu = false, executionConfig = null) {
         try {
             console.log(`[批量执行] 菜单: ${menuName}, 平台: ${platform}`);
+            const executorRunning = await checkExecutorStatus();
+            if (!executorRunning) {
+                showToast('⚠️ 执行服务未运行，任务会滞留在队列，请先启动执行器');
+            }
 
             // 获取菜单下的所有测试用例
             showLoading('正在获取测试用例列表...');
@@ -6674,14 +6854,13 @@ for (let i = 0; i < rows.length; i++) {
                 hideLoading();
                 showToast(`已提交 ${testCaseIds.length} 条测试用例执行`);
 
-                // 可以选择轮询批量执行状态
-                if (result.data && result.data.taskIds) {
-                    result.data.taskIds.forEach((taskId, index) => {
-                        setTimeout(() => {
-                            pollExecutionStatus(taskId, `${menuName} - 用例${index + 1}`);
-                        }, index * 1000); // 错开轮询时间
-                    });
-                }
+                // 可以选择轮询批量执行状态（executionIds 为新字段，taskIds 兼容旧响应）
+                const batchIds = (result.data && (result.data.executionIds || result.data.taskIds)) || [];
+                batchIds.forEach((executionId, index) => {
+                    setTimeout(() => {
+                        pollExecutionStatus(executionId, `${menuName} - 用例${index + 1}`);
+                    }, index * 1000); // 错开轮询时间
+                });
             } else {
                 hideLoading();
                 showToast('批量执行失败: ' + (result.error || '未知错误'));
@@ -6776,6 +6955,240 @@ for (let i = 0; i < rows.length; i++) {
         showExecutionConfigDialog((platform, executionConfig) => {
             executeSingleTestCase(testCaseId, testCaseName, platform, executionConfig);
         });
+    }
+
+    // ============ 查看最近一次执行的截图 / 日志 ============
+    const EXEC_ASSET_HOST = 'http://localhost:8888';
+
+    // 工具：拉取最近一次"已结束"的执行记录（非 pending）
+    async function fetchLatestFinishedExecution(testCaseId) {
+        try {
+            const history = await apiService.getExecutionHistory(testCaseId, 10);
+            if (!history || !history.success) return null;
+            const rows = history.data || [];
+            // 优先找终态；找不到就取最近一次（可能是 running）
+            const finished = rows.find(r => ['passed', 'failed', 'error', 'cancelled'].includes(r.status));
+            const pick = finished || rows[0] || null;
+            if (!pick) return null;
+            // 取完整详情（包含 screenshots 数组和 logFile）
+            const detail = await apiService.getExecutionStatus(pick.id);
+            if (!detail || !detail.success) return null;
+            return detail.data;
+        } catch (e) {
+            console.error('获取执行记录失败:', e);
+            return null;
+        }
+    }
+
+    // 工具：从 logFile 路径提取文件名
+    function extractLogFileName(logPath) {
+        if (!logPath) return '';
+        return String(logPath).split(/[\\/]/).pop();
+    }
+
+    // 查看最近一次执行的截图
+    async function viewLatestScreenshots() {
+        if (!currentTestCase) { showToast('请先选择一个测试用例'); return; }
+        showLoading('加载截图...');
+        const exec = await fetchLatestFinishedExecution(currentTestCase.id);
+        hideLoading();
+        if (!exec) {
+            showToast('⚠️ 该用例还没有执行记录');
+            return;
+        }
+        const screenshots = Array.isArray(exec.screenshots) ? exec.screenshots.filter(Boolean) : [];
+        openAssetModal({
+            title: `📸 截图 (${screenshots.length})`,
+            subtitle: `${currentTestCase.name}  ·  ${formatExecMeta(exec)}`,
+            bodyHtml: screenshots.length === 0
+                ? '<div style="padding:40px; text-align:center; color:#9ca3af;">本次执行没有截图</div>'
+                : `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">
+                    ${screenshots.map((name, i) => {
+                        const url = `${EXEC_ASSET_HOST}/api/screenshots/${encodeURIComponent(name)}`;
+                        return `<a href="${url}" target="_blank" rel="noopener" title="${name}" style="display:block; aspect-ratio:9/16; border:1px solid #e8ecef; border-radius:8px; overflow:hidden; background:#f8f9fb;">
+                            <img src="${url}" alt="${name}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.replaceWith(Object.assign(document.createElement('div'), { textContent: '加载失败', style: 'display:flex;align-items:center;justify-content:center;height:100%;color:#9ca3af;font-size:12px;' }))"/>
+                        </a>`;
+                    }).join('')}
+                  </div>`
+        });
+    }
+
+    // 查看最近一次执行的日志
+    async function viewLatestExecutionLog() {
+        if (!currentTestCase) { showToast('请先选择一个测试用例'); return; }
+        showLoading('加载日志...');
+        const exec = await fetchLatestFinishedExecution(currentTestCase.id);
+        hideLoading();
+        if (!exec) {
+            showToast('⚠️ 该用例还没有执行记录');
+            return;
+        }
+        const logFileName = extractLogFileName(exec.logFile);
+        if (!logFileName) {
+            openAssetModal({
+                title: '📝 执行日志',
+                subtitle: `${currentTestCase.name}  ·  ${formatExecMeta(exec)}`,
+                bodyHtml: '<div style="padding:40px; text-align:center; color:#9ca3af;">本次执行没有日志文件（可能仍在运行或 executor 没上报）</div>'
+            });
+            return;
+        }
+        // 调用 controller 的日志读取接口
+        try {
+            const resp = await fetch(`${EXEC_ASSET_HOST}/api/logs/read?file=${encodeURIComponent(logFileName)}&lines=5000`);
+            const data = await resp.json();
+            if (!data.success) throw new Error(data.error || '读取失败');
+            openAssetModal({
+                title: `📝 执行日志`,
+                subtitle: `${currentTestCase.name}  ·  ${formatExecMeta(exec)}  ·  ${data.returnedLines}/${data.totalLines} 行`,
+                bodyHtml: `<div style="background:#1e1e1e; color:#d4d4d4; padding:16px; border-radius:8px; font-family:'Consolas','Monaco',monospace; font-size:13px; max-height:60vh; overflow-y:auto; line-height:1.6; white-space:pre-wrap; word-break:break-all;">${escapeHtml(data.content || '（空文件）')}</div>`,
+                onOpen: (modal) => {
+                    const viewer = modal.querySelector('div[style*="background:#1e1e1e"]');
+                    if (viewer) viewer.scrollTop = viewer.scrollHeight;
+                }
+            });
+        } catch (e) {
+            openAssetModal({
+                title: '📝 执行日志',
+                subtitle: currentTestCase.name,
+                bodyHtml: `<div style="padding:30px; text-align:center; color:#ef4444;">
+                    无法读取日志：${escapeHtml(e.message)}<br/><br/>
+                    <span style="color:#9ca3af; font-size:13px;">请确认 Controller 服务（${EXEC_ASSET_HOST}）在运行</span>
+                </div>`
+            });
+        }
+    }
+
+    function formatExecMeta(exec) {
+        const statusMap = { passed: '✅ 通过', failed: '❌ 失败', error: '⚠️ 错误', running: '⏳ 运行中', pending: '⏸ 等待', cancelled: '⊘ 已取消' };
+        const statusText = statusMap[exec.status] || exec.status;
+        const time = exec.endTime ? new Date(exec.endTime).toLocaleString('zh-CN') :
+                     exec.startTime ? new Date(exec.startTime).toLocaleString('zh-CN') :
+                     exec.createdAt ? new Date(exec.createdAt).toLocaleString('zh-CN') : '';
+        const duration = exec.duration ? ` · ${Number(exec.duration).toFixed(1)}s` : '';
+        return `${statusText} · ${time}${duration}`;
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    }
+
+    // 预览当前用例的中文 steps 翻译成什么 actions（Standard 模式实际执行的是这些）
+    async function viewAutomationSteps() {
+        if (!currentTestCase) { showToast('请先选择一个测试用例'); return; }
+        const steps = currentTestCase.steps;
+        if (!steps || (Array.isArray(steps) && steps.length === 0)) {
+            showToast('⚠️ 该用例没有步骤');
+            return;
+        }
+        await renderAutomationStepsModal(currentTestCase);
+    }
+
+    async function renderAutomationStepsModal(testCase) {
+        showLoading('翻译中...');
+        try {
+            const stepsText = Array.isArray(testCase.steps) ? testCase.steps.join('\n') : String(testCase.steps || '');
+            const resp = await fetch(`${EXEC_ASSET_HOST}/api/translator/preview`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'rule', steps: stepsText })
+            });
+            const data = await resp.json();
+            hideLoading();
+            if (!data.success) {
+                openAssetModal({
+                    title: '🎮 自动化步骤（翻译失败）',
+                    subtitle: testCase.name,
+                    bodyHtml: `<div style="padding:30px; text-align:center; color:#ef4444;">${escapeHtml(data.error || '未知错误')}</div>`
+                });
+                return;
+            }
+
+            const actions = data.actions || [];
+            const manualCount = data.manual_count || 0;
+            const subtitle = `${testCase.name}  ·  共 ${actions.length} 步  ·  ${manualCount > 0 ? `⚠️ ${manualCount} 步需人工` : '✅ 全部可自动化'}`;
+
+            const rows = actions.map((a, i) => {
+                const isManual = a.action === 'manual';
+                const raw = a.raw_text || a.description || '';
+                const params = [];
+                if (a.element) params.push(`element: ${a.element}`);
+                if (a.text !== undefined) params.push(`text: ${a.text}`);
+                if (a.seconds !== undefined) params.push(`seconds: ${a.seconds}`);
+                if (a.direction) params.push(`direction: ${a.direction}`);
+                if (a.negate) params.push('negate: true');
+                if (a.save_as) params.push(`save_as: ${a.save_as}`);
+                const paramsCell = params.map(p => `<code style="background:#f1f5f9;padding:2px 6px;border-radius:3px;font-size:12px;">${escapeHtml(p)}</code>`).join(' ');
+
+                const rowBg = isManual ? '#fef2f2' : (i % 2 === 0 ? '#ffffff' : '#f8fafc');
+                return `
+                    <tr style="background:${rowBg};">
+                        <td style="padding:8px 12px; text-align:center; color:#6b7280; font-size:12px;">${i + 1}</td>
+                        <td style="padding:8px 12px; font-size:13px; color:#1f2937;">${escapeHtml(raw)}</td>
+                        <td style="padding:8px 12px;"><span style="padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; ${isManual ? 'background:#fecaca;color:#991b1b;' : 'background:#dbeafe;color:#1e40af;'}">${escapeHtml(a.action)}</span></td>
+                        <td style="padding:8px 12px;">${paramsCell}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const bodyHtml = `
+                <div style="margin-bottom:12px; padding:10px 14px; background:#f8fafc; border-left:3px solid #667eea; border-radius:4px; font-size:13px; color:#4b5563;">
+                    规则引擎（路线 1）翻译结果。<strong style="color:#b91c1c;">红色行</strong>是规则无法识别的步骤，执行时会跳过并记录原文。
+                </div>
+                <div style="overflow:auto; border:1px solid #e5e7eb; border-radius:6px;">
+                    <table style="width:100%; border-collapse:collapse; font-family:-apple-system,sans-serif;">
+                        <thead>
+                            <tr style="background:#f3f4f6; font-size:12px; color:#6b7280;">
+                                <th style="padding:8px 12px; text-align:center; width:40px;">#</th>
+                                <th style="padding:8px 12px; text-align:left;">原中文</th>
+                                <th style="padding:8px 12px; text-align:left; width:110px;">Action</th>
+                                <th style="padding:8px 12px; text-align:left;">参数</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <div style="margin-top:12px; text-align:right;">
+                    <button class="btn-edit" onclick="renderAutomationStepsModal(currentTestCase); document.querySelector('[data-asset-modal]')?.remove();">🔄 重新翻译</button>
+                </div>
+            `;
+
+            // 关掉可能存在的旧 modal 再打开新的
+            document.querySelector('[data-asset-modal]')?.remove();
+            openAssetModal({ title: '🎮 自动化步骤（Standard 模式实际执行内容）', subtitle, bodyHtml });
+        } catch (e) {
+            hideLoading();
+            openAssetModal({
+                title: '🎮 自动化步骤',
+                subtitle: testCase.name,
+                bodyHtml: `<div style="padding:30px; text-align:center; color:#ef4444;">
+                    无法请求翻译器：${escapeHtml(e.message)}<br/><br/>
+                    <span style="color:#9ca3af; font-size:13px;">请确认 Controller 服务（${EXEC_ASSET_HOST}）在运行</span>
+                </div>`
+            });
+        }
+    }
+
+    function openAssetModal({ title, subtitle, bodyHtml, onOpen }) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:10000;';
+        overlay.innerHTML = `
+            <div style="background:white; border-radius:12px; width:90%; max-width:900px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden;">
+                <div style="padding:20px 24px; border-bottom:1px solid #e8ecef; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:18px; font-weight:600;">${escapeHtml(title)}</div>
+                            ${subtitle ? `<div style="font-size:13px; opacity:0.9; margin-top:4px;">${escapeHtml(subtitle)}</div>` : ''}
+                        </div>
+                        <button style="background:rgba(255,255,255,0.2); border:none; color:white; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:18px;" onclick="this.closest('[data-asset-modal]').remove()">×</button>
+                    </div>
+                </div>
+                <div style="padding:20px 24px; overflow-y:auto; flex:1;">${bodyHtml}</div>
+            </div>
+        `;
+        overlay.setAttribute('data-asset-modal', '1');
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+        if (typeof onOpen === 'function') onOpen(overlay);
     }
 
     // 显示平台选择对话框（已弃用，使用 showExecutionConfigDialog 替代）
@@ -7252,7 +7665,7 @@ for (let i = 0; i < rows.length; i++) {
     // 检查执行服务状态
     async function checkExecutorStatus() {
         try {
-            const response = await fetch(`${CONTROL_API}/status`, {
+            const response = await fetch(`${CONTROL_API}/api/status`, {
                 method: 'GET',
                 timeout: 3000
             });
@@ -7262,8 +7675,9 @@ for (let i = 0; i < rows.length; i++) {
             }
 
             const result = await response.json();
-            updateExecutorButton(result.running);
-            return result.running;
+            const executorRunning = !!(result && result.services && result.services.executor && result.services.executor.running);
+            updateExecutorButton(executorRunning);
+            return executorRunning;
 
         } catch (error) {
             // 控制服务未运行，显示离线状态
@@ -7319,7 +7733,7 @@ for (let i = 0; i < rows.length; i++) {
 
                 showLoading('正在停止执行服务...');
 
-                const response = await fetch(`${CONTROL_API}/stop`, {
+                const response = await fetch(`${CONTROL_API}/api/stop/executor`, {
                     method: 'POST'
                 });
 
@@ -7336,7 +7750,7 @@ for (let i = 0; i < rows.length; i++) {
                 // 启动执行服务
                 showLoading('正在启动执行服务...');
 
-                const response = await fetch(`${CONTROL_API}/start`, {
+                const response = await fetch(`${CONTROL_API}/api/start/executor`, {
                     method: 'POST'
                 });
 
@@ -7359,18 +7773,12 @@ for (let i = 0; i < rows.length; i++) {
         }
     }
 
-    // 启动状态轮询
+    // 页面加载时执行一次检查，显示按钮初始状态（不再定时轮询，改为执行前按需检查）
     function startExecutorStatusPolling() {
-        // 立即检查一次
         checkExecutorStatus();
-
-        // 每10秒检查一次状态
-        executorStatusInterval = setInterval(() => {
-            checkExecutorStatus();
-        }, 10000);
     }
 
-    // 停止状态轮询
+    // 保留函数以兼容可能存在的调用点（轮询已取消，此处为空操作）
     function stopExecutorStatusPolling() {
         if (executorStatusInterval) {
             clearInterval(executorStatusInterval);

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>自动化规则编辑器</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; margin: 0; background: #f3f4f6; color: #1f2937; }
+.header { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 18px 24px; }
+.header h1 { margin: 0; font-size: 20px; }
+.header .sub { opacity: 0.85; font-size: 12px; margin-top: 2px; }
+.tabs { display: flex; gap: 2px; padding: 0 24px; background: white; border-bottom: 1px solid #e5e7eb; }
+.tab { padding: 12px 20px; cursor: pointer; font-size: 14px; font-weight: 600; color: #6b7280; border-bottom: 3px solid transparent; }
+.tab.active { color: #8b5cf6; border-bottom-color: #8b5cf6; }
+.panel { padding: 20px 24px; }
+.meta { margin-bottom: 10px; color: #6b7280; font-size: 13px; display: flex; gap: 16px; align-items: center; }
+textarea { width: 100%; min-height: 70vh; padding: 14px; border: 1px solid #d1d5db; border-radius: 8px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; line-height: 1.6; resize: vertical; box-sizing: border-box; }
+.toolbar { margin-top: 12px; display: flex; gap: 10px; }
+button { padding: 10px 20px; border: 1px solid #d1d5db; background: white; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; color: #374151; }
+button.primary { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; }
+button:hover { filter: brightness(1.05); }
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 8px; color: white; font-size: 14px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); animation: slideIn 0.2s ease; }
+.toast.ok { background: #059669; }
+.toast.err { background: #dc2626; }
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>⚙️ 自动化规则编辑器</h1>
+<div class="sub">修改规则后保存即可，下次调用 translate_cli 自动重载；旧文件会备份为 *.bak.时间戳</div>
+</div>
+
+<div class="tabs">
+<div class="tab active" data-kind="rules">📐 rules.yaml（规则）</div>
+<div class="tab" data-kind="aliases">🔤 aliases.yaml（别名）</div>
+<div class="tab" data-kind="test_data">🧪 test_data.yaml（数据池）</div>
+</div>
+
+<div class="panel">
+<div class="meta">
+<span id="fileInfo">加载中…</span>
+<span id="dirty" style="color:#dc2626;"></span>
+</div>
+<textarea id="editor" spellcheck="false"></textarea>
+<div class="toolbar">
+<button onclick="reload()">🔄 重新加载</button>
+<button class="primary" onclick="save()">💾 保存</button>
+<button onclick="testPreview()">🔍 测试翻译一条</button>
+</div>
+</div>
+
+<script>
+let currentKind = 'rules';
+let originalContent = '';
+const tabs = document.querySelectorAll('.tab');
+const editor = document.getElementById('editor');
+const fileInfo = document.getElementById('fileInfo');
+const dirtyLabel = document.getElementById('dirty');
+
+function getToken() { return localStorage.getItem('token') || ''; }
+function authHeaders() { const t = getToken(); return t ? { 'Authorization': `Bearer ${t}` } : {}; }
+
+function toast(msg, kind='ok') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2400);
+}
+
+async function loadKind(kind) {
+  currentKind = kind;
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.kind === kind));
+  fileInfo.textContent = '加载中…';
+  try {
+    const resp = await fetch(`/api/automation/config/${kind}`, { headers: authHeaders() });
+    const data = await resp.json();
+    if (!data.success) { toast(data.error || '加载失败', 'err'); return; }
+    editor.value = data.content || '';
+    originalContent = data.content || '';
+    const size = data.size ? `${(data.size / 1024).toFixed(1)} KB` : '新文件';
+    const mtime = data.mtime ? new Date(data.mtime).toLocaleString() : '';
+    fileInfo.textContent = `${kind}.yaml · ${size}${mtime ? ' · 修改于 ' + mtime : ''}`;
+    dirtyLabel.textContent = '';
+  } catch (e) {
+    toast('请求失败: ' + e.message, 'err');
+  }
+}
+
+async function save() {
+  try {
+    const resp = await fetch(`/api/automation/config/${currentKind}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ content: editor.value })
+    });
+    const data = await resp.json();
+    if (!data.success) { toast(data.error || '保存失败', 'err'); return; }
+    originalContent = editor.value;
+    dirtyLabel.textContent = '';
+    toast('✅ 已保存：' + data.message);
+  } catch (e) {
+    toast('请求失败: ' + e.message, 'err');
+  }
+}
+
+function reload() { loadKind(currentKind); }
+
+async function testPreview() {
+  const line = prompt('输入一句测试步骤，看翻译结果：', '点击登录按钮');
+  if (!line) return;
+  try {
+    const resp = await fetch('/api/automation/preview-steps', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ steps: line })
+    });
+    const data = await resp.json();
+    if (!data.success) { toast(data.error || '翻译失败', 'err'); return; }
+    const a = (data.actions || [])[0] || {};
+    const msg = a.action === 'manual'
+      ? `❌ 无法翻译：${a.raw_text || line}`
+      : `✅ ${a.action}  element=${a.element || ''}  text=${a.text || ''}`;
+    alert(msg);
+  } catch (e) {
+    toast('请求失败: ' + e.message, 'err');
+  }
+}
+
+tabs.forEach(t => t.onclick = () => loadKind(t.dataset.kind));
+editor.oninput = () => dirtyLabel.textContent = editor.value !== originalContent ? '● 有未保存修改' : '';
+window.onbeforeunload = () => editor.value !== originalContent ? '有未保存修改，确定离开？' : null;
+
+loadKind('rules');
+</script>
+</body>
+</html>

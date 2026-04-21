@@ -124,6 +124,14 @@ class APIService {
         });
     }
 
+    // 更新冒烟用例（走独立接口，避免被 test_cases 表的 UPDATE 误匹配到 0 行）
+    async updateSmokeTestCase(id, updates) {
+        return await this.request(`/test-cases/smoke/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(updates)
+        });
+    }
+
     // 更新测试用例状态
     async updateTestCaseStatus(id, platform, status, failReason = '') {
         return await this.request(`/test-cases/${id}/status`, {
