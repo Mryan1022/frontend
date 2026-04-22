@@ -171,9 +171,10 @@
         <div id="apiStatus" class="api-status">正在检查 API 连接...</div>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        // API 配置
-        const API_BASE_URL = 'http://localhost:3000/api';
+        // API 配置（来自 config.js，按 hostname 自动切换）
+        const API_BASE_URL = (window.AppConfig && window.AppConfig.apiBase) || 'http://localhost:3000/api';
 
         // DOM 元素
         const loginForm = document.getElementById('loginForm');

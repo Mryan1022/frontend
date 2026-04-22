@@ -4,7 +4,8 @@
 
 class APIService {
     constructor() {
-        this.baseURL = 'http://localhost:3000/api';
+        // 从 config.js 注入的运行时配置读取；若未加载则回退到本地地址
+        this.baseURL = (window.AppConfig && window.AppConfig.apiBase) || 'http://localhost:3000/api';
         this.token = localStorage.getItem('token');
     }
 

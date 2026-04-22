@@ -235,8 +235,9 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        const API_BASE_URL = 'http://localhost:3000/api';
+        const API_BASE_URL = (window.AppConfig && window.AppConfig.apiBase) || 'http://localhost:3000/api';
 
         // 检查是否已登录
         function checkAuth() {

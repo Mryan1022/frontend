@@ -6,6 +6,7 @@
     <title>TestHub - 测试管理平台</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="config.js"></script>
     <script src="api-service.js"></script>
     <script src="execution-config-dialog.js"></script>
     <style>
@@ -6958,7 +6959,8 @@ for (let i = 0; i < rows.length; i++) {
     }
 
     // ============ 查看最近一次执行的截图 / 日志 ============
-    const EXEC_ASSET_HOST = 'http://localhost:8888';
+    // 本地用 localhost:8888，部署环境在 config.js 里配 PROD_CONTROLLER_BASE
+    const EXEC_ASSET_HOST = (window.AppConfig && window.AppConfig.controllerBase) || 'http://localhost:8888';
 
     // 工具：拉取最近一次"已结束"的执行记录（非 pending）
     async function fetchLatestFinishedExecution(testCaseId) {
@@ -7659,7 +7661,7 @@ for (let i = 0; i < rows.length; i++) {
 
     // ==================== 执行服务控制功能 ====================
 
-    const CONTROL_API = 'http://localhost:8888';
+    const CONTROL_API = (window.AppConfig && window.AppConfig.controllerBase) || 'http://localhost:8888';
     let executorStatusInterval = null;
 
     // 检查执行服务状态
