@@ -340,6 +340,36 @@ class APIService {
     // ==================== 用户相关 ====================
 
     // 获取当前用户信息
+    async getBugs(params = {}) {
+        const queryParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.append(key, value);
+            }
+        });
+
+        const queryString = queryParams.toString();
+        return await this.request(`/bugs${queryString ? '?' + queryString : ''}`);
+    }
+
+    async getBugDetail(id) {
+        return await this.request(`/bugs/${id}`);
+    }
+
+    async createBug(data) {
+        return await this.request('/bugs', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async updateBugStatus(id, status, remark = '') {
+        return await this.request(`/bugs/${id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status, remark })
+        });
+    }
+
     async getCurrentUser() {
         return await this.request('/auth/me');
     }

@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TestHub - BUG记录</title>
+    <script src="config.js"></script>
+    <script src="api-service.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: #f5f5f5;
+            color: #1f2937;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+        }
+        .tab-navigation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: 30px;
+            padding: 10px 0;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            color: #667eea;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .tab-link {
+            display: block;
+            padding: 15px 30px;
+            color: rgba(255,255,255,0.72);
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-link:hover { color: white; background: rgba(255,255,255,0.1); }
+        .tab-link.active { color: white; background: rgba(255,255,255,0.15); border-bottom-color: white; }
+        .page { padding: 20px 30px 30px; }
+        .header {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .header h1 { color: #667eea; font-size: 22px; margin-bottom: 8px; }
+        .header p { color: #6b7280; font-size: 14px; }
+        .btn-create {
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+            white-space: nowrap;
+        }
+        .layout { display: grid; grid-template-columns: 310px minmax(0, 1fr); gap: 20px; }
+        .panel { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .panel-header {
+            padding: 15px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .filter-body { padding: 16px; display: grid; gap: 14px; }
+        .field label { display: block; margin-bottom: 7px; color: #4b5563; font-size: 13px; font-weight: 600; }
+        .field input, .field select, .field textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            padding: 9px 10px;
+            font-size: 14px;
+            outline: none;
+        }
+        .field textarea { min-height: 96px; line-height: 1.5; resize: vertical; }
+        .field input:focus, .field select:focus, .field textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+        }
+        .filter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-small {
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        .btn-small.primary { border-color: #667eea; background: #667eea; color: white; }
+        .summary-list { padding: 0 16px 16px; display: grid; gap: 10px; }
+        .summary-row {
+            background: #f9fafb;
+            border-radius: 6px;
+            padding: 9px 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #4b5563;
+            font-size: 13px;
+        }
+        .summary-count { color: #667eea; font-weight: 800; }
+        .content-panel { display: flex; flex-direction: column; min-width: 0; }
+        .toolbar {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .toolbar input { flex: 1; min-width: 220px; border: 1px solid #d1d5db; border-radius: 6px; padding: 9px 10px; outline: none; }
+        .role-switch { display: inline-flex; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+        .role-switch button { border: none; background: white; color: #4b5563; cursor: pointer; padding: 9px 12px; font-size: 13px; }
+        .role-switch button.active { background: #667eea; color: white; }
+        .table-wrap { overflow: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 13px 14px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; font-size: 14px; }
+        th { background: #f9fafb; color: #4b5563; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        tbody tr:hover { background: #f8f7ff; }
+        .bug-id { color: #667eea; font-weight: 800; white-space: nowrap; }
+        .bug-link-cell { cursor: pointer; }
+        .bug-title { color: #111827; font-weight: 700; margin-bottom: 5px; }
+        .bug-link-cell:hover .bug-title { color: #667eea; text-decoration: underline; }
+        .bug-desc { color: #6b7280; font-size: 12px; line-height: 1.5; max-width: 420px; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 3px 9px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .status-created { background: #eef2ff; color: #4f46e5; }
+        .status-fixing { background: #fff7ed; color: #c2410c; }
+        .status-fixed { background: #ecfdf5; color: #047857; }
+        .status-reopened { background: #fef2f2; color: #b91c1c; }
+        .status-verified { background: #f0fdf4; color: #15803d; }
+        .status-not_issue { background: #f3f4f6; color: #374151; }
+        .priority-high { background: #fee2e2; color: #b91c1c; }
+        .priority-middle { background: #fef3c7; color: #92400e; }
+        .priority-low { background: #e0f2fe; color: #0369a1; }
+        .actions { display: flex; gap: 8px; white-space: nowrap; }
+        .action-btn {
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+        .action-btn.primary { color: #667eea; border-color: #c7d2fe; background: #eef2ff; }
+        .action-btn.danger { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+        .role-actions { display: inline-flex; gap: 8px; }
+        body[data-role="test"] .dev-actions, body[data-role="dev"] .test-actions { display: none; }
+        .detail-view { display: none; }
+        .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; }
+        .detail-title { color: #111827; font-size: 22px; margin-bottom: 12px; }
+        .meta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .detail-section { padding: 16px 0; border-top: 1px solid #e5e7eb; }
+        .detail-section:first-of-type { border-top: 0; }
+        .detail-section h2 { color: #374151; font-size: 15px; margin-bottom: 8px; }
+        .detail-section p { color: #4b5563; font-size: 14px; line-height: 1.7; white-space: pre-line; }
+        .info-item { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f0f1f4; font-size: 14px; }
+        .info-label { color: #6b7280; white-space: nowrap; }
+        .info-value { color: #111827; font-weight: 700; text-align: right; }
+        .history-item { padding: 12px 0; border-bottom: 1px solid #f0f1f4; color: #4b5563; font-size: 13px; line-height: 1.6; }
+        .drawer-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(17,24,39,0.35);
+            display: none;
+            align-items: stretch;
+            justify-content: flex-end;
+            z-index: 10001;
+        }
+        .drawer-mask.show { display: flex; }
+        .drawer { width: min(560px, 100%); background: white; box-shadow: -8px 0 26px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        .drawer-header {
+            padding: 18px 22px;
+            background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .drawer-header h2 { font-size: 20px; }
+        .drawer-close { width: 32px; height: 32px; border: none; border-radius: 50%; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 20px; line-height: 1; }
+        .drawer-body { padding: 20px 22px; overflow: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .full { grid-column: 1 / -1; }
+        .upload-placeholder {
+            border: 1px dashed #c4c9d4;
+            border-radius: 8px;
+            background: #fafafa;
+            min-height: 96px;
+            padding: 16px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        .drawer-footer { margin-top: auto; padding: 16px 22px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            border-radius: 6px;
+            padding: 12px 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+            display: none;
+            z-index: 11000;
+        }
+        @media (max-width: 900px) {
+            .layout, .detail-grid { grid-template-columns: 1fr; }
+            .header, .toolbar { flex-direction: column; align-items: stretch; }
+            .drawer-body { grid-template-columns: 1fr; }
+            .tab-navigation { padding: 0 12px; overflow-x: auto; }
+            .tab-link { white-space: nowrap; padding: 14px 16px; }
+        }
+    </style>
+</head>
+<body data-role="test">
+    <nav class="tab-navigation">
+        <div class="app-logo" onclick="location.href='manage.html'">
+            <div class="logo-icon">T</div>
+            <div>TestHub</div>
+        </div>
+        <a class="tab-link" href="manage.html">首页</a>
+        <a class="tab-link" href="manage.html">数据管理</a>
+        <a class="tab-link" href="manage.html">用例仓库</a>
+        <a class="tab-link active" href="bug-management.html">BUG记录</a>
+    </nav>
+
+    <main class="page">
+        <section id="listView">
+            <div class="header">
+                <div>
+                    <h1>BUG记录</h1>
+                    <p>记录测试过程中发现的问题，跟踪从创建到验证完成的完整状态。</p>
+                </div>
+                <button class="btn-create" onclick="openDrawer()">+ 创建BUG</button>
+            </div>
+
+            <div class="layout">
+                <aside class="panel">
+                    <div class="panel-header">筛选条件</div>
+                    <div class="filter-body">
+                        <div class="field">
+                            <label>所属模块</label>
+                            <select id="moduleFilter">
+                                <option value="">全部模块</option>
+                                <option value="金币兑换">金币兑换</option>
+                                <option value="用例仓库">用例仓库</option>
+                                <option value="活动榜单">活动榜单</option>
+                                <option value="账号注销">账号注销</option>
+                                <option value="登录鉴权">登录鉴权</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>BUG状态</label>
+                            <select id="statusFilter">
+                                <option value="">全部状态</option>
+                                <option value="created">已创建</option>
+                                <option value="fixing">修复中</option>
+                                <option value="fixed">已修复</option>
+                                <option value="reopened">重新打开</option>
+                                <option value="verified">验证完成</option>
+                                <option value="not_issue">非问题</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>优先级</label>
+                            <select id="priorityFilter">
+                                <option value="">全部优先级</option>
+                                <option value="P0">P0 严重</option>
+                                <option value="P1">P1 高</option>
+                                <option value="P2">P2 中</option>
+                                <option value="P3">P3 低</option>
+                            </select>
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn-small primary" onclick="loadBugs()">查询</button>
+                            <button class="btn-small" onclick="resetFilters()">重置</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-header">状态统计</div>
+                    <div class="summary-list" id="statusSummary"></div>
+                </aside>
+
+                <section class="panel content-panel">
+                    <div class="toolbar">
+                        <input id="keywordInput" placeholder="搜索 BUG 标题、编号、创建人、负责人" onkeyup="handleSearchKeyup(event)">
+                        <div class="role-switch">
+                            <button id="roleTestBtn" class="active" onclick="switchRole('test')">测试角色</button>
+                            <button id="roleDevBtn" onclick="switchRole('dev')">开发角色</button>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>编号</th>
+                                    <th>BUG内容</th>
+                                    <th>状态</th>
+                                    <th>优先级</th>
+                                    <th>所属模块</th>
+                                    <th>创建人</th>
+                                    <th>负责人</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section id="detailView" class="detail-view"></section>
+    </main>
+
+    <div id="drawerMask" class="drawer-mask" onclick="closeDrawer(event)">
+        <aside class="drawer" onclick="event.stopPropagation()">
+            <div class="drawer-header">
+                <h2>创建BUG</h2>
+                <button class="drawer-close" onclick="closeDrawer()">×</button>
+            </div>
+            <div class="drawer-body">
+                <div class="field full">
+                    <label>BUG标题</label>
+                    <input id="titleInput" placeholder="请输入问题标题">
+                </div>
+                <div class="field">
+                    <label>所属模块</label>
+                    <select id="moduleInput">
+                        <option value="金币兑换">金币兑换</option>
+                        <option value="用例仓库">用例仓库</option>
+                        <option value="活动榜单">活动榜单</option>
+                        <option value="账号注销">账号注销</option>
+                        <option value="登录鉴权">登录鉴权</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>优先级</label>
+                    <select id="priorityInput">
+                        <option value="P2">P2 中</option>
+                        <option value="P0">P0 严重</option>
+                        <option value="P1">P1 高</option>
+                        <option value="P3">P3 低</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>初始状态</label>
+                    <select disabled><option>已创建</option></select>
+                </div>
+                <div class="field">
+                    <label>负责人</label>
+                    <input id="assigneeInput" placeholder="可先不填">
+                </div>
+                <div class="field full">
+                    <label>BUG描述</label>
+                    <textarea id="descriptionInput" placeholder="描述实际问题表现"></textarea>
+                </div>
+                <div class="field full">
+                    <label>复现步骤</label>
+                    <textarea id="stepsInput" placeholder="1. 进入页面&#10;2. 执行操作&#10;3. 观察实际结果"></textarea>
+                </div>
+                <div class="field full">
+                    <label>期望结果</label>
+                    <textarea id="expectedInput" placeholder="描述正确表现"></textarea>
+                </div>
+                <div class="field full">
+                    <label>图片附件</label>
+                    <div class="upload-placeholder">第二版本支持上传图片：截图、接口报错、控制台日志图片。当前版本先存储文本 BUG。</div>
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <button class="btn-small" onclick="closeDrawer()">取消</button>
+                <button class="btn-create" onclick="saveBug()">保存BUG</button>
+            </div>
+        </aside>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            location.href = 'index.html';
+        }
+
+        let bugs = [];
+        let currentDetail = null;
+        const statusText = {
+            created: '已创建',
+            fixing: '修复中',
+            fixed: '已修复',
+            reopened: '重新打开',
+            verified: '验证完成',
+            not_issue: '非问题'
+        };
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 1800);
+        }
+
+        function statusClass(status) {
+            return `status-${status || 'created'}`;
+        }
+
+        function priorityClass(priority) {
+            if (priority === 'P0' || priority === 'P1') return 'priority-high';
+            if (priority === 'P2') return 'priority-middle';
+            return 'priority-low';
+        }
+
+        function switchRole(role) {
+            document.body.dataset.role = role;
+            document.getElementById('roleTestBtn').classList.toggle('active', role === 'test');
+            document.getElementById('roleDevBtn').classList.toggle('active', role === 'dev');
+        }
+
+        async function loadBugs() {
+            const params = {
+                module: document.getElementById('moduleFilter').value,
+                status: document.getElementById('statusFilter').value,
+                priority: document.getElementById('priorityFilter').value,
+                keyword: document.getElementById('keywordInput').value.trim()
+            };
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#6b7280;padding:30px;">正在加载BUG...</td></tr>';
+
+            try {
+                const response = await apiService.getBugs(params);
+                bugs = response.data || [];
+                renderTable();
+                renderSummary(response.stats || {});
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444;padding:30px;">加载BUG失败：${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+
+        function renderSummary(stats) {
+            const rows = [
+                ['created', '已创建'],
+                ['fixing', '修复中'],
+                ['fixed', '已修复'],
+                ['reopened', '重新打开'],
+                ['verified', '验证完成'],
+                ['not_issue', '非问题']
+            ];
+            document.getElementById('statusSummary').innerHTML = rows.map(([status, label]) => `
+                <div class="summary-row"><span>${label}</span><span class="summary-count">${stats[status] || 0}</span></div>
+            `).join('');
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            if (bugs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:40px;">暂无BUG记录</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = bugs.map(bug => `
+                <tr>
+                    <td><span class="bug-id">${escapeHtml(bug.bugNo)}</span></td>
+                    <td class="bug-link-cell" onclick="showDetail('${escapeHtml(bug.bugNo)}')">
+                        <div class="bug-title">${escapeHtml(bug.title)}</div>
+                        <div class="bug-desc">${escapeHtml(bug.description || bug.reproduceSteps || '')}</div>
+                    </td>
+                    <td><span class="badge ${statusClass(bug.status)}">${escapeHtml(bug.statusLabel || statusText[bug.status])}</span></td>
+                    <td><span class="badge ${priorityClass(bug.priority)}">${escapeHtml(bug.priority)}</span></td>
+                    <td>${escapeHtml(bug.module)}</td>
+                    <td>${escapeHtml(bug.createdByName || '-')}</td>
+                    <td>${escapeHtml(bug.assignee || '-')}</td>
+                    <td class="actions">
+                        <span class="role-actions test-actions">
+                            <button class="action-btn primary" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'verified')">验证完成</button>
+                            <button class="action-btn danger" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'reopened')">重新打开</button>
+                        </span>
+                        <span class="role-actions dev-actions">
+                            <button class="action-btn primary" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'fixed')">已修复</button>
+                            <button class="action-btn" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'not_issue')">非问题</button>
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function resetFilters() {
+            ['moduleFilter', 'statusFilter', 'priorityFilter', 'keywordInput'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            loadBugs();
+        }
+
+        function handleSearchKeyup(event) {
+            if (event.key === 'Enter') loadBugs();
+        }
+
+        function openDrawer() {
+            document.getElementById('drawerMask').classList.add('show');
+        }
+
+        function closeDrawer(event) {
+            if (!event || event.target.id === 'drawerMask') {
+                document.getElementById('drawerMask').classList.remove('show');
+            }
+        }
+
+        function clearForm() {
+            ['titleInput', 'assigneeInput', 'descriptionInput', 'stepsInput', 'expectedInput'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('moduleInput').value = '金币兑换';
+            document.getElementById('priorityInput').value = 'P2';
+        }
+
+        async function saveBug() {
+            const data = {
+                title: document.getElementById('titleInput').value.trim(),
+                module: document.getElementById('moduleInput').value,
+                priority: document.getElementById('priorityInput').value,
+                assignee: document.getElementById('assigneeInput').value.trim(),
+                description: document.getElementById('descriptionInput').value.trim(),
+                reproduceSteps: document.getElementById('stepsInput').value.trim(),
+                expectedResult: document.getElementById('expectedInput').value.trim()
+            };
+            if (!data.title) {
+                alert('BUG标题不能为空');
+                return;
+            }
+            try {
+                await apiService.createBug(data);
+                closeDrawer();
+                clearForm();
+                await loadBugs();
+                showToast('BUG创建成功');
+            } catch (error) {
+                alert('创建BUG失败：' + error.message);
+            }
+        }
+
+        async function updateStatus(event, bugNo, status) {
+            event?.stopPropagation();
+            try {
+                await apiService.updateBugStatus(bugNo, status, statusText[status] || status);
+                await loadBugs();
+                if (currentDetail && currentDetail.bugNo === bugNo) {
+                    await showDetail(bugNo);
+                }
+                showToast('BUG状态已同步');
+            } catch (error) {
+                alert('更新BUG状态失败：' + error.message);
+            }
+        }
+
+        async function showDetail(bugNo) {
+            try {
+                const response = await apiService.getBugDetail(bugNo);
+                currentDetail = response.data;
+                document.getElementById('listView').style.display = 'none';
+                const detail = document.getElementById('detailView');
+                detail.style.display = 'block';
+                detail.innerHTML = detailHtml(currentDetail);
+            } catch (error) {
+                alert('加载BUG详情失败：' + error.message);
+            }
+        }
+
+        function backToList() {
+            currentDetail = null;
+            document.getElementById('detailView').style.display = 'none';
+            document.getElementById('listView').style.display = 'block';
+        }
+
+        function detailHtml(bug) {
+            const logs = bug.logs || [];
+            const logHtml = logs.length === 0
+                ? '<div class="history-item">暂无流转记录</div>'
+                : logs.map(log => `<div class="history-item"><strong>${escapeHtml(log.changedByName || '-')}</strong> 将状态变更为 <strong>${escapeHtml(log.toStatusLabel)}</strong>${log.remark ? '：' + escapeHtml(log.remark) : ''}</div>`).join('');
+
+            return `
+                <div class="header">
+                    <div><h1>${escapeHtml(bug.bugNo)} 详情</h1><p>点击返回可回到 BUG 列表。</p></div>
+                    <button class="btn-small" onclick="backToList()">返回列表</button>
+                </div>
+                <div class="detail-grid">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span>问题信息</span>
+                            <span class="actions">
+                                <span class="role-actions test-actions">
+                                    <button class="action-btn primary" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'verified')">验证完成</button>
+                                    <button class="action-btn danger" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'reopened')">重新打开</button>
+                                </span>
+                                <span class="role-actions dev-actions">
+                                    <button class="action-btn primary" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'fixed')">已修复</button>
+                                    <button class="action-btn" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'not_issue')">非问题</button>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="filter-body">
+                            <h2 class="detail-title">${escapeHtml(bug.title)}</h2>
+                            <div class="meta-row">
+                                <span class="badge ${statusClass(bug.status)}">${escapeHtml(bug.statusLabel)}</span>
+                                <span class="badge ${priorityClass(bug.priority)}">${escapeHtml(bug.priority)}</span>
+                                <span class="badge">${escapeHtml(bug.module)}</span>
+                            </div>
+                            <div class="detail-section"><h2>BUG描述</h2><p>${escapeHtml(bug.description || '-')}</p></div>
+                            <div class="detail-section"><h2>复现步骤</h2><p>${escapeHtml(bug.reproduceSteps || '-')}</p></div>
+                            <div class="detail-section"><h2>期望结果</h2><p>${escapeHtml(bug.expectedResult || '-')}</p></div>
+                            <div class="detail-section"><h2>附件</h2><p>第二版本支持上传图片后，这里展示截图缩略图、接口报错截图和控制台日志图片。</p></div>
+                        </div>
+                    </div>
+                    <aside class="panel">
+                        <div class="panel-header">基础信息</div>
+                        <div class="filter-body">
+                            <div class="info-item"><span class="info-label">所属模块</span><span class="info-value">${escapeHtml(bug.module)}</span></div>
+                            <div class="info-item"><span class="info-label">创建人</span><span class="info-value">${escapeHtml(bug.createdByName || '-')}</span></div>
+                            <div class="info-item"><span class="info-label">负责人</span><span class="info-value">${escapeHtml(bug.assignee || '-')}</span></div>
+                            <div class="info-item"><span class="info-label">当前状态</span><span class="info-value">${escapeHtml(bug.statusLabel)}</span></div>
+                            <div class="info-item"><span class="info-label">优先级</span><span class="info-value">${escapeHtml(bug.priority)}</span></div>
+                        </div>
+                        <div class="panel-header">流转记录</div>
+                        <div class="filter-body">${logHtml}</div>
+                    </aside>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            switchRole('test');
+            loadBugs();
+        });
+    </script>
+</body>
+</html>
