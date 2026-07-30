@@ -162,10 +162,19 @@
         .role-switch button { border: none; background: white; color: #4b5563; cursor: pointer; padding: 9px 12px; font-size: 13px; }
         .role-switch button.active { background: #667eea; color: white; }
         .table-wrap { overflow: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th, td { padding: 13px 14px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; min-width: 980px; table-layout: fixed; }
+        th, td { height: 58px; padding: 13px 14px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; font-size: 14px; }
         th { background: #f9fafb; color: #4b5563; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        th:nth-child(1), td:nth-child(1) { width: 105px; }
+        th:nth-child(2), td:nth-child(2) { width: 30%; }
+        th:nth-child(3), td:nth-child(3) { width: 110px; }
+        th:nth-child(4), td:nth-child(4) { width: 90px; }
+        th:nth-child(5), td:nth-child(5) { width: 120px; }
+        th:nth-child(6), td:nth-child(6) { width: 110px; }
+        th:nth-child(7), td:nth-child(7) { width: 110px; }
+        th:nth-child(8), td:nth-child(8) { width: 210px; }
         tbody tr:hover { background: #f8f7ff; }
+        .empty-row td { color: transparent; }
         .bug-id { color: #667eea; font-weight: 800; white-space: nowrap; }
         .bug-link-cell { cursor: pointer; }
         .bug-title { color: #111827; font-weight: 700; margin-bottom: 5px; }
@@ -664,12 +673,8 @@
 
         function renderTable() {
             const tbody = document.getElementById('tableBody');
-            if (bugs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:40px;">暂无BUG记录</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = bugs.map(bug => `
+            const pageSize = pagination.pageSize || 10;
+            const dataRows = bugs.map(bug => `
                 <tr>
                     <td><span class="bug-id">${escapeHtml(bug.bugNo)}</span></td>
                     <td class="bug-link-cell" onclick="showDetail('${escapeHtml(bug.bugNo)}')">
@@ -683,7 +688,20 @@
                     <td>${escapeHtml(bug.assigneeName || bug.assignee || '-')}</td>
                     <td class="actions">${actionButtons(bug)}</td>
                 </tr>
-            `).join('');
+            `);
+            const emptyRows = Array.from({ length: Math.max(pageSize - bugs.length, 0) }, (_, index) => `
+                <tr class="empty-row">
+                    <td>${bugs.length === 0 && index === 0 ? '<span style="color:#9ca3af;">暂无BUG记录</span>' : '&nbsp;'}</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+            `);
+            tbody.innerHTML = dataRows.concat(emptyRows).join('');
         }
 
         function renderPagination() {
