@@ -399,6 +399,12 @@ class APIService {
         });
     }
 
+    async deleteBug(id) {
+        return await this.request(`/bugs/${id}`, {
+            method: 'DELETE'
+        });
+    }
+
     async uploadBugAttachments(id, files) {
         const formData = new FormData();
         Array.from(files || []).forEach(file => formData.append('images', file));

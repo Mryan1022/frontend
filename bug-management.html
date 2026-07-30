@@ -178,7 +178,21 @@
         th:nth-child(8), td:nth-child(8) { width: 210px; }
         tbody tr:hover { background: #f8f7ff; }
         .empty-row td { color: transparent; }
+        .id-cell { display: flex; align-items: center; gap: 8px; }
         .bug-id { color: #667eea; font-weight: 800; white-space: nowrap; }
+        .delete-btn {
+            border: 1px solid #fecaca;
+            border-radius: 5px;
+            background: #fef2f2;
+            color: #b91c1c;
+            cursor: pointer;
+            width: 26px;
+            height: 26px;
+            font-size: 12px;
+            line-height: 1;
+            flex: 0 0 auto;
+        }
+        .delete-btn:hover { background: #fee2e2; }
         .bug-link-cell { cursor: pointer; }
         .bug-title { color: #111827; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .bug-link-cell:hover .bug-title { color: #667eea; text-decoration: underline; }
@@ -692,7 +706,7 @@
             const pageSize = pagination.pageSize || 10;
             const dataRows = bugs.map(bug => `
                 <tr>
-                    <td><span class="bug-id">${escapeHtml(bug.bugNo)}</span></td>
+                    <td><div class="id-cell"><button class="delete-btn" onclick="deleteBug(event, '${escapeHtml(bug.bugNo)}')">删</button><span class="bug-id">${escapeHtml(bug.bugNo)}</span></div></td>
                     <td class="bug-link-cell" onclick="showDetail('${escapeHtml(bug.bugNo)}')">
                         <div class="bug-title">${escapeHtml(bug.title)}</div>
                         <div class="bug-desc">${escapeHtml(bug.description || bug.reproduceSteps || '')}</div>
@@ -753,6 +767,24 @@
             pagination.pageSize = Number(document.getElementById('pageSizeSelect').value) || 10;
             pagination.page = 1;
             loadBugs();
+        }
+
+        async function deleteBug(event, bugNo) {
+            event?.stopPropagation();
+            if (!confirm(`确认删除 ${bugNo} 吗？删除后不可恢复。`)) return;
+            try {
+                await apiService.deleteBug(bugNo);
+                if (currentDetail && currentDetail.bugNo === bugNo) {
+                    backToList();
+                }
+                if (bugs.length === 1 && pagination.page > 1) {
+                    pagination.page -= 1;
+                }
+                await loadBugs();
+                showToast('BUG已删除');
+            } catch (error) {
+                alert('删除BUG失败：' + error.message);
+            }
         }
 
         function resetFilters() {
