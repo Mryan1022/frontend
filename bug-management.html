@@ -166,7 +166,7 @@
         .role-switch button.active { background: #667eea; color: white; }
         .table-wrap { overflow: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 980px; table-layout: fixed; }
-        th, td { height: 58px; padding: 13px 14px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; font-size: 14px; }
+        th, td { height: 58px; max-height: 58px; padding: 9px 14px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: middle; font-size: 14px; overflow: hidden; }
         th { background: #f9fafb; color: #4b5563; font-size: 13px; font-weight: 700; white-space: nowrap; }
         th:nth-child(1), td:nth-child(1) { width: 105px; }
         th:nth-child(2), td:nth-child(2) { width: 30%; }
@@ -180,9 +180,9 @@
         .empty-row td { color: transparent; }
         .bug-id { color: #667eea; font-weight: 800; white-space: nowrap; }
         .bug-link-cell { cursor: pointer; }
-        .bug-title { color: #111827; font-weight: 700; margin-bottom: 5px; }
+        .bug-title { color: #111827; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .bug-link-cell:hover .bug-title { color: #667eea; text-decoration: underline; }
-        .bug-desc { color: #6b7280; font-size: 12px; line-height: 1.5; max-width: 420px; }
+        .bug-desc { color: #6b7280; font-size: 12px; line-height: 1.35; max-width: 420px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
         .badge {
             display: inline-flex;
             align-items: center;
