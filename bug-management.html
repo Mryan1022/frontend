@@ -544,6 +544,7 @@
         let assignableUsers = [];
         let editingBug = null;
         let pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
+        let bugStats = {};
         let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const statusText = {
             pending_confirm: '待确认',
@@ -661,8 +662,9 @@
                 const response = await apiService.getBugs(params);
                 bugs = response.data || [];
                 pagination = response.pagination || pagination;
+                bugStats = response.stats || {};
                 renderTable();
-                renderSummary(response.stats || {});
+                renderSummary(bugStats);
                 renderPagination();
             } catch (error) {
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444;padding:30px;">加载BUG失败：${escapeHtml(error.message)}</td></tr>`;
@@ -885,10 +887,21 @@
         async function updateStatus(event, bugNo, status, actionLabel = '') {
             event?.stopPropagation();
             try {
+                const before = bugs.find(bug => bug.bugNo === bugNo);
+                const fromStatus = before?.status;
                 await apiService.updateBugStatus(bugNo, status, actionLabel || statusText[status] || status);
-                await loadBugs();
+                const response = await apiService.getBugStatus(bugNo);
+                const updatedBug = response.data;
+                bugs = bugs.map(bug => bug.bugNo === bugNo ? updatedBug : bug);
+                if (fromStatus && fromStatus !== updatedBug.status) {
+                    bugStats[fromStatus] = Math.max((bugStats[fromStatus] || 0) - 1, 0);
+                    bugStats[updatedBug.status] = (bugStats[updatedBug.status] || 0) + 1;
+                }
+                renderTable();
+                renderSummary(bugStats);
                 if (currentDetail && currentDetail.bugNo === bugNo) {
-                    await showDetail(bugNo);
+                    currentDetail = { ...currentDetail, ...updatedBug };
+                    document.getElementById('detailView').innerHTML = detailHtml(currentDetail);
                 }
                 showToast('BUG状态已同步');
             } catch (error) {

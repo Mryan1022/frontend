@@ -381,6 +381,10 @@ class APIService {
         return await this.request(`/bugs/${id}`);
     }
 
+    async getBugStatus(id) {
+        return await this.request(`/bugs/${id}/status`);
+    }
+
     async createBug(data) {
         return await this.request('/bugs', {
             method: 'POST',
