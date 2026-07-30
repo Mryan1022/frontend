@@ -632,7 +632,7 @@
                     <td><span class="badge ${priorityClass(bug.priority)}">${escapeHtml(bug.priority)}</span></td>
                     <td>${escapeHtml(bug.module)}</td>
                     <td>${escapeHtml(bug.createdByName || '-')}</td>
-                    <td>${escapeHtml(bug.assigneeName || bug.assignee || '-')}<div class="bug-desc">${escapeHtml(bug.assigneeRoleLabel || '')}</div></td>
+                    <td>${escapeHtml(bug.assigneeName || bug.assignee || '-')}</td>
                     <td class="actions">${actionButtons(bug)}</td>
                 </tr>
             `).join('');
