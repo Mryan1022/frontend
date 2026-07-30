@@ -346,6 +346,25 @@ class APIService {
     // ==================== 用户相关 ====================
 
     // 获取当前用户信息
+    async getUsers(params = {}) {
+        const queryParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.append(key, value);
+            }
+        });
+
+        const queryString = queryParams.toString();
+        return await this.request(`/users${queryString ? '?' + queryString : ''}`);
+    }
+
+    async createUser(data) {
+        return await this.request('/users', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
     async getBugs(params = {}) {
         const queryParams = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {

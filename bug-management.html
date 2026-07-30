@@ -166,6 +166,13 @@
         .status-reopened { background: #fef2f2; color: #b91c1c; }
         .status-verified { background: #f0fdf4; color: #15803d; }
         .status-not_issue { background: #f3f4f6; color: #374151; }
+        .status-pending_confirm { background: #eef2ff; color: #4f46e5; }
+        .status-pending_fix { background: #fff7ed; color: #c2410c; }
+        .status-pending_product_confirm { background: #fef3c7; color: #92400e; }
+        .status-transferred_requirement { background: #f5f3ff; color: #6d28d9; }
+        .status-rejected { background: #f3f4f6; color: #374151; }
+        .status-pending_test { background: #e0f2fe; color: #0369a1; }
+        .status-archived { background: #f0fdf4; color: #15803d; }
         .priority-high { background: #fee2e2; color: #b91c1c; }
         .priority-middle { background: #fef3c7; color: #92400e; }
         .priority-low { background: #e0f2fe; color: #0369a1; }
@@ -182,7 +189,6 @@
         .action-btn.primary { color: #667eea; border-color: #c7d2fe; background: #eef2ff; }
         .action-btn.danger { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
         .role-actions { display: inline-flex; gap: 8px; }
-        body[data-role="test"] .dev-actions, body[data-role="dev"] .test-actions { display: none; }
         .detail-view { display: none; }
         .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; }
         .detail-title { color: #111827; font-size: 22px; margin-bottom: 12px; }
@@ -301,6 +307,7 @@
         <a class="tab-link" href="manage.html">数据管理</a>
         <a class="tab-link" href="manage.html">用例仓库</a>
         <a class="tab-link active" href="bug-management.html">BUG记录</a>
+        <a class="tab-link" href="account-management.html">账号管理</a>
     </nav>
 
     <main class="page">
@@ -332,12 +339,13 @@
                             <label>BUG状态</label>
                             <select id="statusFilter">
                                 <option value="">全部状态</option>
-                                <option value="created">已创建</option>
-                                <option value="fixing">修复中</option>
-                                <option value="fixed">已修复</option>
-                                <option value="reopened">重新打开</option>
-                                <option value="verified">验证完成</option>
-                                <option value="not_issue">非问题</option>
+                                <option value="pending_confirm">待确认</option>
+                                <option value="pending_fix">待修复</option>
+                                <option value="pending_product_confirm">待产品确认</option>
+                                <option value="transferred_requirement">已转需求</option>
+                                <option value="rejected">已拒绝</option>
+                                <option value="pending_test">待验证</option>
+                                <option value="archived">已归档</option>
                             </select>
                         </div>
                         <div class="field">
@@ -363,10 +371,6 @@
                 <section class="panel content-panel">
                     <div class="toolbar">
                         <input id="keywordInput" placeholder="搜索 BUG 标题、编号、创建人、负责人" onkeyup="handleSearchKeyup(event)">
-                        <div class="role-switch">
-                            <button id="roleTestBtn" class="active" onclick="switchRole('test')">测试角色</button>
-                            <button id="roleDevBtn" onclick="switchRole('dev')">开发角色</button>
-                        </div>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -424,11 +428,17 @@
                 </div>
                 <div class="field">
                     <label>初始状态</label>
-                    <select disabled><option>已创建</option></select>
+                    <select disabled><option>待确认</option></select>
                 </div>
                 <div class="field">
                     <label>负责人</label>
-                    <input id="assigneeInput" placeholder="可先不填">
+                    <select id="assigneeInput" onchange="syncAssigneeRole()">
+                        <option value="">暂不指定</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>负责人角色</label>
+                    <input id="assigneeRoleInput" disabled placeholder="选择负责人后自动显示">
                 </div>
                 <div class="field full">
                     <label>BUG描述</label>
@@ -469,13 +479,54 @@
         let bugs = [];
         let currentDetail = null;
         let selectedBugImages = [];
+        let assignableUsers = [];
+        let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const statusText = {
-            created: '已创建',
-            fixing: '修复中',
-            fixed: '已修复',
-            reopened: '重新打开',
-            verified: '验证完成',
-            not_issue: '非问题'
+            pending_confirm: '待确认',
+            pending_fix: '待修复',
+            pending_product_confirm: '待产品确认',
+            transferred_requirement: '已转需求',
+            rejected: '已拒绝',
+            pending_test: '待验证',
+            archived: '已归档'
+        };
+        const roleText = {
+            admin: '管理员',
+            tester: '测试',
+            developer: '开发',
+            product: '产品'
+        };
+        const statusActions = {
+            pending_confirm: [
+                { status: 'pending_fix', label: '确认问题', roles: ['developer', 'product'], style: 'primary' },
+                { status: 'pending_product_confirm', label: '转产品确认', roles: ['tester', 'developer'] },
+                { status: 'transferred_requirement', label: '转需求', roles: ['developer', 'product'] },
+                { status: 'rejected', label: '非问题', roles: ['developer', 'product'], style: 'danger' },
+                { status: 'archived', label: '已验证', roles: ['tester'], style: 'primary' }
+            ],
+            pending_fix: [
+                { status: 'pending_test', label: '已修复', roles: ['developer'], style: 'primary' },
+                { status: 'pending_product_confirm', label: '转产品确认', roles: ['tester', 'developer'] },
+                { status: 'transferred_requirement', label: '转需求', roles: ['developer', 'product'] }
+            ],
+            pending_product_confirm: [
+                { status: 'pending_fix', label: '确认问题', roles: ['product'], style: 'primary' },
+                { status: 'transferred_requirement', label: '转需求', roles: ['product'] },
+                { status: 'archived', label: '非问题', roles: ['product'], style: 'danger' }
+            ],
+            transferred_requirement: [
+                { status: 'pending_test', label: '已完成', roles: ['developer'], style: 'primary' }
+            ],
+            rejected: [
+                { status: 'pending_fix', label: '重新打开', roles: ['tester', 'product'], style: 'danger' }
+            ],
+            pending_test: [
+                { status: 'archived', label: '已验证', roles: ['tester'], style: 'primary' },
+                { status: 'pending_fix', label: '重新打开', roles: ['tester'], style: 'danger' }
+            ],
+            archived: [
+                { status: 'pending_fix', label: '重新打开', roles: ['tester'], style: 'danger' }
+            ]
         };
 
         function escapeHtml(value) {
@@ -495,7 +546,7 @@
         }
 
         function statusClass(status) {
-            return `status-${status || 'created'}`;
+            return `status-${status || 'pending_confirm'}`;
         }
 
         function priorityClass(priority) {
@@ -504,10 +555,19 @@
             return 'priority-low';
         }
 
-        function switchRole(role) {
-            document.body.dataset.role = role;
-            document.getElementById('roleTestBtn').classList.toggle('active', role === 'test');
-            document.getElementById('roleDevBtn').classList.toggle('active', role === 'dev');
+        function allowedActions(status) {
+            const role = currentUser.role || '';
+            const actions = statusActions[status] || [];
+            if (role === 'admin') return actions;
+            return actions.filter(action => action.roles.includes(role));
+        }
+
+        function actionButtons(bug) {
+            const actions = allowedActions(bug.status);
+            if (actions.length === 0) return '<span style="color:#9ca3af;">-</span>';
+            return actions.map(action => `
+                <button class="action-btn ${action.style || ''}" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', '${action.status}', '${escapeHtml(action.label)}')">${escapeHtml(action.label)}</button>
+            `).join('');
         }
 
         async function loadBugs() {
@@ -532,12 +592,13 @@
 
         function renderSummary(stats) {
             const rows = [
-                ['created', '已创建'],
-                ['fixing', '修复中'],
-                ['fixed', '已修复'],
-                ['reopened', '重新打开'],
-                ['verified', '验证完成'],
-                ['not_issue', '非问题']
+                ['pending_confirm', '待确认'],
+                ['pending_fix', '待修复'],
+                ['pending_product_confirm', '待产品确认'],
+                ['transferred_requirement', '已转需求'],
+                ['rejected', '已拒绝'],
+                ['pending_test', '待验证'],
+                ['archived', '已归档']
             ];
             document.getElementById('statusSummary').innerHTML = rows.map(([status, label]) => `
                 <div class="summary-row"><span>${label}</span><span class="summary-count">${stats[status] || 0}</span></div>
@@ -562,17 +623,8 @@
                     <td><span class="badge ${priorityClass(bug.priority)}">${escapeHtml(bug.priority)}</span></td>
                     <td>${escapeHtml(bug.module)}</td>
                     <td>${escapeHtml(bug.createdByName || '-')}</td>
-                    <td>${escapeHtml(bug.assignee || '-')}</td>
-                    <td class="actions">
-                        <span class="role-actions test-actions">
-                            <button class="action-btn primary" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'verified')">验证完成</button>
-                            <button class="action-btn danger" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'reopened')">重新打开</button>
-                        </span>
-                        <span class="role-actions dev-actions">
-                            <button class="action-btn primary" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'fixed')">已修复</button>
-                            <button class="action-btn" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'not_issue')">非问题</button>
-                        </span>
-                    </td>
+                    <td>${escapeHtml(bug.assigneeName || bug.assignee || '-')}<div class="bug-desc">${escapeHtml(bug.assigneeRoleLabel || '')}</div></td>
+                    <td class="actions">${actionButtons(bug)}</td>
                 </tr>
             `).join('');
         }
@@ -619,10 +671,31 @@
             }
         }
 
+        async function loadAssignableUsers() {
+            try {
+                const response = await apiService.getUsers();
+                assignableUsers = (response.data || []).filter(user => user.role !== 'admin');
+                const select = document.getElementById('assigneeInput');
+                select.innerHTML = '<option value="">暂不指定</option>' + assignableUsers.map(user => `
+                    <option value="${user.id}">${escapeHtml(user.displayName)}（${escapeHtml(roleText[user.role] || user.role)}）</option>
+                `).join('');
+            } catch (error) {
+                console.warn('加载负责人失败:', error);
+            }
+        }
+
+        function syncAssigneeRole() {
+            const selectedId = Number(document.getElementById('assigneeInput').value || 0);
+            const user = assignableUsers.find(item => item.id === selectedId);
+            document.getElementById('assigneeRoleInput').value = user ? (roleText[user.role] || user.role) : '';
+        }
+
         function clearForm() {
-            ['titleInput', 'assigneeInput', 'descriptionInput', 'stepsInput', 'expectedInput'].forEach(id => {
+            ['titleInput', 'descriptionInput', 'stepsInput', 'expectedInput'].forEach(id => {
                 document.getElementById(id).value = '';
             });
+            document.getElementById('assigneeInput').value = '';
+            document.getElementById('assigneeRoleInput').value = '';
             document.getElementById('moduleInput').value = '金币兑换';
             document.getElementById('priorityInput').value = 'P2';
             selectedBugImages = [];
@@ -637,7 +710,7 @@
                 title: document.getElementById('titleInput').value.trim(),
                 module: document.getElementById('moduleInput').value,
                 priority: document.getElementById('priorityInput').value,
-                assignee: document.getElementById('assigneeInput').value.trim(),
+                assigneeId: document.getElementById('assigneeInput').value || null,
                 description: document.getElementById('descriptionInput').value.trim(),
                 reproduceSteps: document.getElementById('stepsInput').value.trim(),
                 expectedResult: document.getElementById('expectedInput').value.trim()
@@ -661,10 +734,10 @@
             }
         }
 
-        async function updateStatus(event, bugNo, status) {
+        async function updateStatus(event, bugNo, status, actionLabel = '') {
             event?.stopPropagation();
             try {
-                await apiService.updateBugStatus(bugNo, status, statusText[status] || status);
+                await apiService.updateBugStatus(bugNo, status, actionLabel || statusText[status] || status);
                 await loadBugs();
                 if (currentDetail && currentDetail.bugNo === bugNo) {
                     await showDetail(bugNo);
@@ -718,16 +791,7 @@
                     <div class="panel">
                         <div class="panel-header">
                             <span>问题信息</span>
-                            <span class="actions">
-                                <span class="role-actions test-actions">
-                                    <button class="action-btn primary" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'verified')">验证完成</button>
-                                    <button class="action-btn danger" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'reopened')">重新打开</button>
-                                </span>
-                                <span class="role-actions dev-actions">
-                                    <button class="action-btn primary" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'fixed')">已修复</button>
-                                    <button class="action-btn" onclick="updateStatus(event, '${escapeHtml(bug.bugNo)}', 'not_issue')">非问题</button>
-                                </span>
-                            </span>
+                            <span class="actions">${actionButtons(bug)}</span>
                         </div>
                         <div class="filter-body">
                             <h2 class="detail-title">${escapeHtml(bug.title)}</h2>
@@ -747,7 +811,8 @@
                         <div class="filter-body">
                             <div class="info-item"><span class="info-label">所属模块</span><span class="info-value">${escapeHtml(bug.module)}</span></div>
                             <div class="info-item"><span class="info-label">创建人</span><span class="info-value">${escapeHtml(bug.createdByName || '-')}</span></div>
-                            <div class="info-item"><span class="info-label">负责人</span><span class="info-value">${escapeHtml(bug.assignee || '-')}</span></div>
+                            <div class="info-item"><span class="info-label">负责人</span><span class="info-value">${escapeHtml(bug.assigneeName || bug.assignee || '-')}</span></div>
+                            <div class="info-item"><span class="info-label">负责人角色</span><span class="info-value">${escapeHtml(bug.assigneeRoleLabel || '-')}</span></div>
                             <div class="info-item"><span class="info-label">当前状态</span><span class="info-value">${escapeHtml(bug.statusLabel)}</span></div>
                             <div class="info-item"><span class="info-label">优先级</span><span class="info-value">${escapeHtml(bug.priority)}</span></div>
                         </div>
@@ -759,8 +824,17 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            switchRole('test');
-            loadBugs();
+            apiService.getCurrentUser()
+                .then(user => {
+                    currentUser = user;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    document.body.dataset.role = user.role || '';
+                })
+                .catch(() => {})
+                .finally(() => {
+                    loadAssignableUsers();
+                    loadBugs();
+                });
         });
     </script>
 </body>
