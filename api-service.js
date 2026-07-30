@@ -36,6 +36,12 @@ class APIService {
                     const error = new Error('认证失败，请重新登录');
                     error.code = 'UNAUTHORIZED';
                     error.status = 401;
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    this.token = null;
+                    if (!/\/index\.html$|\/$/.test(window.location.pathname)) {
+                        window.location.href = 'index.html';
+                    }
                     throw error;
                 }
                 throw new Error(data.error || `HTTP ${response.status}`);
