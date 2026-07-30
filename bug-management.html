@@ -232,6 +232,43 @@
             line-height: 1.5;
             font-size: 14px;
         }
+        .image-picker { display: grid; gap: 10px; }
+        .image-picker input { width: 100%; }
+        .image-preview-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .image-preview {
+            width: 78px;
+            height: 78px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #f9fafb;
+        }
+        .attachment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .attachment-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f9fafb;
+        }
+        .attachment-card img {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+        }
+        .attachment-name {
+            padding: 7px 8px;
+            color: #4b5563;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .drawer-footer { margin-top: auto; padding: 16px 22px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; }
         .toast {
             position: fixed;
@@ -407,7 +444,11 @@
                 </div>
                 <div class="field full">
                     <label>图片附件</label>
-                    <div class="upload-placeholder">第二版本支持上传图片：截图、接口报错、控制台日志图片。当前版本先存储文本 BUG。</div>
+                    <div class="image-picker">
+                        <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" multiple onchange="previewSelectedImages()">
+                        <div id="imagePreviewList" class="image-preview-list"></div>
+                        <div style="color:#6b7280;font-size:13px;">支持 JPG、PNG、WEBP，单张不超过 5MB，最多 10 张。保存 BUG 后图片会在后台上传。</div>
+                    </div>
                 </div>
             </div>
             <div class="drawer-footer">
@@ -427,6 +468,7 @@
 
         let bugs = [];
         let currentDetail = null;
+        let selectedBugImages = [];
         const statusText = {
             created: '已创建',
             fixing: '修复中',
@@ -556,12 +598,38 @@
             }
         }
 
+        function previewSelectedImages() {
+            const input = document.getElementById('imageInput');
+            const preview = document.getElementById('imagePreviewList');
+            selectedBugImages = Array.from(input.files || []).slice(0, 10);
+            if ((input.files || []).length > 10) {
+                showToast('最多只能上传 10 张图片');
+            }
+            preview.innerHTML = selectedBugImages.map(file => `
+                <img class="image-preview" src="${URL.createObjectURL(file)}" alt="${escapeHtml(file.name)}">
+            `).join('');
+        }
+
+        async function uploadImagesInBackground(bugId, files) {
+            try {
+                await apiService.uploadBugAttachments(bugId, files);
+                showToast('图片上传完成');
+            } catch (error) {
+                showToast('图片上传失败：' + error.message);
+            }
+        }
+
         function clearForm() {
             ['titleInput', 'assigneeInput', 'descriptionInput', 'stepsInput', 'expectedInput'].forEach(id => {
                 document.getElementById(id).value = '';
             });
             document.getElementById('moduleInput').value = '金币兑换';
             document.getElementById('priorityInput').value = 'P2';
+            selectedBugImages = [];
+            const imageInput = document.getElementById('imageInput');
+            const preview = document.getElementById('imagePreviewList');
+            if (imageInput) imageInput.value = '';
+            if (preview) preview.innerHTML = '';
         }
 
         async function saveBug() {
@@ -579,11 +647,15 @@
                 return;
             }
             try {
-                await apiService.createBug(data);
+                const filesToUpload = selectedBugImages.slice();
+                const response = await apiService.createBug(data);
                 closeDrawer();
                 clearForm();
                 await loadBugs();
                 showToast('BUG创建成功');
+                if (filesToUpload.length > 0 && response.data?.id) {
+                    uploadImagesInBackground(response.data.id, filesToUpload);
+                }
             } catch (error) {
                 alert('创建BUG失败：' + error.message);
             }
@@ -627,6 +699,15 @@
             const logHtml = logs.length === 0
                 ? '<div class="history-item">暂无流转记录</div>'
                 : logs.map(log => `<div class="history-item"><strong>${escapeHtml(log.changedByName || '-')}</strong> 将状态变更为 <strong>${escapeHtml(log.toStatusLabel)}</strong>${log.remark ? '：' + escapeHtml(log.remark) : ''}</div>`).join('');
+            const attachments = bug.attachments || [];
+            const attachmentHtml = attachments.length === 0
+                ? '<p>暂无图片附件</p>'
+                : `<div class="attachment-grid">${attachments.map(file => `
+                    <div class="attachment-card">
+                        <img src="${escapeHtml(file.fileUrl)}" alt="${escapeHtml(file.fileName)}" onclick="window.open('${escapeHtml(file.fileUrl)}', '_blank')">
+                        <div class="attachment-name" title="${escapeHtml(file.fileName)}">${escapeHtml(file.fileName)}</div>
+                    </div>
+                `).join('')}</div>`;
 
             return `
                 <div class="header">
@@ -658,7 +739,7 @@
                             <div class="detail-section"><h2>BUG描述</h2><p>${escapeHtml(bug.description || '-')}</p></div>
                             <div class="detail-section"><h2>复现步骤</h2><p>${escapeHtml(bug.reproduceSteps || '-')}</p></div>
                             <div class="detail-section"><h2>期望结果</h2><p>${escapeHtml(bug.expectedResult || '-')}</p></div>
-                            <div class="detail-section"><h2>附件</h2><p>第二版本支持上传图片后，这里展示截图缩略图、接口报错截图和控制台日志图片。</p></div>
+                            <div class="detail-section"><h2>图片附件</h2>${attachmentHtml}</div>
                         </div>
                     </div>
                     <aside class="panel">

@@ -369,6 +369,28 @@ class APIService {
         });
     }
 
+    async uploadBugAttachments(id, files) {
+        const formData = new FormData();
+        Array.from(files || []).forEach(file => formData.append('images', file));
+
+        const response = await fetch(`${this.baseURL}/bugs/${id}/attachments`, {
+            method: 'POST',
+            headers: this.token ? { 'Authorization': `Bearer ${this.token}` } : {},
+            body: formData
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                this.token = null;
+                window.location.href = 'index.html';
+            }
+            throw new Error(data.error || `HTTP ${response.status}`);
+        }
+        return data;
+    }
+
     async updateBugStatus(id, status, remark = '') {
         return await this.request(`/bugs/${id}/status`, {
             method: 'PATCH',
