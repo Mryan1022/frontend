@@ -706,7 +706,11 @@
             const pageSize = pagination.pageSize || 10;
             const dataRows = bugs.map(bug => `
                 <tr>
-                    <td><div class="id-cell"><button class="delete-btn" onclick="deleteBug(event, '${escapeHtml(bug.bugNo)}')">删</button><span class="bug-id">${escapeHtml(bug.bugNo)}</span></div></td>
+                    <td><div class="id-cell"><span class="bug-id">${escapeHtml(bug.bugNo)}</span><button class="delete-btn" title="删除" onclick="deleteBug(event, '${escapeHtml(bug.bugNo)}')">
+                        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                            <path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v9h-2V9Zm4 0h2v9h-2V9ZM7 9h2v9h6v-9h2v11H7V9Z"/>
+                        </svg>
+                    </button></div></td>
                     <td class="bug-link-cell" onclick="showDetail('${escapeHtml(bug.bugNo)}')">
                         <div class="bug-title">${escapeHtml(bug.title)}</div>
                         <div class="bug-desc">${escapeHtml(bug.description || bug.reproduceSteps || '')}</div>
