@@ -51,6 +51,27 @@
         }
         .tab-link:hover { color: white; background: rgba(255,255,255,0.1); }
         .tab-link.active { color: white; background: rgba(255,255,255,0.15); border-bottom-color: white; }
+        .account-area {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .account-meta { text-align: right; line-height: 1.4; }
+        .account-role { color: rgba(255,255,255,0.75); }
+        .logout-btn {
+            border: 1px solid rgba(255,255,255,0.45);
+            border-radius: 5px;
+            background: rgba(255,255,255,0.12);
+            color: white;
+            cursor: pointer;
+            padding: 7px 10px;
+            font-size: 13px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.22); }
         .page { padding: 20px 30px 30px; }
         .header {
             background: white;
@@ -294,6 +315,7 @@
             .drawer-body { grid-template-columns: 1fr; }
             .tab-navigation { padding: 0 12px; overflow-x: auto; }
             .tab-link { white-space: nowrap; padding: 14px 16px; }
+            .account-area { margin-left: 12px; }
         }
     </style>
 </head>
@@ -308,6 +330,13 @@
         <a class="tab-link" href="manage.html">用例仓库</a>
         <a class="tab-link active" href="bug-management.html">BUG记录</a>
         <a class="tab-link" href="account-management.html">账号管理</a>
+        <div class="account-area">
+            <div class="account-meta">
+                <div id="navUsername">-</div>
+                <div id="navRole" class="account-role">-</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
     </nav>
 
     <main class="page">
@@ -543,6 +572,15 @@
             toast.textContent = message;
             toast.style.display = 'block';
             setTimeout(() => toast.style.display = 'none', 1800);
+        }
+
+        function renderAccountInfo() {
+            document.getElementById('navUsername').textContent = currentUser.username || '-';
+            document.getElementById('navRole').textContent = roleText[currentUser.role] || currentUser.role || '-';
+        }
+
+        function logout() {
+            apiService.logout();
         }
 
         function statusClass(status) {
@@ -824,11 +862,13 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            renderAccountInfo();
             apiService.getCurrentUser()
                 .then(user => {
                     currentUser = user;
                     localStorage.setItem('user', JSON.stringify(user));
                     document.body.dataset.role = user.role || '';
+                    renderAccountInfo();
                 })
                 .catch(() => {})
                 .finally(() => {
