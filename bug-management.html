@@ -115,7 +115,7 @@
         .header-filter {
             margin-top: 0;
             display: grid;
-            grid-template-columns: minmax(150px, 190px) minmax(150px, 190px) auto;
+            grid-template-columns: minmax(150px, 190px) minmax(150px, 190px) minmax(260px, 1fr) auto;
             gap: 12px;
             align-items: end;
         }
@@ -159,14 +159,7 @@
         }
         .summary-count { color: #667eea; font-weight: 800; }
         .content-panel { display: flex; flex-direction: column; min-width: 0; }
-        .toolbar {
-            padding: 14px 18px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
+        .toolbar { display: none; }
         .toolbar input { flex: 1; min-width: 220px; border: 1px solid #d1d5db; border-radius: 6px; padding: 9px 10px; outline: none; }
         .role-switch { display: inline-flex; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
         .role-switch button { border: none; background: white; color: #4b5563; cursor: pointer; padding: 9px 12px; font-size: 13px; }
@@ -250,7 +243,7 @@
             color: #4b5563;
             font-size: 13px;
         }
-        .header-summary .summary-row { display: grid; justify-items: center; gap: 4px; padding: 9px 8px; }
+        .header-summary .summary-row { display: flex; justify-content: center; gap: 8px; padding: 9px 8px; }
         .pagination-pages { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .page-btn {
             border: 1px solid #d1d5db;
@@ -425,6 +418,10 @@
                                 <option value="P3">P3 低</option>
                             </select>
                         </div>
+                        <div class="field">
+                            <label>搜索</label>
+                            <input id="keywordInput" placeholder="BUG 标题、编号、创建人、负责人" onkeyup="handleSearchKeyup(event)">
+                        </div>
                         <div class="filter-actions">
                             <button class="btn-small primary" onclick="queryBugs()">查询</button>
                             <button class="btn-small" onclick="resetFilters()">重置</button>
@@ -439,9 +436,6 @@
 
             <div class="layout">
                 <section class="panel content-panel">
-                    <div class="toolbar">
-                        <input id="keywordInput" placeholder="搜索 BUG 标题、编号、创建人、负责人" onkeyup="handleSearchKeyup(event)">
-                    </div>
                     <div class="table-wrap">
                         <table>
                             <thead>
