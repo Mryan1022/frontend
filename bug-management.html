@@ -354,17 +354,6 @@
                     <div class="panel-header">筛选条件</div>
                     <div class="filter-body">
                         <div class="field">
-                            <label>所属模块</label>
-                            <select id="moduleFilter">
-                                <option value="">全部模块</option>
-                                <option value="金币兑换">金币兑换</option>
-                                <option value="用例仓库">用例仓库</option>
-                                <option value="活动榜单">活动榜单</option>
-                                <option value="账号注销">账号注销</option>
-                                <option value="登录鉴权">登录鉴权</option>
-                            </select>
-                        </div>
-                        <div class="field">
                             <label>BUG状态</label>
                             <select id="statusFilter">
                                 <option value="">全部状态</option>
@@ -438,13 +427,7 @@
                 </div>
                 <div class="field">
                     <label>所属模块</label>
-                    <select id="moduleInput">
-                        <option value="金币兑换">金币兑换</option>
-                        <option value="用例仓库">用例仓库</option>
-                        <option value="活动榜单">活动榜单</option>
-                        <option value="账号注销">账号注销</option>
-                        <option value="登录鉴权">登录鉴权</option>
-                    </select>
+                    <input id="moduleInput" placeholder="可不填">
                 </div>
                 <div class="field">
                     <label>优先级</label>
@@ -461,13 +444,9 @@
                 </div>
                 <div class="field">
                     <label>负责人</label>
-                    <select id="assigneeInput" onchange="syncAssigneeRole()">
+                    <select id="assigneeInput">
                         <option value="">暂不指定</option>
                     </select>
-                </div>
-                <div class="field">
-                    <label>负责人角色</label>
-                    <input id="assigneeRoleInput" disabled placeholder="选择负责人后自动显示">
                 </div>
                 <div class="field full">
                     <label>BUG描述</label>
@@ -509,6 +488,7 @@
         let currentDetail = null;
         let selectedBugImages = [];
         let assignableUsers = [];
+        let editingBug = null;
         let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const statusText = {
             pending_confirm: '待确认',
@@ -610,7 +590,6 @@
 
         async function loadBugs() {
             const params = {
-                module: document.getElementById('moduleFilter').value,
                 status: document.getElementById('statusFilter').value,
                 priority: document.getElementById('priorityFilter').value,
                 keyword: document.getElementById('keywordInput').value.trim()
@@ -668,7 +647,7 @@
         }
 
         function resetFilters() {
-            ['moduleFilter', 'statusFilter', 'priorityFilter', 'keywordInput'].forEach(id => {
+            ['statusFilter', 'priorityFilter', 'keywordInput'].forEach(id => {
                 document.getElementById(id).value = '';
             });
             loadBugs();
@@ -679,6 +658,28 @@
         }
 
         function openDrawer() {
+            clearForm();
+            editingBug = null;
+            document.querySelector('.drawer-header h2').textContent = '创建BUG';
+            document.querySelector('.drawer-footer .btn-create').textContent = '保存BUG';
+            document.getElementById('imageInput')?.closest('.field.full')?.style.removeProperty('display');
+            document.getElementById('drawerMask').classList.add('show');
+        }
+
+        function openEditDrawer(bugNo) {
+            const bug = currentDetail && currentDetail.bugNo === bugNo ? currentDetail : bugs.find(item => item.bugNo === bugNo);
+            if (!bug) return;
+            editingBug = bug;
+            document.querySelector('.drawer-header h2').textContent = '修改BUG';
+            document.querySelector('.drawer-footer .btn-create').textContent = '保存修改';
+            document.getElementById('titleInput').value = bug.title || '';
+            document.getElementById('moduleInput').value = bug.module || '';
+            document.getElementById('priorityInput').value = bug.priority || 'P2';
+            document.getElementById('assigneeInput').value = bug.assigneeId || '';
+            document.getElementById('descriptionInput').value = bug.description || '';
+            document.getElementById('stepsInput').value = bug.reproduceSteps || '';
+            document.getElementById('expectedInput').value = bug.expectedResult || '';
+            document.getElementById('imageInput')?.closest('.field.full')?.style.setProperty('display', 'none');
             document.getElementById('drawerMask').classList.add('show');
         }
 
@@ -715,17 +716,11 @@
                 assignableUsers = (response.data || []).filter(user => user.role !== 'admin');
                 const select = document.getElementById('assigneeInput');
                 select.innerHTML = '<option value="">暂不指定</option>' + assignableUsers.map(user => `
-                    <option value="${user.id}">${escapeHtml(user.displayName)}（${escapeHtml(roleText[user.role] || user.role)}）</option>
+                    <option value="${user.id}">${escapeHtml(user.displayName)}</option>
                 `).join('');
             } catch (error) {
                 console.warn('加载负责人失败:', error);
             }
-        }
-
-        function syncAssigneeRole() {
-            const selectedId = Number(document.getElementById('assigneeInput').value || 0);
-            const user = assignableUsers.find(item => item.id === selectedId);
-            document.getElementById('assigneeRoleInput').value = user ? (roleText[user.role] || user.role) : '';
         }
 
         function clearForm() {
@@ -733,9 +728,9 @@
                 document.getElementById(id).value = '';
             });
             document.getElementById('assigneeInput').value = '';
-            document.getElementById('assigneeRoleInput').value = '';
-            document.getElementById('moduleInput').value = '金币兑换';
+            document.getElementById('moduleInput').value = '';
             document.getElementById('priorityInput').value = 'P2';
+            editingBug = null;
             selectedBugImages = [];
             const imageInput = document.getElementById('imageInput');
             const preview = document.getElementById('imagePreviewList');
@@ -759,12 +754,19 @@
             }
             try {
                 const filesToUpload = selectedBugImages.slice();
-                const response = await apiService.createBug(data);
+                const wasEditing = !!editingBug;
+                const editingBugNo = editingBug?.bugNo;
+                const response = editingBug
+                    ? await apiService.updateBug(editingBug.bugNo, data)
+                    : await apiService.createBug(data);
                 closeDrawer();
                 clearForm();
                 await loadBugs();
-                showToast('BUG创建成功');
-                if (filesToUpload.length > 0 && response.data?.id) {
+                if (currentDetail && wasEditing) {
+                    await showDetail(editingBugNo);
+                }
+                showToast(wasEditing ? 'BUG修改成功' : 'BUG创建成功');
+                if (!wasEditing && filesToUpload.length > 0 && response.data?.id) {
                     uploadImagesInBackground(response.data.id, filesToUpload);
                 }
             } catch (error) {
@@ -823,7 +825,10 @@
             return `
                 <div class="header">
                     <div><h1>${escapeHtml(bug.bugNo)} 详情</h1><p>点击返回可回到 BUG 列表。</p></div>
-                    <button class="btn-small" onclick="backToList()">返回列表</button>
+                    <div class="actions">
+                        <button class="btn-small primary" onclick="openEditDrawer('${escapeHtml(bug.bugNo)}')">修改</button>
+                        <button class="btn-small" onclick="backToList()">返回列表</button>
+                    </div>
                 </div>
                 <div class="detail-grid">
                     <div class="panel">

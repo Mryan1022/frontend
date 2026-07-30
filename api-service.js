@@ -388,6 +388,13 @@ class APIService {
         });
     }
 
+    async updateBug(id, data) {
+        return await this.request(`/bugs/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
     async uploadBugAttachments(id, files) {
         const formData = new FormData();
         Array.from(files || []).forEach(file => formData.append('images', file));
