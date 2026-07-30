@@ -439,10 +439,6 @@
                     </select>
                 </div>
                 <div class="field">
-                    <label>初始状态</label>
-                    <select disabled><option>待确认</option></select>
-                </div>
-                <div class="field">
                     <label>负责人</label>
                     <select id="assigneeInput">
                         <option value="">暂不指定</option>
@@ -609,16 +605,12 @@
 
         function renderSummary(stats) {
             const rows = [
-                ['pending_confirm', '待确认'],
-                ['pending_fix', '待修复'],
-                ['pending_product_confirm', '待产品确认'],
-                ['transferred_requirement', '已转需求'],
-                ['rejected', '已拒绝'],
-                ['pending_test', '待验证'],
-                ['archived', '已归档']
+                ['待修复', ['pending_confirm', 'pending_fix']],
+                ['待确认', ['pending_product_confirm', 'transferred_requirement', 'rejected']],
+                ['待验证', ['pending_test']]
             ];
-            document.getElementById('statusSummary').innerHTML = rows.map(([status, label]) => `
-                <div class="summary-row"><span>${label}</span><span class="summary-count">${stats[status] || 0}</span></div>
+            document.getElementById('statusSummary').innerHTML = rows.map(([label, statuses]) => `
+                <div class="summary-row"><span>${label}</span><span class="summary-count">${statuses.reduce((sum, status) => sum + (stats[status] || 0), 0)}</span></div>
             `).join('');
         }
 
