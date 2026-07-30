@@ -210,6 +210,32 @@
         .action-btn.primary { color: #667eea; border-color: #c7d2fe; background: #eef2ff; }
         .action-btn.danger { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
         .role-actions { display: inline-flex; gap: 8px; }
+        .pagination-bar {
+            padding: 12px 18px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: #4b5563;
+            font-size: 13px;
+        }
+        .pagination-pages { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .page-btn {
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 9px;
+            font-size: 13px;
+        }
+        .page-btn.active { background: #667eea; color: white; border-color: #667eea; }
+        .page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .page-size-select { border: 1px solid #d1d5db; border-radius: 5px; padding: 6px 8px; background: white; color: #374151; }
         .detail-view { display: none; }
         .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; }
         .detail-title { color: #111827; font-size: 22px; margin-bottom: 12px; }
@@ -377,7 +403,7 @@
                             </select>
                         </div>
                         <div class="filter-actions">
-                            <button class="btn-small primary" onclick="loadBugs()">查询</button>
+                            <button class="btn-small primary" onclick="queryBugs()">查询</button>
                             <button class="btn-small" onclick="resetFilters()">重置</button>
                         </div>
                     </div>
@@ -406,6 +432,18 @@
                             </thead>
                             <tbody id="tableBody"></tbody>
                         </table>
+                    </div>
+                    <div class="pagination-bar">
+                        <div id="paginationInfo">共 0 条</div>
+                        <div class="pagination-pages" id="paginationPages"></div>
+                        <label>每页
+                            <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                            </select>
+                            条
+                        </label>
                     </div>
                 </section>
             </div>
@@ -485,6 +523,7 @@
         let selectedBugImages = [];
         let assignableUsers = [];
         let editingBug = null;
+        let pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
         let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const statusText = {
             pending_confirm: '待确认',
@@ -588,7 +627,9 @@
             const params = {
                 status: document.getElementById('statusFilter').value,
                 priority: document.getElementById('priorityFilter').value,
-                keyword: document.getElementById('keywordInput').value.trim()
+                keyword: document.getElementById('keywordInput').value.trim(),
+                page: pagination.page,
+                pageSize: pagination.pageSize
             };
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#6b7280;padding:30px;">正在加载BUG...</td></tr>';
@@ -596,11 +637,18 @@
             try {
                 const response = await apiService.getBugs(params);
                 bugs = response.data || [];
+                pagination = response.pagination || pagination;
                 renderTable();
                 renderSummary(response.stats || {});
+                renderPagination();
             } catch (error) {
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#ef4444;padding:30px;">加载BUG失败：${escapeHtml(error.message)}</td></tr>`;
             }
+        }
+
+        function queryBugs() {
+            pagination.page = 1;
+            loadBugs();
         }
 
         function renderSummary(stats) {
@@ -638,10 +686,46 @@
             `).join('');
         }
 
+        function renderPagination() {
+            document.getElementById('paginationInfo').textContent = `共 ${pagination.total || 0} 条，第 ${pagination.page || 1} / ${pagination.totalPages || 1} 页`;
+            document.getElementById('pageSizeSelect').value = String(pagination.pageSize || 10);
+            const totalPages = pagination.totalPages || 1;
+            const current = pagination.page || 1;
+            const pages = [];
+            for (let page = 1; page <= totalPages; page++) {
+                if (page === 1 || page === totalPages || Math.abs(page - current) <= 2) {
+                    pages.push(page);
+                } else if (pages[pages.length - 1] !== '...') {
+                    pages.push('...');
+                }
+            }
+            document.getElementById('paginationPages').innerHTML = `
+                <button class="page-btn" ${current <= 1 ? 'disabled' : ''} onclick="goPage(${current - 1})">上一页</button>
+                ${pages.map(page => page === '...'
+                    ? '<span style="padding:0 4px;color:#9ca3af;">...</span>'
+                    : `<button class="page-btn ${page === current ? 'active' : ''}" onclick="goPage(${page})">${page}</button>`
+                ).join('')}
+                <button class="page-btn" ${current >= totalPages ? 'disabled' : ''} onclick="goPage(${current + 1})">下一页</button>
+            `;
+        }
+
+        function goPage(page) {
+            if (page < 1 || page > (pagination.totalPages || 1) || page === pagination.page) return;
+            pagination.page = page;
+            loadBugs();
+        }
+
+        function changePageSize() {
+            pagination.pageSize = Number(document.getElementById('pageSizeSelect').value) || 10;
+            pagination.page = 1;
+            loadBugs();
+        }
+
         function resetFilters() {
             ['statusFilter', 'priorityFilter', 'keywordInput'].forEach(id => {
                 document.getElementById(id).value = '';
             });
+            pagination.page = 1;
             loadBugs();
         }
 
