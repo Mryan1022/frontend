@@ -392,6 +392,36 @@ class APIService {
         });
     }
 
+    async importBugs(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const headers = {};
+        if (this.token) {
+            headers['Authorization'] = `Bearer ${this.token}`;
+        }
+
+        const response = await fetch(`${this.baseURL}/bugs/import`, {
+            method: 'POST',
+            headers,
+            body: formData
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                this.token = null;
+                if (!/\/index\.html$|\/$/.test(window.location.pathname)) {
+                    window.location.href = 'index.html';
+                }
+            }
+            throw new Error(data.error || `HTTP ${response.status}`);
+        }
+
+        return data;
+    }
+
     async updateBug(id, data) {
         return await this.request(`/bugs/${id}`, {
             method: 'PUT',
@@ -402,6 +432,13 @@ class APIService {
     async deleteBug(id) {
         return await this.request(`/bugs/${id}`, {
             method: 'DELETE'
+        });
+    }
+
+    async addBugComment(id, content) {
+        return await this.request(`/bugs/${id}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ content })
         });
     }
 

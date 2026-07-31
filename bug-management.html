@@ -85,7 +85,7 @@
             margin-bottom: 20px;
         }
         .header-main { flex: 1; min-width: 0; }
-        .header-side { width: 340px; display: grid; gap: 12px; justify-items: end; }
+        .header-side { width: 340px; display: flex; gap: 10px; justify-content: flex-end; align-items: flex-start; }
         .header h1 { color: #667eea; font-size: 22px; margin-bottom: 8px; }
         .header p { color: #6b7280; font-size: 14px; }
         .btn-create {
@@ -100,6 +100,18 @@
             box-shadow: 0 4px 12px rgba(102,126,234,0.3);
             white-space: nowrap;
         }
+        .btn-import {
+            border: 1px solid #c7d2fe;
+            border-radius: 6px;
+            background: #eef2ff;
+            color: #4f46e5;
+            cursor: pointer;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .btn-import:disabled { opacity: 0.65; cursor: not-allowed; }
         .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
         .panel { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
         .panel-header {
@@ -150,13 +162,17 @@
         .header-summary { width: min(620px, 100%); margin-top: 12px; padding: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .summary-row {
             background: #f9fafb;
+            border: 1px solid transparent;
             border-radius: 6px;
             padding: 9px 10px;
             display: flex;
             justify-content: space-between;
             color: #4b5563;
             font-size: 13px;
+            cursor: pointer;
         }
+        .summary-row:hover { border-color: #c7d2fe; background: #eef2ff; }
+        .summary-row.active { border-color: #667eea; background: #eef2ff; color: #4f46e5; }
         .summary-count { color: #667eea; font-weight: 800; }
         .content-panel { display: flex; flex-direction: column; min-width: 0; }
         .toolbar { display: none; }
@@ -177,6 +193,7 @@
         th:nth-child(7), td:nth-child(7) { width: 110px; }
         th:nth-child(8), td:nth-child(8) { width: 110px; }
         th:nth-child(9), td:nth-child(9) { width: 210px; }
+        td.bug-link-cell { overflow: visible; }
         tbody tr:hover { background: #f8f7ff; }
         .empty-row td { color: transparent; }
         .id-cell { display: flex; align-items: center; gap: 8px; }
@@ -194,8 +211,38 @@
             flex: 0 0 auto;
         }
         .delete-btn:hover { background: #fee2e2; }
-        .bug-link-cell { cursor: pointer; }
-        .bug-title { color: #111827; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bug-link-cell { cursor: pointer; position: relative; }
+        .bug-title {
+            color: #111827;
+            font-weight: 700;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bug-tooltip {
+            display: none;
+        }
+        .bug-floating-tooltip {
+            display: none;
+            position: fixed;
+            z-index: 12000;
+            max-width: min(260px, 60vw);
+            width: max-content;
+            white-space: normal;
+            overflow-wrap: break-word;
+            background: #87CEEB;
+            color: #000;
+            border: 1px solid #5ca8c5;
+            border-radius: 6px;
+            padding: 8px 10px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+            font-size: 13px;
+            line-height: 1.5;
+            font-weight: 500;
+            text-decoration: none;
+            pointer-events: none;
+        }
         .bug-link-cell:hover .bug-title { color: #667eea; text-decoration: underline; }
         .bug-desc { color: #6b7280; font-size: 12px; line-height: 1.35; max-width: 420px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
         .badge {
@@ -282,6 +329,30 @@
         .detail-section:first-of-type { border-top: 0; }
         .detail-section h2 { color: #374151; font-size: 15px; margin-bottom: 8px; }
         .detail-section p { color: #4b5563; font-size: 14px; line-height: 1.7; white-space: pre-line; }
+        .back-list-btn { min-width: 114px; }
+        .comment-form { display: grid; gap: 10px; margin-bottom: 14px; }
+        .comment-input {
+            width: 100%;
+            min-height: 76px;
+            resize: vertical;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #111827;
+            font-size: 14px;
+            line-height: 1.6;
+            outline: none;
+        }
+        .comment-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+        }
+        .comment-actions { display: flex; justify-content: flex-end; }
+        .comment-list { display: grid; gap: 10px; }
+        .comment-item { border-top: 1px solid #e5e7eb; padding-top: 12px; }
+        .comment-meta { display: flex; align-items: baseline; gap: 10px; color: #6b7280; font-size: 12px; margin-bottom: 6px; }
+        .comment-user { color: #111827; font-weight: 700; }
+        .comment-content { color: #374151; font-size: 14px; line-height: 1.7; white-space: pre-line; }
         .info-item { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f0f1f4; font-size: 14px; }
         .info-label { color: #6b7280; white-space: nowrap; }
         .info-value { color: #111827; font-weight: 700; text-align: right; }
@@ -376,7 +447,7 @@
         @media (max-width: 900px) {
             .layout, .detail-grid { grid-template-columns: 1fr; }
             .header, .toolbar { flex-direction: column; align-items: stretch; }
-            .header-side { width: 100%; justify-items: stretch; }
+            .header-side { width: 100%; justify-content: flex-end; }
             .header-filter { grid-template-columns: 1fr; }
             .drawer-body { grid-template-columns: 1fr; }
             .tab-navigation { padding: 0 12px; overflow-x: auto; }
@@ -445,6 +516,8 @@
                     <div class="summary-list header-summary" id="statusSummary"></div>
                 </div>
                 <div class="header-side">
+                    <input id="bugImportInput" type="file" accept=".csv,text/csv" style="display:none" onchange="importBugCsv(event)">
+                    <button id="bugImportBtn" class="btn-import" onclick="openBugImport()">导入</button>
                     <button class="btn-create" onclick="openDrawer()">新建</button>
                 </div>
             </div>
@@ -555,6 +628,7 @@
     </div>
 
     <div id="toast" class="toast"></div>
+    <div id="bugFloatingTooltip" class="bug-floating-tooltip"></div>
 
     <script>
         const token = localStorage.getItem('token');
@@ -567,6 +641,8 @@
         let selectedBugImages = [];
         let assignableUsers = [];
         let editingBug = null;
+        let detailHistoryPushed = false;
+        let activeStatusGroup = '';
         let pagination = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
         let bugStats = {};
         let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -653,6 +729,14 @@
             return 'priority-low';
         }
 
+        function formatDateTime(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '-';
+            const pad = number => String(number).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+        }
+
         function allowedActions(status) {
             const role = currentUser.role || '';
             const actions = statusActions[status] || [];
@@ -674,6 +758,7 @@
         async function loadBugs() {
             const params = {
                 status: document.getElementById('statusFilter').value,
+                statusGroup: activeStatusGroup,
                 priority: document.getElementById('priorityFilter').value,
                 keyword: document.getElementById('keywordInput').value.trim(),
                 page: pagination.page,
@@ -696,19 +781,30 @@
         }
 
         function queryBugs() {
+            activeStatusGroup = '';
             pagination.page = 1;
             loadBugs();
         }
 
         function renderSummary(stats) {
             const rows = [
-                ['待修复', ['pending_confirm', 'pending_fix']],
-                ['待确认', ['pending_product_confirm', 'transferred_requirement', 'rejected']],
-                ['待验证', ['pending_test']]
+                ['待修复', 'to_fix', ['pending_confirm', 'pending_fix']],
+                ['待确认', 'to_confirm', ['pending_product_confirm', 'transferred_requirement', 'rejected']],
+                ['待验证', 'to_verify', ['pending_test']]
             ];
-            document.getElementById('statusSummary').innerHTML = rows.map(([label, statuses]) => `
-                <div class="summary-row"><span>${label}</span><span class="summary-count">${statuses.reduce((sum, status) => sum + (stats[status] || 0), 0)}</span></div>
+            document.getElementById('statusSummary').innerHTML = rows.map(([label, group, statuses]) => `
+                <div class="summary-row ${activeStatusGroup === group ? 'active' : ''}" onclick="filterByStatusGroup('${group}')">
+                    <span>${label}</span>
+                    <span class="summary-count">${statuses.reduce((sum, status) => sum + (stats[status] || 0), 0)}</span>
+                </div>
             `).join('');
+        }
+
+        function filterByStatusGroup(group) {
+            activeStatusGroup = activeStatusGroup === group ? '' : group;
+            document.getElementById('statusFilter').value = '';
+            pagination.page = 1;
+            loadBugs();
         }
 
         function renderTable() {
@@ -723,6 +819,7 @@
                     </button></div></td>
                     <td class="bug-link-cell" onclick="showDetail('${escapeHtml(bug.bugNo)}')">
                         <div class="bug-title">${escapeHtml(bug.title)}</div>
+                        <div class="bug-tooltip">${escapeHtml(bug.title)}</div>
                         <div class="bug-desc">${escapeHtml(bug.description || bug.reproduceSteps || '')}</div>
                     </td>
                     <td>${escapeHtml(bug.type || 'Android')}</td>
@@ -748,6 +845,53 @@
                 </tr>
             `);
             tbody.innerHTML = dataRows.concat(emptyRows).join('');
+            updateTitleTooltips();
+            bindTitleTooltipEvents();
+        }
+
+        function updateTitleTooltips() {
+            document.querySelectorAll('.bug-link-cell').forEach(cell => {
+                const title = cell.querySelector('.bug-title');
+                if (!title) return;
+                cell.classList.toggle('has-overflow-title', title.scrollWidth > title.clientWidth);
+            });
+        }
+
+        function bindTitleTooltipEvents() {
+            document.querySelectorAll('.bug-link-cell').forEach(cell => {
+                cell.onmouseenter = () => showBugTitleTooltip(cell);
+                cell.onmouseleave = hideBugTitleTooltip;
+            });
+        }
+
+        function showBugTitleTooltip(cell) {
+            if (!cell.classList.contains('has-overflow-title')) return;
+            const title = cell.querySelector('.bug-title');
+            const tooltip = document.getElementById('bugFloatingTooltip');
+            if (!title || !tooltip) return;
+
+            tooltip.textContent = title.textContent || '';
+            tooltip.style.display = 'block';
+            tooltip.style.left = '0px';
+            tooltip.style.top = '0px';
+
+            const titleRect = title.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const margin = 8;
+            const left = Math.min(
+                Math.max(titleRect.left, margin),
+                window.innerWidth - tooltipRect.width - margin
+            );
+            const preferredTop = titleRect.top - tooltipRect.height - margin;
+            const top = Math.max(preferredTop, margin);
+
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+        }
+
+        function hideBugTitleTooltip() {
+            const tooltip = document.getElementById('bugFloatingTooltip');
+            if (tooltip) tooltip.style.display = 'none';
         }
 
         function renderPagination() {
@@ -791,7 +935,7 @@
             try {
                 await apiService.deleteBug(bugNo);
                 if (currentDetail && currentDetail.bugNo === bugNo) {
-                    backToList();
+                    backToList({ useHistory: false });
                 }
                 if (bugs.length === 1 && pagination.page > 1) {
                     pagination.page -= 1;
@@ -807,12 +951,62 @@
             ['statusFilter', 'priorityFilter', 'keywordInput'].forEach(id => {
                 document.getElementById(id).value = '';
             });
+            activeStatusGroup = '';
             pagination.page = 1;
             loadBugs();
         }
 
         function handleSearchKeyup(event) {
             if (event.key === 'Enter') loadBugs();
+        }
+
+        function openBugImport() {
+            document.getElementById('bugImportInput').click();
+        }
+
+        async function importBugCsv(event) {
+            const input = event.target;
+            const file = input.files && input.files[0];
+            if (!file) return;
+            if (!/\.csv$/i.test(file.name)) {
+                input.value = '';
+                alert('请选择CSV文件');
+                return;
+            }
+
+            const button = document.getElementById('bugImportBtn');
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = '导入中...';
+
+            try {
+                const response = await apiService.importBugs(file);
+                const result = response.data || {};
+                pagination.page = 1;
+                await loadBugs();
+
+                const messages = [`导入完成：成功 ${result.importedCount || 0} 条，失败 ${result.failedCount || 0} 条`];
+                if (result.warningCount) messages.push(`提示 ${result.warningCount} 条`);
+                showToast(messages.join('，'));
+
+                if ((result.failed || []).length > 0 || (result.warnings || []).length > 0) {
+                    const failedText = (result.failed || [])
+                        .slice(0, 5)
+                        .map(item => `第${item.row}行：${item.error}`)
+                        .join('\n');
+                    const warningText = (result.warnings || [])
+                        .slice(0, 5)
+                        .map(item => `第${item.row}行 ${item.field}=${item.value}：${item.message}`)
+                        .join('\n');
+                    alert([failedText, warningText].filter(Boolean).join('\n'));
+                }
+            } catch (error) {
+                alert('导入BUG失败：' + error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+                input.value = '';
+            }
         }
 
         function openDrawer() {
@@ -924,7 +1118,7 @@
                 clearForm();
                 await loadBugs();
                 if (currentDetail && wasEditing) {
-                    await showDetail(editingBugNo);
+                    await showDetail(editingBugNo, { pushHistory: false });
                 }
                 showToast(wasEditing ? 'BUG修改成功' : 'BUG创建成功');
                 if (!wasEditing && filesToUpload.length > 0 && response.data?.id) {
@@ -972,7 +1166,46 @@
             select.value = '';
         }
 
-        async function showDetail(bugNo) {
+        async function submitBugComment(bugNo) {
+            const input = document.getElementById('commentInput');
+            const content = input.value.trim();
+            if (!content) {
+                alert('请输入备注内容');
+                return;
+            }
+
+            const button = document.getElementById('commentSubmitBtn');
+            button.disabled = true;
+            button.textContent = '提交中...';
+            try {
+                await apiService.addBugComment(bugNo, content);
+                await showDetail(bugNo, { pushHistory: false });
+                showToast('备注已添加');
+            } catch (error) {
+                alert('添加备注失败：' + error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = '提交备注';
+            }
+        }
+
+        function bugListUrl() {
+            return `${window.location.pathname}${window.location.hash || ''}`;
+        }
+
+        function bugDetailUrl(bugNo) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('bug', bugNo);
+            return `${url.pathname}${url.search}${url.hash}`;
+        }
+
+        function setListView() {
+            currentDetail = null;
+            document.getElementById('detailView').style.display = 'none';
+            document.getElementById('listView').style.display = 'block';
+        }
+
+        async function showDetail(bugNo, options = {}) {
             try {
                 const response = await apiService.getBugDetail(bugNo);
                 currentDetail = response.data;
@@ -980,15 +1213,25 @@
                 const detail = document.getElementById('detailView');
                 detail.style.display = 'block';
                 detail.innerHTML = detailHtml(currentDetail);
+                if (options.pushHistory !== false) {
+                    history.pushState({ view: 'detail', bugNo }, '', bugDetailUrl(bugNo));
+                    detailHistoryPushed = true;
+                }
             } catch (error) {
                 alert('加载BUG详情失败：' + error.message);
             }
         }
 
-        function backToList() {
-            currentDetail = null;
-            document.getElementById('detailView').style.display = 'none';
-            document.getElementById('listView').style.display = 'block';
+        function backToList(options = {}) {
+            if (options.useHistory !== false && history.state?.view === 'detail' && detailHistoryPushed) {
+                history.back();
+                return;
+            }
+            detailHistoryPushed = false;
+            setListView();
+            if (options.replaceUrl !== false) {
+                history.replaceState({ view: 'list' }, '', bugListUrl());
+            }
         }
 
         function detailHtml(bug) {
@@ -1005,20 +1248,34 @@
                         <div class="attachment-name" title="${escapeHtml(file.fileName)}">${escapeHtml(file.fileName)}</div>
                     </div>
                 `).join('')}</div>`;
+            const comments = bug.comments || [];
+            const commentHtml = comments.length === 0
+                ? '<div class="history-item">暂无备注</div>'
+                : `<div class="comment-list">${comments.map(comment => `
+                    <div class="comment-item">
+                        <div class="comment-meta">
+                            <span class="comment-user">${escapeHtml(comment.createdByName || '-')}</span>
+                            <span>${escapeHtml(formatDateTime(comment.createdAt))}</span>
+                        </div>
+                        <div class="comment-content">${escapeHtml(comment.content || '')}</div>
+                    </div>
+                `).join('')}</div>`;
 
             return `
                 <div class="header">
-                    <div><h1>${escapeHtml(bug.bugNo)} 详情</h1><p>点击返回可回到 BUG 列表。</p></div>
+                    <div><h1>${escapeHtml(bug.bugNo)} 详情</h1></div>
                     <div class="actions">
                         <button class="btn-small primary" onclick="openEditDrawer('${escapeHtml(bug.bugNo)}')">修改</button>
-                        <button class="btn-small" onclick="backToList()">返回列表</button>
                     </div>
                 </div>
                 <div class="detail-grid">
                     <div class="panel">
                         <div class="panel-header">
                             <span>问题信息</span>
-                            <span class="actions">${actionButtons(bug)}</span>
+                            <span class="actions">
+                                <button class="btn-small back-list-btn" onclick="backToList()">返回列表</button>
+                                ${actionButtons(bug)}
+                            </span>
                         </div>
                         <div class="filter-body">
                             <h2 class="detail-title">${escapeHtml(bug.title)}</h2>
@@ -1032,6 +1289,16 @@
                             <div class="detail-section"><h2>复现步骤</h2><p>${escapeHtml(bug.reproduceSteps || '-')}</p></div>
                             <div class="detail-section"><h2>期望结果</h2><p>${escapeHtml(bug.expectedResult || '-')}</p></div>
                             <div class="detail-section"><h2>图片附件</h2>${attachmentHtml}</div>
+                            <div class="detail-section">
+                                <h2>备注</h2>
+                                <div class="comment-form">
+                                    <textarea id="commentInput" class="comment-input" placeholder="输入你对这个BUG的看法或补充描述"></textarea>
+                                    <div class="comment-actions">
+                                        <button id="commentSubmitBtn" class="btn-small primary" onclick="submitBugComment('${escapeHtml(bug.bugNo)}')">提交备注</button>
+                                    </div>
+                                </div>
+                                ${commentHtml}
+                            </div>
                         </div>
                     </div>
                     <aside class="panel">
@@ -1052,7 +1319,32 @@
             `;
         }
 
+        window.addEventListener('popstate', (event) => {
+            const bugNo = event.state?.bugNo || new URLSearchParams(window.location.search).get('bug');
+            if (event.state?.view === 'detail' && bugNo) {
+                detailHistoryPushed = true;
+                showDetail(bugNo, { pushHistory: false });
+                return;
+            }
+            detailHistoryPushed = false;
+            setListView();
+        });
+
+        window.addEventListener('resize', () => {
+            if (document.getElementById('listView').style.display !== 'none') {
+                hideBugTitleTooltip();
+                updateTitleTooltips();
+            }
+        });
+        window.addEventListener('scroll', hideBugTitleTooltip, true);
+
         document.addEventListener('DOMContentLoaded', () => {
+            const initialBugNo = new URLSearchParams(window.location.search).get('bug');
+            history.replaceState(
+                initialBugNo ? { view: 'detail', bugNo: initialBugNo } : { view: 'list' },
+                '',
+                initialBugNo ? bugDetailUrl(initialBugNo) : bugListUrl()
+            );
             renderAccountInfo();
             apiService.getCurrentUser()
                 .then(user => {
@@ -1065,6 +1357,9 @@
                 .finally(() => {
                     loadAssignableUsers();
                     loadBugs();
+                    if (initialBugNo) {
+                        showDetail(initialBugNo, { pushHistory: false });
+                    }
                 });
         });
     </script>
